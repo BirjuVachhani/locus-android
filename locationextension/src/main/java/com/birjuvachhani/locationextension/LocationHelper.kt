@@ -18,6 +18,7 @@ class LocationHelper : Fragment() {
     var isOneTime = false
     private var isRationaleDisplayed = false
     private var isJustBlocked = true
+    private var options: LocationOptions = LocationOptions()
 
     companion object {
         const val TAG = "LocationHelper"
@@ -38,10 +39,12 @@ class LocationHelper : Fragment() {
     }
 
     fun startLocationProcess(
+        options: LocationOptions = LocationOptions(),
         success: (Location) -> Unit,
         failure: (isDenied: Boolean, t: Throwable?) -> Unit,
         isOneTime: Boolean
     ) {
+        this.options = options
         this.success = success
         this.failure = failure
         this.isOneTime = isOneTime
@@ -70,7 +73,7 @@ class LocationHelper : Fragment() {
     private fun displayRationale() {
         val alertDialog = AlertDialog.Builder(requireContext())
             .setTitle("Location Permission Required!")
-            .setMessage("Location permission is required to perform this action")
+            .setMessage(options.rationale)
             .setPositiveButton("GRANT") { dialog, _ ->
                 requestLocationPermission()
                 dialog.dismiss()
@@ -127,7 +130,7 @@ class LocationHelper : Fragment() {
     private fun showPermissionBlockedDialog() {
         val alertDialog = AlertDialog.Builder(requireContext())
             .setTitle("Location Permission Blocked")
-            .setMessage("Location permission is blocked. Please enable it settings.")
+            .setMessage(options.blocked)
             .setPositiveButton("ENABLE") { dialog, _ ->
                 dialog.dismiss()
                 openSettings()
