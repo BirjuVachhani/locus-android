@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">Location Extension</string>
+
+    <string name="location_rationale_custom">Are you sure you want to skip location services? Turning location on
+        provides deals in your area and for items on your list.
+    </string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_settings">Settings</string>
+    <string name="location_is_currently_disabled">Location is currently disabled</string>
+    <string name="please_enable_access_to_location">Please enable access to Location from Settings.</string>
+    <string name="settings_title">Settings</string>
+
 </resources>
