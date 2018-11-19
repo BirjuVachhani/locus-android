@@ -1,6 +1,29 @@
 # location-extension-android
 An Awesome Kotlin Location Extension 
 
+## Current Version
+#### AvatarView v1.0.0-alpha
+
+## Gradle Dependency
+
+* Add the JitPack repository to your project's build.gradle file
+
+```
+allprojects {
+    repositories {
+        ...
+        maven { url 'https://jitpack.io' }
+    }
+}
+```
+
+* Add the dependency in your app's build.gradle file
+
+```
+dependencies {
+    implementation 'com.github.BirjuVachhani:location-extension-android:1.0.0-alpha'
+}
+```
 
 # License
 
