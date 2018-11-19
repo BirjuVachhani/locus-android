@@ -26,12 +26,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun startTracking(v: View) {
-//        geoLocation.getCurrentLocation({ location ->
-//            Log.e(TAG, "Latitude: ${location.latitude}\tLongitude: ${location.longitude}")
-//        }, {
-//            Log.e(TAG, "isDenied: ${it.isPermissionDenied}\t Error: ${it.throwable?.message}")
-//        })
-
         geoLocation.listenForLocation({ location ->
             Log.e(TAG, "Latitude: ${location.latitude}\tLongitude: ${location.longitude}")
         }, {

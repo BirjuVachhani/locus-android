@@ -9,5 +9,10 @@
     <string name="location_is_currently_disabled">Location is currently disabled</string>
     <string name="please_enable_access_to_location">Please enable access to Location from Settings.</string>
     <string name="settings_title">Settings</string>
+    <string name="enable">ENABLE</string>
+    <string name="cancel">CANCEL</string>
+    <string name="permission_blocked_title">Location Permission Blocked</string>
+    <string name="grant">GRANT</string>
+    <string name="permission_required_title">Location Permission Required!</string>
 
 </resources>
