@@ -21,25 +21,22 @@ import com.bext.alertDialog
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 
-
 /**
  * Created by Birju Vachhani on 09-11-2018.
  */
 class LocationHelper : Fragment() {
-    var isOneTime = false
+    private var isOneTime = false
     private var isRationaleDisplayed = false
     private var isJustBlocked = true
     private var options: LocationOptions = LocationOptions()
-    private val REQUEST_CODE_LOCATION_SETTINGS = 123
+
     private var mFusedLocationProviderClient: FusedLocationProviderClient? = null
     private val mLocationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult?) {
             super.onLocationResult(locationResult)
-
             locationResult?.let {
                 if (it.locations.isNotEmpty()) {
                     success(it.locations.first())
-
                     if (isOneTime) {
                         stopContinuousLocation()
                     }
@@ -49,7 +46,10 @@ class LocationHelper : Fragment() {
     }
 
     companion object {
-        const val TAG = "LocationHelper"
+        val TAG = this::class.java.simpleName
+        private const val REQUEST_CODE_LOCATION_SETTINGS = 123
+        private const val LOCATION_PERMISSION = Manifest.permission.ACCESS_FINE_LOCATION
+        private const val REQUEST_LOCATION_CODE = 7
         fun newInstance(): LocationHelper {
             return LocationHelper()
         }
@@ -57,9 +57,6 @@ class LocationHelper : Fragment() {
 
     var success: (Location) -> Unit = {}
     var failure: (LocationError) -> Unit = {}
-
-    private val LOCATION_PERMISSION = Manifest.permission.ACCESS_FINE_LOCATION
-    private val REQUEST_LOCATION_CODE = 7
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -89,7 +86,7 @@ class LocationHelper : Fragment() {
                     //permission is requested first time, directly prompt user for permission
                     true -> requestLocationPermission()
                     false -> {
-                        //permission is not asked for first time, display rationale and then prompt user for permission
+                        //permission is not asked for first time, display rationaleText and then prompt user for permission
                         displayRationale()
                         isRationaleDisplayed = true
                     }
@@ -100,13 +97,13 @@ class LocationHelper : Fragment() {
 
     private fun displayRationale() {
         AlertDialog.Builder(requireContext())
-            .setTitle("Location Permission Required!")
-            .setMessage(options.rationale)
-            .setPositiveButton("GRANT") { dialog, _ ->
+            .setTitle(getString(R.string.permission_required_title))
+            .setMessage(options.rationaleText)
+            .setPositiveButton(getString(R.string.grant)) { dialog, _ ->
                 requestLocationPermission()
                 dialog.dismiss()
             }
-            .setNegativeButton("CANCEL") { dialog, _ ->
+            .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
                 dialog.dismiss()
                 failure(LocationError(true))
             }.create().show()
@@ -141,7 +138,7 @@ class LocationHelper : Fragment() {
                     initLocationTracking()
                 } else {
                     if (!shouldShowRequestPermissionRationale(LOCATION_PERMISSION)) {
-                        //means permission is permanently blocked by user
+                        //means permission is permanently blockedText by user
                         if (!isJustBlocked) {
                             showPermissionBlockedDialog()
                         } else
@@ -155,13 +152,13 @@ class LocationHelper : Fragment() {
 
     private fun showPermissionBlockedDialog() {
         AlertDialog.Builder(requireContext())
-            .setTitle("Location Permission Blocked")
-            .setMessage(options.blocked)
-            .setPositiveButton("ENABLE") { dialog, _ ->
+            .setTitle(getString(R.string.permission_blocked_title))
+            .setMessage(options.blockedText)
+            .setPositiveButton(getString(R.string.enable)) { dialog, _ ->
                 dialog.dismiss()
                 openSettings()
             }
-            .setNegativeButton("CANCEL") { dialog, _ ->
+            .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
                 dialog.dismiss()
             }.create().show()
     }
@@ -179,7 +176,6 @@ class LocationHelper : Fragment() {
     * Location Settings and Location Request Handling
     *
     */
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == REQUEST_CODE_LOCATION_SETTINGS) {
             val locationSettingsStates = LocationSettingsStates.fromIntent(data!!)
@@ -202,7 +198,6 @@ class LocationHelper : Fragment() {
 
     private fun initLocationTracking() {
         //init location here
-
         initializeFusedLocationProviderClient()
         checkIfLocationSettingsAreEnabled()
     }
@@ -225,7 +220,6 @@ class LocationHelper : Fragment() {
             locationSettingsResponseTask.addOnSuccessListener {
                 // All location settings are satisfied. The client can initialize
                 // location requests here.
-                // ...
                 getLastKnownLocation()
             }
             locationSettingsResponseTask.addOnFailureListener { exception ->
@@ -258,7 +252,6 @@ class LocationHelper : Fragment() {
     private fun resolveLocationSettings(exception: Exception) {
         val resolvable = exception as ResolvableApiException
         try {
-//            resolvable.startResolutionForResult(requireActivity(), REQUEST_CODE_LOCATION_SETTINGS)
             startIntentSenderForResult(
                 resolvable.resolution.intentSender,
                 REQUEST_CODE_LOCATION_SETTINGS,
