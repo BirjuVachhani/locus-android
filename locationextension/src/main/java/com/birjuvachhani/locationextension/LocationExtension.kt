@@ -4,7 +4,6 @@ import android.location.Location
 import android.support.v7.app.AppCompatActivity
 import com.google.android.gms.location.LocationRequest
 
-
 /**
  * Created by Birju Vachhani on 09-11-2018.
  */
@@ -12,17 +11,20 @@ import com.google.android.gms.location.LocationRequest
 class GeoLocation(val activity: AppCompatActivity, func: LocationOptions.() -> Unit = {}) {
 
     private var options = LocationOptions()
-    val INTERVAL_IN_MS = 1000L
-    private val FASTEST_INTERVAL_IN_MS = 5000L
-    private val MAX_WAIT_TIME_IN_MS = 5000L
-    private val NUMBER_OF_UPDATES = 1
+
+    private object Defaults {
+        internal const val INTERVAL_IN_MS = 1000L
+        internal const val FASTEST_INTERVAL_IN_MS = 1000L
+        internal const val MAX_WAIT_TIME_IN_MS = 1000L
+        internal const val NUMBER_OF_UPDATES = 1
+    }
 
     init {
         options.locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        options.locationRequest.interval = INTERVAL_IN_MS
-        options.locationRequest.fastestInterval = FASTEST_INTERVAL_IN_MS
-        options.locationRequest.numUpdates = NUMBER_OF_UPDATES
-        options.locationRequest.maxWaitTime = MAX_WAIT_TIME_IN_MS
+        options.locationRequest.interval = Defaults.INTERVAL_IN_MS
+        options.locationRequest.fastestInterval = Defaults.FASTEST_INTERVAL_IN_MS
+        options.locationRequest.numUpdates = Defaults.NUMBER_OF_UPDATES
+        options.locationRequest.maxWaitTime = Defaults.MAX_WAIT_TIME_IN_MS
         options(func)
     }
 
@@ -48,8 +50,15 @@ class GeoLocation(val activity: AppCompatActivity, func: LocationOptions.() -> U
         }
     }
 
+    fun listenForLocation(success: (Location) -> Unit) {
+        getLocationHelper(activity).apply {
+            startLocationProcess(options, success, {}, false)
+        }
+    }
+
     fun listenForLocation(
-        success: (Location) -> Unit, failure: (error: LocationError) -> Unit
+        success: (Location) -> Unit,
+        failure: (error: LocationError) -> Unit
     ) {
         getLocationHelper(activity).apply {
             startLocationProcess(options, success, failure, false)
@@ -74,11 +83,9 @@ class GeoLocation(val activity: AppCompatActivity, func: LocationOptions.() -> U
     }
 }
 
-// Give location only once
-
 data class LocationOptions(
-    var rationale: String = "Location permission is required in order to use this feature properly.Please grant the permission.",
-    var blocked: String = "Location permission is blocked. Please allow permission from settings screen to use this feature",
+    var rationaleText: String = "Location permission is required in order to use this feature properly.Please grant the permission.",
+    var blockedText: String = "Location permission is blocked. Please allow permission from settings screen to use this feature",
     var request: LocationRequest.() -> Unit = {},
     internal var locationRequest: LocationRequest = LocationRequest()
 )
