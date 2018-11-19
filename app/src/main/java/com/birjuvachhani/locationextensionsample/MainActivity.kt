@@ -6,12 +6,14 @@ import android.util.Log
 import android.view.View
 import com.birjuvachhani.locationextension.GeoLocation
 import com.google.android.gms.location.LocationRequest
+import kotlinx.android.synthetic.main.activity_main.*
+import java.util.*
+
 
 class MainActivity : AppCompatActivity() {
 
     private val TAG = this::class.java.simpleName
 
-    var count = 0
     private val geoLocation = GeoLocation(this) {
         request = {
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
@@ -27,11 +29,24 @@ class MainActivity : AppCompatActivity() {
 
     fun startTracking(v: View) {
         geoLocation.listenForLocation({ location ->
+            tvLatitude.text = location.latitude.toString()
+            tvLongitude.text = location.longitude.toString()
+            tvError.text = ""
+            tvTime.text = getCurrentTimeString()
+            tvUpdateLabel.visibility = View.VISIBLE
             Log.e(TAG, "Latitude: ${location.latitude}\tLongitude: ${location.longitude}")
-        }, {
-            Log.e(TAG, "isDenied: ${it.isPermissionDenied}\t Error: ${it.throwable?.message}")
+        }, { error ->
+            tvLatitude.text = ""
+            tvLongitude.text = ""
+            tvError.text = "Permission Denied: ${error.isPermissionDenied}, Throwable: ${error.throwable?.message}"
+            Log.e(TAG, "isDenied: ${error.isPermissionDenied}\t Error: ${error.throwable?.message}")
         })
 
+    }
+
+    fun getCurrentTimeString(): String {
+        val calendar = Calendar.getInstance()
+        return "${calendar.get(Calendar.HOUR_OF_DAY)} : ${calendar.get(Calendar.MINUTE)} : ${calendar.get(Calendar.SECOND)}"
     }
 
     override fun onPause() {
