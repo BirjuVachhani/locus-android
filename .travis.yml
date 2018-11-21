@@ -1,0 +1,14 @@
+language: android
+android:
+        components:
+                - platform-tools
+                - build-tools-28.0.3
+                - android-28
+                - extra-android-m2repository
+script:
+        - ./gradlew build
+before_install:
+        - chmod +x gradlew
+branches:
+        only:
+                - master

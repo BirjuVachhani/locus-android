@@ -17,7 +17,7 @@
 package com.birjuvachhani.locationextension
 
 import android.location.Location
-import android.support.v7.app.AppCompatActivity
+import android.support.v4.app.FragmentActivity
 import com.google.android.gms.location.LocationRequest
 
 /**
@@ -32,7 +32,7 @@ import com.google.android.gms.location.LocationRequest
  * @param activity is used to display dialog and to initiate the helper class for location
  *
  * */
-class GeoLocation(val activity: AppCompatActivity, func: LocationOptions.() -> Unit = {}) {
+class GeoLocation(private val activity: FragmentActivity, func: LocationOptions.() -> Unit = {}) {
 
     private var options = LocationOptions()
 
@@ -143,7 +143,7 @@ class GeoLocation(val activity: AppCompatActivity, func: LocationOptions.() -> U
      *
      * @return Instance of LocationHelper class which can be used to initiate Location Retrieval process.
      * */
-    private fun getLocationHelper(activity: AppCompatActivity): LocationHelper {
+    private fun getLocationHelper(activity: FragmentActivity): LocationHelper {
         val frag = activity.supportFragmentManager.findFragmentByTag(LocationHelper.TAG)
         return if (frag == null) {
             val mLocationHelper = LocationHelper.newInstance()
