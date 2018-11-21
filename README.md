@@ -1,4 +1,4 @@
-# Location Extension for Android
+# Locus-Android
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-2196F3.svg?style=for-the-badge)](https://opensource.org/licenses/Apache-2.0)
 [![GitHub (pre-)release](https://img.shields.io/github/release-pre/birjuvachhani/location-extension-android.svg?style=for-the-badge&colorB=607D8B)](https://github.com/BirjuVachhani/location-extension-android/releases)
@@ -7,7 +7,7 @@
 [![API](https://img.shields.io/badge/API-16%2B-F44336.svg?style=for-the-badge)](https://android-arsenal.com/api?level=16)
 [![Travis (.org) branch](https://img.shields.io/travis/BirjuVachhani/location-extension-android/master.svg?style=for-the-badge)](https://travis-ci.org/BirjuVachhani/location-extension-android)
 
-A kotlin DSL that makes it very easy to retrieve location with just few lines of code. Everything including permission model and Location settings is handled internally which removes a lot of boilerplate code any developer have to write everytime. 
+Locus is a kotlin library for android which makes it very easy to retrieve location with just few lines of code. Everything including permission model and Location settings is handled internally which removes a lot of boilerplate code any developer have to write everytime. 
 
 Please note that this library is still under development. Stable version of the library will be released soon. Stay toned!
 
