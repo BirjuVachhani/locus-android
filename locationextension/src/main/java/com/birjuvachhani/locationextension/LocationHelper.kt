@@ -71,6 +71,10 @@ class LocationHelper : Fragment() {
         private const val REQUEST_CODE_LOCATION_SETTINGS = 123
         private const val LOCATION_PERMISSION = Manifest.permission.ACCESS_FINE_LOCATION
         private const val REQUEST_LOCATION_CODE = 7
+
+        /**
+         * Creates a new instance o this class and returns it.
+         * */
         fun newInstance(): LocationHelper {
             return LocationHelper()
         }
@@ -240,13 +244,13 @@ class LocationHelper : Fragment() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == REQUEST_CODE_LOCATION_SETTINGS) {
-            val locationSettingsStates = LocationSettingsStates.fromIntent(data!!)
-            when (resultCode) {
-                Activity.RESULT_OK -> initPermissionModel()
-                Activity.RESULT_CANCELED ->
-                    // The user was asked to change settings, but chose not to
-                    onResolveLocationSettingCancelled(locationSettingsStates)
-                else -> {
+            data?.let {
+                val locationSettingsStates = LocationSettingsStates.fromIntent(it)
+                when (resultCode) {
+                    Activity.RESULT_OK -> initPermissionModel()
+                    Activity.RESULT_CANCELED ->
+                        // The user was asked to change settings, but chose not to
+                        onResolveLocationSettingCancelled(locationSettingsStates)
                 }
             }
         }
