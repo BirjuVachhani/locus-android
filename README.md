@@ -93,6 +93,40 @@ geoLocation.stopTrackingLocation()
 
 So easy right? That's what we wanted to achieve: a hassle free location retrieval process.
 
+
+## Custom Configuration
+
+You can use default settings by just initializing the [GeoLocation](https://github.com/BirjuVachhani/locus-android/blob/master/locationextension/src/main/java/com/birjuvachhani/locationextension/LocationExtension.kt) Class like this:
+
+```kotlin
+private val geoLocation = GeoLocation(this)
+```
+
+To use custom [LocationRequest](https://developers.google.com/android/reference/com/google/android/gms/location/LocationRequest) object and custom dialog messages, you can initialize [GeoLocation](https://github.com/BirjuVachhani/locus-android/blob/master/locationextension/src/main/java/com/birjuvachhani/locationextension/LocationExtension.kt) class like this:
+
+```kotlin
+private val geoLocation = GeoLocation(this) {
+    rationaleText = "This is custom rationale text"
+    blockedText = "The permission is blocked and this is custom blocked message"
+    request = {
+        priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        interval = 1000
+        fastestInterval = 1000
+    }
+}
+```
+
+Here, **request** is provides a lambda block to configure [LocationRequest](https://developers.google.com/android/reference/com/google/android/gms/location/LocationRequest).
+
+Following are the default [LocationRequest](https://developers.google.com/android/reference/com/google/android/gms/location/LocationRequest) configuration which will be used in not provided externally.
+
+```kotlin
+priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+interval = 1000L
+fastestInterval = 1000L
+maxWaitTime = 1000L
+```
+
 # License
 
 ```
