@@ -20,10 +20,17 @@ import android.location.Location
 import android.support.v4.app.FragmentActivity
 import com.google.android.gms.location.LocationRequest
 
+
 /**
  * Created by Birju Vachhani on 09-11-2018.
  */
 
+/**
+ * Marker class for GeoLocation Extensions
+ * */
+@DslMarker
+@Target(AnnotationTarget.CLASS, AnnotationTarget.TYPE, AnnotationTarget.PROPERTY)
+internal annotation class GeoLocationExtension
 
 /**
  * A helper class for location extension which provides dsl extensions for getting location
@@ -32,7 +39,10 @@ import com.google.android.gms.location.LocationRequest
  * @param activity is used to display dialog and to initiate the helper class for location
  *
  * */
-class GeoLocation(private val activity: FragmentActivity, func: LocationOptions.() -> Unit = {}) {
+@GeoLocationExtension
+class GeoLocation(
+    private val activity: FragmentActivity, func: LocationOptions.() -> Unit = {}
+) {
 
     private var options = LocationOptions()
 
@@ -43,7 +53,6 @@ class GeoLocation(private val activity: FragmentActivity, func: LocationOptions.
         internal const val INTERVAL_IN_MS = 1000L
         internal const val FASTEST_INTERVAL_IN_MS = 1000L
         internal const val MAX_WAIT_TIME_IN_MS = 1000L
-        internal const val NUMBER_OF_UPDATES = 1
     }
 
     /**
@@ -53,9 +62,8 @@ class GeoLocation(private val activity: FragmentActivity, func: LocationOptions.
         options.locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         options.locationRequest.interval = Defaults.INTERVAL_IN_MS
         options.locationRequest.fastestInterval = Defaults.FASTEST_INTERVAL_IN_MS
-        options.locationRequest.numUpdates = Defaults.NUMBER_OF_UPDATES
         options.locationRequest.maxWaitTime = Defaults.MAX_WAIT_TIME_IN_MS
-        options(func)
+        configure(func)
     }
 
     /**
@@ -64,11 +72,8 @@ class GeoLocation(private val activity: FragmentActivity, func: LocationOptions.
      * @param func is a lambda receiver for LocationOptions which is used to build LocationOptions object
      *
      * */
-    private fun options(func: LocationOptions.() -> Unit) {
-        val locationOptions = LocationOptions()
-        func.invoke(locationOptions)
-        locationOptions.request.invoke(locationOptions.locationRequest)
-        this.options = locationOptions
+    fun configure(func: LocationOptions.() -> Unit) {
+        func.invoke(options)
     }
 
     /**
@@ -170,9 +175,22 @@ class GeoLocation(private val activity: FragmentActivity, func: LocationOptions.
  * class.
  *
  * */
-data class LocationOptions(
-    var rationaleText: String = "Location permission is required in order to use this feature properly.Please grant the permission.",
-    var blockedText: String = "Location permission is blocked. Please allow permission from settings screen to use this feature",
-    var request: LocationRequest.() -> Unit = {},
+@GeoLocationExtension
+class LocationOptions internal constructor() {
+    var rationaleText: String =
+        "Location permission is required in order to use this feature properly.Please grant the permission."
+    var blockedText: String =
+        "Location permission is blocked. Please allow permission from settings screen to use this feature"
+
+    /**
+     * Create an instance of LocationRequest class
+     *
+     * @param func is a LocationRequest's lambda receiver which provide a block to configure LocationRequest
+     *
+     * */
+    fun request(func: (@GeoLocationExtension LocationRequest).() -> Unit) {
+        locationRequest = LocationRequest().apply(func)
+    }
+
     internal var locationRequest: LocationRequest = LocationRequest()
-)
+}
