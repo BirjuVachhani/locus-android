@@ -1,11 +1,10 @@
 /*
- * Copyright 2018 BirjuVachhani
- *
+ * Copyright 2019 Birju Vachhani (https://github.com/BirjuVachhani)
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +20,8 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
 import com.birjuvachhani.locationextension.GeoLocation
+import com.birjuvachhani.locationextension.Locus
+import com.birjuvachhani.locationextension.watch
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 
@@ -41,20 +42,28 @@ class MainActivity : AppCompatActivity() {
      * Initiates location tracking process on button click
      * */
     fun startTracking(v: View) {
-        geoLocation.listenForLocation({ location ->
-            locationContainer.visibility = View.VISIBLE
-            tvLatitude.text = location.latitude.toString()
-            tvLongitude.text = location.longitude.toString()
-            tvError.text = ""
-            tvTime.text = getCurrentTimeString()
-            Log.e(TAG, "Latitude: ${location.latitude}\tLongitude: ${location.longitude}")
-        }, { error ->
-            tvLatitude.text = ""
-            tvLongitude.text = ""
-            tvError.text = "Permission Denied: ${error.isPermissionDenied}, Throwable: ${error.throwable?.message}"
-            Log.e(TAG, "isDenied: ${error.isPermissionDenied}\t Error: ${error.throwable?.message}")
-        })
-
+        geoLocation.listenForLocation().watch(this) { callback ->
+            when (callback) {
+                is Locus.Success -> {
+                    locationContainer.visibility = View.VISIBLE
+                    tvLatitude.text = callback.location.toString()
+                    tvLongitude.text = callback.location.toString()
+                    tvError.text = ""
+                    tvTime.text = getCurrentTimeString()
+                    Log.e(TAG, "Latitude: ${callback.location.latitude}\tLongitude: ${callback.location.longitude}")
+                }
+                is Locus.PermissionDenied -> {
+                    tvLatitude.text = ""
+                    tvLongitude.text = ""
+                    tvError.text = "Permission Denied"
+                }
+                is Locus.Failure -> {
+                    tvLatitude.text = ""
+                    tvLongitude.text = ""
+                    Log.e(TAG, "Error: ${callback.error.message}")
+                }
+            }
+        }
     }
 
     /**
