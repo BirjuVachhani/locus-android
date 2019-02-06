@@ -1,11 +1,10 @@
 /*
- * Copyright 2018 BirjuVachhani
- *
+ * Copyright 2019 Birju Vachhani (https://github.com/BirjuVachhani)
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,7 +24,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
-import android.location.Location
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
@@ -36,6 +34,7 @@ import android.support.v4.app.Fragment
 import com.bext.alertDialog
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
+import kotlin.Result.Companion.success
 
 /**
  * Created by Birju Vachhani on 09-11-2018.
@@ -55,9 +54,9 @@ class LocationHelper : Fragment() {
     private val mLocationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult?) {
             super.onLocationResult(locationResult)
-            locationResult?.let {
-                if (it.locations.isNotEmpty()) {
-                    success(it.locations.first())
+            locationResult?.let { result ->
+                if (result.locations.isNotEmpty()) {
+                    sendResult(Locus.Success(result.locations.first()))
                     if (isOneTime) {
                         stopContinuousLocation()
                     }
@@ -67,7 +66,7 @@ class LocationHelper : Fragment() {
     }
 
     companion object {
-        val TAG = this::class.java.simpleName
+        const val TAG = "LocationHelper"
         private const val REQUEST_CODE_LOCATION_SETTINGS = 123
         private const val LOCATION_PERMISSION = Manifest.permission.ACCESS_FINE_LOCATION
         private const val REQUEST_LOCATION_CODE = 7
@@ -75,13 +74,10 @@ class LocationHelper : Fragment() {
         /**
          * Creates a new instance o this class and returns it.
          * */
-        fun newInstance(): LocationHelper {
-            return LocationHelper()
+        fun newInstance(options: LocationOptions): LocationHelper {
+            return LocationHelper().apply { this.options = options }
         }
     }
-
-    var success: (Location) -> Unit = {}
-    var failure: (LocationError) -> Unit = {}
 
     /**
      * retainInstance if set to true, makes sure that this fragment instance persist though configuration changes.
@@ -89,28 +85,15 @@ class LocationHelper : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         retainInstance = true
+        arguments?.let { args ->
+            if (args.containsKey(Constants.IS_ONE_TIME_BUNDLE_KEY)) {
+                isOneTime = args.getBoolean(Constants.IS_ONE_TIME_BUNDLE_KEY)
+            }
+        }
     }
 
-    /**
-     * Initiates main location process by initiating permission model.
-     *
-     * @param options provides the dialog messages and LocationRequest instance to configure location request process.
-     * @param success is a function which will be called when the location is retrieved successfully.
-     * @param failure is a function which will be called when the user denies the permission or if there's any error
-     * getting location.
-     * @param isOneTime is a flag that indicates whether the location update should be sent only once or continuous.
-     *
-     * */
-    fun startLocationProcess(
-        options: LocationOptions = LocationOptions(),
-        success: (Location) -> Unit,
-        failure: (LocationError) -> Unit,
-        isOneTime: Boolean
-    ) {
-        this.options = options
-        this.success = success
-        this.failure = failure
-        this.isOneTime = isOneTime
+    override fun onResume() {
+        super.onResume()
         initPermissionModel()
     }
 
@@ -149,7 +132,7 @@ class LocationHelper : Fragment() {
             }
             .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
                 dialog.dismiss()
-                failure(LocationError(true))
+                sendResult(Locus.PermissionDenied)
             }.create().show()
     }
 
@@ -209,7 +192,7 @@ class LocationHelper : Fragment() {
                         } else
                             isJustBlocked = false
                     }
-                    failure(LocationError(true))
+                    sendResult(Locus.PermissionDenied)
                 }
             }
         }
@@ -310,7 +293,7 @@ class LocationHelper : Fragment() {
                 if (exception is ResolvableApiException) {
                     onResolutionNeeded(exception)
                 } else {
-                    failure(LocationError(false, exception))
+                    sendResult(Locus.Failure(exception))
                 }
             }
         }
@@ -404,7 +387,7 @@ class LocationHelper : Fragment() {
                 startContinuousLocation()
             }
         }?.addOnFailureListener { exception ->
-            failure(LocationError(false, exception))
+            sendResult(Locus.Failure(exception))
         }
     }
 
@@ -419,7 +402,7 @@ class LocationHelper : Fragment() {
             mLocationCallback,
             Looper.getMainLooper()
         )?.addOnFailureListener { exception ->
-            failure(LocationError(false, exception))
+            sendResult(Locus.Failure(exception))
         }
     }
 
@@ -429,9 +412,12 @@ class LocationHelper : Fragment() {
     internal fun stopContinuousLocation() {
         mFusedLocationProviderClient?.removeLocationUpdates(mLocationCallback)
     }
-}
 
-/**
- * Helper class to handle errors which can be passed to the top abstraction layer.
- * */
-class LocationError(val isPermissionDenied: Boolean, val throwable: Throwable? = null)
+    fun sendResult(result: Locus) {
+        LocationResultHolder.locationLiveData.value = result
+    }
+
+    fun sendResultAsync(result: Locus) {
+        LocationResultHolder.locationLiveData.postValue(result)
+    }
+}

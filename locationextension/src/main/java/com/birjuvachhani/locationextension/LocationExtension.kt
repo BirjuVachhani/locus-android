@@ -1,11 +1,10 @@
 /*
- * Copyright 2018 BirjuVachhani
- *
+ * Copyright 2019 Birju Vachhani (https://github.com/BirjuVachhani)
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,8 +15,14 @@
 
 package com.birjuvachhani.locationextension
 
-import android.location.Location
+import android.arch.lifecycle.Lifecycle
+import android.arch.lifecycle.LifecycleObserver
+import android.arch.lifecycle.LiveData
+import android.arch.lifecycle.OnLifecycleEvent
+import android.os.Bundle
+import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
+import android.support.v4.app.FragmentManager
 import com.google.android.gms.location.LocationRequest
 
 
@@ -40,11 +45,32 @@ internal annotation class GeoLocationExtension
  *
  * */
 @GeoLocationExtension
-class GeoLocation(
-    private val activity: FragmentActivity, func: LocationOptions.() -> Unit = {}
-) {
+class GeoLocation(func: LocationOptions.() -> Unit = {}) {
 
     private var options = LocationOptions()
+
+    private var fragmentManager: FragmentManager? = null
+
+    private var locationHelper: LocationHelper? = null
+
+    constructor(activity: FragmentActivity, func: LocationOptions.() -> Unit = {}) : this(func) {
+        fragmentManager = activity.supportFragmentManager
+    }
+
+    constructor(fragment: Fragment, func: LocationOptions.() -> Unit = {}) : this(func) {
+        fragment.lifecycle.addObserver(object : LifecycleObserver {
+
+            @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
+            fun onFragmentManagerAvailable() {
+                fragmentManager = fragment.fragmentManager
+            }
+
+            @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+            fun onFragmentManagerDestroyed() {
+                fragmentManager = null
+            }
+        })
+    }
 
     /**
      * This class is used to create a default LocationRequest object if not provided externally
@@ -68,9 +94,7 @@ class GeoLocation(
 
     /**
      * creates LocationOptions object from user configuration
-     *
      * @param func is a lambda receiver for LocationOptions which is used to build LocationOptions object
-     *
      * */
     fun configure(func: LocationOptions.() -> Unit) {
         func.invoke(options)
@@ -79,65 +103,21 @@ class GeoLocation(
     /**
      * This function is used to get location for one time only. It handles most of the errors internally though
      * it doesn't any mechanism to handle errors externally.
-     *
-     * @param success is a function which will be called when location is retrieved successfully.
-     *
      * */
-    fun getCurrentLocation(success: (Location) -> Unit) {
-        getLocationHelper(activity).apply {
-            startLocationProcess(options, success, {}, true)
-        }
-    }
-
-    /**
-     * This function is used to get location for one time only.
-     * It also provides mechanism to handle errors externally.
-     *
-     * @param success is a function which will be called when location is retrieved successfully.
-     *
-     * @param failure is a function which will be called when user denies location permission
-     * or there's any error while retrieving location.
-     *
-     * */
-    fun getCurrentLocation(
-        success: (Location) -> Unit,
-        failure: (LocationError) -> Unit
-    ) {
-        getLocationHelper(activity).apply {
-            startLocationProcess(options, success, failure, true)
-        }
+    fun getCurrentLocation(): LiveData<Locus> {
+        initLocationHelper(true)
+        //startLocationProcess(options, success, {}, true)
+        return LocationResultHolder.locationLiveData
     }
 
     /**
      * This function is used to get location updates continuously. It handles most of the errors internally though
      * it doesn't any mechanism to handle errors externally.
-     *
-     * @param success is a function which will be called everytime when there's new update for location
-     *
      * */
-    fun listenForLocation(success: (Location) -> Unit) {
-        getLocationHelper(activity).apply {
-            startLocationProcess(options, success, {}, false)
-        }
-    }
-
-    /**
-     * This function is used to get location updates continuously. It handles most of the errors internally and also
-     * provides mechanism to handle errors externally.
-     *
-     * @param success is a function which will be called every time when there's new update for location
-     *
-     * @param failure is a function which will be called when user denies location permission
-     * or there's any error while retrieving location.
-     *
-     * */
-    fun listenForLocation(
-        success: (Location) -> Unit,
-        failure: (error: LocationError) -> Unit
-    ) {
-        getLocationHelper(activity).apply {
-            startLocationProcess(options, success, failure, false)
-        }
+    fun listenForLocation(): LiveData<Locus> {
+        initLocationHelper()
+        //startLocationProcess(options, success, {}, false)
+        return LocationResultHolder.locationLiveData
     }
 
     /**
@@ -148,16 +128,18 @@ class GeoLocation(
      *
      * @return Instance of LocationHelper class which can be used to initiate Location Retrieval process.
      * */
-    private fun getLocationHelper(activity: FragmentActivity): LocationHelper {
-        val frag = activity.supportFragmentManager.findFragmentByTag(LocationHelper.TAG)
-        return if (frag == null) {
-            val mLocationHelper = LocationHelper.newInstance()
-            activity.supportFragmentManager.beginTransaction()
-                .add(mLocationHelper, LocationHelper.TAG)
-                .commitNow()
-            mLocationHelper
-        } else {
-            frag as LocationHelper
+    private fun initLocationHelper(isOneTime: Boolean = false) {
+        locationHelper = fragmentManager?.findFragmentByTag(LocationHelper.TAG) as? LocationHelper
+        if (locationHelper == null) {
+            locationHelper = LocationHelper.newInstance(options)
+            locationHelper?.let { helper ->
+                helper.arguments = Bundle().apply {
+                    putBoolean(Constants.IS_ONE_TIME_BUNDLE_KEY, isOneTime)
+                }
+                fragmentManager?.beginTransaction()
+                    ?.add(helper, LocationHelper.TAG)
+                    ?.commit()
+            }
         }
     }
 
@@ -166,7 +148,7 @@ class GeoLocation(
      *
      * */
     fun stopTrackingLocation() {
-        getLocationHelper(activity).stopContinuousLocation()
+        locationHelper?.stopContinuousLocation()
     }
 }
 
