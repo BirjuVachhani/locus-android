@@ -20,6 +20,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.arch.lifecycle.Lifecycle
+import android.arch.lifecycle.MutableLiveData
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
@@ -34,7 +35,6 @@ import android.support.v4.app.Fragment
 import com.bext.alertDialog
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
-import kotlin.Result.Companion.success
 
 /**
  * Created by Birju Vachhani on 09-11-2018.
@@ -42,13 +42,13 @@ import kotlin.Result.Companion.success
 
 /**
  * Helper headless fragment to handle permission model and location retrieval process.
- *
  * */
 class LocationHelper : Fragment() {
     private var isOneTime = false
     private var isRationaleDisplayed = false
     private var isJustBlocked = true
     private var options: LocationOptions = LocationOptions()
+    internal val locationLiveData = MutableLiveData<Locus>()
 
     private var mFusedLocationProviderClient: FusedLocationProviderClient? = null
     private val mLocationCallback = object : LocationCallback() {
@@ -100,7 +100,7 @@ class LocationHelper : Fragment() {
     /**
      * Initiates permission model to request location permission in order to retrieve location successfully.=
      * */
-    private fun initPermissionModel() {
+    fun initPermissionModel() {
         when (hasLocationPermission()) {
             //has permission to access location
             true -> initLocationTracking()
@@ -123,7 +123,7 @@ class LocationHelper : Fragment() {
      * Displays a rational dialog to provide more information about the necessity of location permission
      * */
     private fun displayRationale() {
-        AlertDialog.Builder(requireContext())
+        val dialog = AlertDialog.Builder(requireContext())
             .setTitle(getString(R.string.permission_required_title))
             .setMessage(options.rationaleText)
             .setPositiveButton(getString(R.string.grant)) { dialog, _ ->
@@ -132,52 +132,42 @@ class LocationHelper : Fragment() {
             }
             .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
                 dialog.dismiss()
-                sendResult(Locus.PermissionDenied)
-            }.create().show()
+                sendResult(Locus.Failure(Throwable(Constants.DENIED)))
+            }.create()
+
+        if (!requireActivity().isFinishing) {
+            dialog.show()
+        }
     }
 
     /**
      * Requests user for location permission
      * */
-    private fun requestLocationPermission() {
-        requestPermissions(arrayOf(LOCATION_PERMISSION), REQUEST_LOCATION_CODE)
-    }
+    private fun requestLocationPermission() = requestPermissions(arrayOf(LOCATION_PERMISSION), REQUEST_LOCATION_CODE)
 
     /**
      * Checks whether the location permission is requested for the first time or not.
-     *
      * @return true if the location permission is requested for the first time, false otherwise.
-     *
      * */
-    private fun isFirstRequest(): Boolean {
-        return if (isApiLevelAbove23())
-            !requireActivity().shouldShowRequestPermissionRationale(LOCATION_PERMISSION)
-        else
-            false
-    }
+    private fun isFirstRequest(): Boolean = if (isApiLevelAbove23())
+        !requireActivity().shouldShowRequestPermissionRationale(LOCATION_PERMISSION)
+    else
+        false
 
     /**
      * Checks whether the app has location permission or not
-     *
      * @return true is the app has location permission, false otherwise.
-     *
      * */
-    private fun hasLocationPermission(): Boolean {
-        return if (isApiLevelAbove23())
-            requireActivity().checkSelfPermission(LOCATION_PERMISSION) == PackageManager.PERMISSION_GRANTED
-        else
-            true
-    }
+    private fun hasLocationPermission(): Boolean = if (isApiLevelAbove23())
+        requireActivity().checkSelfPermission(LOCATION_PERMISSION) == PackageManager.PERMISSION_GRANTED
+    else
+        true
 
     /**
      * Checks whether the android os version is 23+ or not.
-     *
      * @return true is the android version is 23 or above, false otherwise.
-     *
      * */
-    private fun isApiLevelAbove23(): Boolean {
-        return Build.VERSION.SDK_INT >= 23
-    }
+    private fun isApiLevelAbove23(): Boolean = Build.VERSION.SDK_INT >= 23
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         when (requestCode) {
@@ -186,13 +176,14 @@ class LocationHelper : Fragment() {
                     initLocationTracking()
                 } else {
                     if (!shouldShowRequestPermissionRationale(LOCATION_PERMISSION)) {
-                        //means permission is permanently blockedText by user
+                        //means permission is permanently blocked by user
                         if (!isJustBlocked) {
+                            sendResult(Locus.Failure(Throwable(Constants.PERMANENTLY_DENIED)))
                             showPermissionBlockedDialog()
                         } else
                             isJustBlocked = false
                     }
-                    sendResult(Locus.PermissionDenied)
+                    sendResult(Locus.Failure(Throwable(Constants.DENIED)))
                 }
             }
         }
@@ -202,7 +193,7 @@ class LocationHelper : Fragment() {
      * This function is used to show a 'Permission Blocked' dialog when the permission is permanently denied.
      * */
     private fun showPermissionBlockedDialog() {
-        AlertDialog.Builder(requireContext())
+        val dialog = AlertDialog.Builder(requireContext())
             .setTitle(getString(R.string.permission_blocked_title))
             .setMessage(options.blockedText)
             .setPositiveButton(getString(R.string.enable)) { dialog, _ ->
@@ -211,7 +202,11 @@ class LocationHelper : Fragment() {
             }
             .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
                 dialog.dismiss()
-            }.create().show()
+            }.create()
+
+        if (!requireActivity().isFinishing) {
+            dialog.show()
+        }
     }
 
     /**
@@ -241,10 +236,8 @@ class LocationHelper : Fragment() {
 
     /**
      * Called when resolution of location setting is cancelled
-     *
      * @param locationSettingsStates a settings state instance that determines if the current location settings are
      * usable or not.
-     *
      * */
     private fun onResolveLocationSettingCancelled(locationSettingsStates: LocationSettingsStates) {
         if (locationSettingsStates.isLocationPresent && locationSettingsStates.isLocationUsable) {
@@ -254,7 +247,6 @@ class LocationHelper : Fragment() {
 
     /**
      * This function initiates location tracking if the permission model succeeds.
-     *
      * */
     private fun initLocationTracking() {
         //init location here
@@ -272,7 +264,6 @@ class LocationHelper : Fragment() {
     /**
      * Checks whether the current location settings allows retrieval of location or not.
      * If settings are enabled then retrieves the location, otherwise initiate the process of settings resolution
-     *
      * */
     private fun checkIfLocationSettingsAreEnabled() {
         if (checkIfRequiredLocationSettingsAreEnabled()) {
@@ -302,10 +293,8 @@ class LocationHelper : Fragment() {
     /**
      * This function is called when resolution of location settings is needed.
      * Shows a dialog that location resolution is needed.
-     *
      * @param exception is an instance of ResolvableApiException which determines whether the resolution
      * is possible or not
-     *
      * */
     private fun onResolutionNeeded(exception: ResolvableApiException) {
         exception.printStackTrace()
@@ -326,9 +315,7 @@ class LocationHelper : Fragment() {
 
     /**
      * Initiates location settings resolution process.
-     *
      * @param exception is used to resolve location settings
-     *
      * */
     private fun resolveLocationSettings(exception: Exception) {
         val resolvable = exception as ResolvableApiException
@@ -349,17 +336,12 @@ class LocationHelper : Fragment() {
 
     /**
      * Checks whether to continue the process or not. Makes sure the fragment is in foreground.
-     *
      * */
-    private fun shouldBeAllowedToProceed(): Boolean {
-        return lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
-    }
+    private fun shouldBeAllowedToProceed(): Boolean = lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
 
     /**
      * Checks whether the device location settings match with what the user requested
-     *
      * @return true is the current location settings satisfies the requirement, false otherwise.
-     *
      * */
     private fun checkIfRequiredLocationSettingsAreEnabled(): Boolean {
         val locationManager = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -371,7 +353,6 @@ class LocationHelper : Fragment() {
     /**
      * Retrieves the last known location using FusedLocationProviderClient.
      * In case of no last known location, initiates continues location to get a result.
-     *
      * */
     @SuppressLint("MissingPermission")
     private fun getLastKnownLocation() {
@@ -382,7 +363,7 @@ class LocationHelper : Fragment() {
         mFusedLocationProviderClient?.lastLocation?.addOnSuccessListener { location ->
             // Got last known location. In some rare situations this can be null.
             if (location != null) {
-                success(location)
+                sendResult(Locus.Success(location))
             } else {
                 startContinuousLocation()
             }
@@ -393,7 +374,6 @@ class LocationHelper : Fragment() {
 
     /**
      * Starts continuous location tracking using FusedLocationProviderClient
-     *
      * */
     @SuppressLint("MissingPermission")
     private fun startContinuousLocation() {
@@ -413,11 +393,15 @@ class LocationHelper : Fragment() {
         mFusedLocationProviderClient?.removeLocationUpdates(mLocationCallback)
     }
 
-    fun sendResult(result: Locus) {
-        LocationResultHolder.locationLiveData.value = result
+    /**
+     * Sets result into live data synchronously
+     * */
+    private fun sendResult(result: Locus) {
+        locationLiveData.value = result
     }
 
-    fun sendResultAsync(result: Locus) {
-        LocationResultHolder.locationLiveData.postValue(result)
-    }
+    /**
+     * Sets result into live data asynchronously
+     * */
+    private fun sendResultAsync(result: Locus) = locationLiveData.postValue(result)
 }
