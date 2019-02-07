@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Location Extension Sample</string>
+    <string name="get_location">GET LOCATION</string>
+    <string name="stop_location">STOP LOCATION</string>
+    <string name="last_updated">Last Updated</string>
+    <string name="longitude">Longitude</string>
+    <string name="latitude">Latitude</string>
 </resources>

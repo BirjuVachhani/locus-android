@@ -1,11 +1,10 @@
 /*
- * Copyright 2018 BirjuVachhani
- *
+ * Copyright 2019 Birju Vachhani (https://github.com/BirjuVachhani)
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,11 +20,11 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.arch.lifecycle.Lifecycle
+import android.arch.lifecycle.MutableLiveData
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
-import android.location.Location
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
@@ -43,21 +42,21 @@ import com.google.android.gms.location.*
 
 /**
  * Helper headless fragment to handle permission model and location retrieval process.
- *
  * */
 class LocationHelper : Fragment() {
     private var isOneTime = false
     private var isRationaleDisplayed = false
     private var isJustBlocked = true
     private var options: LocationOptions = LocationOptions()
+    internal val locationLiveData = MutableLiveData<Locus>()
 
     private var mFusedLocationProviderClient: FusedLocationProviderClient? = null
     private val mLocationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult?) {
             super.onLocationResult(locationResult)
-            locationResult?.let {
-                if (it.locations.isNotEmpty()) {
-                    success(it.locations.first())
+            locationResult?.let { result ->
+                if (result.locations.isNotEmpty()) {
+                    sendResult(Locus.Success(result.locations.first()))
                     if (isOneTime) {
                         stopContinuousLocation()
                     }
@@ -67,7 +66,7 @@ class LocationHelper : Fragment() {
     }
 
     companion object {
-        val TAG = this::class.java.simpleName
+        const val TAG = "LocationHelper"
         private const val REQUEST_CODE_LOCATION_SETTINGS = 123
         private const val LOCATION_PERMISSION = Manifest.permission.ACCESS_FINE_LOCATION
         private const val REQUEST_LOCATION_CODE = 7
@@ -75,13 +74,10 @@ class LocationHelper : Fragment() {
         /**
          * Creates a new instance o this class and returns it.
          * */
-        fun newInstance(): LocationHelper {
-            return LocationHelper()
+        fun newInstance(options: LocationOptions): LocationHelper {
+            return LocationHelper().apply { this.options = options }
         }
     }
-
-    var success: (Location) -> Unit = {}
-    var failure: (LocationError) -> Unit = {}
 
     /**
      * retainInstance if set to true, makes sure that this fragment instance persist though configuration changes.
@@ -89,35 +85,22 @@ class LocationHelper : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         retainInstance = true
+        arguments?.let { args ->
+            if (args.containsKey(Constants.IS_ONE_TIME_BUNDLE_KEY)) {
+                isOneTime = args.getBoolean(Constants.IS_ONE_TIME_BUNDLE_KEY)
+            }
+        }
     }
 
-    /**
-     * Initiates main location process by initiating permission model.
-     *
-     * @param options provides the dialog messages and LocationRequest instance to configure location request process.
-     * @param success is a function which will be called when the location is retrieved successfully.
-     * @param failure is a function which will be called when the user denies the permission or if there's any error
-     * getting location.
-     * @param isOneTime is a flag that indicates whether the location update should be sent only once or continuous.
-     *
-     * */
-    fun startLocationProcess(
-        options: LocationOptions = LocationOptions(),
-        success: (Location) -> Unit,
-        failure: (LocationError) -> Unit,
-        isOneTime: Boolean
-    ) {
-        this.options = options
-        this.success = success
-        this.failure = failure
-        this.isOneTime = isOneTime
+    override fun onResume() {
+        super.onResume()
         initPermissionModel()
     }
 
     /**
      * Initiates permission model to request location permission in order to retrieve location successfully.=
      * */
-    private fun initPermissionModel() {
+    fun initPermissionModel() {
         when (hasLocationPermission()) {
             //has permission to access location
             true -> initLocationTracking()
@@ -140,7 +123,7 @@ class LocationHelper : Fragment() {
      * Displays a rational dialog to provide more information about the necessity of location permission
      * */
     private fun displayRationale() {
-        AlertDialog.Builder(requireContext())
+        val dialog = AlertDialog.Builder(requireContext())
             .setTitle(getString(R.string.permission_required_title))
             .setMessage(options.rationaleText)
             .setPositiveButton(getString(R.string.grant)) { dialog, _ ->
@@ -149,52 +132,42 @@ class LocationHelper : Fragment() {
             }
             .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
                 dialog.dismiss()
-                failure(LocationError(true))
-            }.create().show()
+                sendResult(Locus.Failure(Throwable(Constants.DENIED)))
+            }.create()
+
+        if (!requireActivity().isFinishing) {
+            dialog.show()
+        }
     }
 
     /**
      * Requests user for location permission
      * */
-    private fun requestLocationPermission() {
-        requestPermissions(arrayOf(LOCATION_PERMISSION), REQUEST_LOCATION_CODE)
-    }
+    private fun requestLocationPermission() = requestPermissions(arrayOf(LOCATION_PERMISSION), REQUEST_LOCATION_CODE)
 
     /**
      * Checks whether the location permission is requested for the first time or not.
-     *
      * @return true if the location permission is requested for the first time, false otherwise.
-     *
      * */
-    private fun isFirstRequest(): Boolean {
-        return if (isApiLevelAbove23())
-            !requireActivity().shouldShowRequestPermissionRationale(LOCATION_PERMISSION)
-        else
-            false
-    }
+    private fun isFirstRequest(): Boolean = if (isApiLevelAbove23())
+        !requireActivity().shouldShowRequestPermissionRationale(LOCATION_PERMISSION)
+    else
+        false
 
     /**
      * Checks whether the app has location permission or not
-     *
      * @return true is the app has location permission, false otherwise.
-     *
      * */
-    private fun hasLocationPermission(): Boolean {
-        return if (isApiLevelAbove23())
-            requireActivity().checkSelfPermission(LOCATION_PERMISSION) == PackageManager.PERMISSION_GRANTED
-        else
-            true
-    }
+    private fun hasLocationPermission(): Boolean = if (isApiLevelAbove23())
+        requireActivity().checkSelfPermission(LOCATION_PERMISSION) == PackageManager.PERMISSION_GRANTED
+    else
+        true
 
     /**
      * Checks whether the android os version is 23+ or not.
-     *
      * @return true is the android version is 23 or above, false otherwise.
-     *
      * */
-    private fun isApiLevelAbove23(): Boolean {
-        return Build.VERSION.SDK_INT >= 23
-    }
+    private fun isApiLevelAbove23(): Boolean = Build.VERSION.SDK_INT >= 23
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         when (requestCode) {
@@ -203,13 +176,14 @@ class LocationHelper : Fragment() {
                     initLocationTracking()
                 } else {
                     if (!shouldShowRequestPermissionRationale(LOCATION_PERMISSION)) {
-                        //means permission is permanently blockedText by user
+                        //means permission is permanently blocked by user
                         if (!isJustBlocked) {
+                            sendResult(Locus.Failure(Throwable(Constants.PERMANENTLY_DENIED)))
                             showPermissionBlockedDialog()
                         } else
                             isJustBlocked = false
                     }
-                    failure(LocationError(true))
+                    sendResult(Locus.Failure(Throwable(Constants.DENIED)))
                 }
             }
         }
@@ -219,7 +193,7 @@ class LocationHelper : Fragment() {
      * This function is used to show a 'Permission Blocked' dialog when the permission is permanently denied.
      * */
     private fun showPermissionBlockedDialog() {
-        AlertDialog.Builder(requireContext())
+        val dialog = AlertDialog.Builder(requireContext())
             .setTitle(getString(R.string.permission_blocked_title))
             .setMessage(options.blockedText)
             .setPositiveButton(getString(R.string.enable)) { dialog, _ ->
@@ -228,7 +202,11 @@ class LocationHelper : Fragment() {
             }
             .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
                 dialog.dismiss()
-            }.create().show()
+            }.create()
+
+        if (!requireActivity().isFinishing) {
+            dialog.show()
+        }
     }
 
     /**
@@ -258,10 +236,8 @@ class LocationHelper : Fragment() {
 
     /**
      * Called when resolution of location setting is cancelled
-     *
      * @param locationSettingsStates a settings state instance that determines if the current location settings are
      * usable or not.
-     *
      * */
     private fun onResolveLocationSettingCancelled(locationSettingsStates: LocationSettingsStates) {
         if (locationSettingsStates.isLocationPresent && locationSettingsStates.isLocationUsable) {
@@ -271,7 +247,6 @@ class LocationHelper : Fragment() {
 
     /**
      * This function initiates location tracking if the permission model succeeds.
-     *
      * */
     private fun initLocationTracking() {
         //init location here
@@ -289,7 +264,6 @@ class LocationHelper : Fragment() {
     /**
      * Checks whether the current location settings allows retrieval of location or not.
      * If settings are enabled then retrieves the location, otherwise initiate the process of settings resolution
-     *
      * */
     private fun checkIfLocationSettingsAreEnabled() {
         if (checkIfRequiredLocationSettingsAreEnabled()) {
@@ -310,7 +284,7 @@ class LocationHelper : Fragment() {
                 if (exception is ResolvableApiException) {
                     onResolutionNeeded(exception)
                 } else {
-                    failure(LocationError(false, exception))
+                    sendResult(Locus.Failure(exception))
                 }
             }
         }
@@ -319,10 +293,8 @@ class LocationHelper : Fragment() {
     /**
      * This function is called when resolution of location settings is needed.
      * Shows a dialog that location resolution is needed.
-     *
      * @param exception is an instance of ResolvableApiException which determines whether the resolution
      * is possible or not
-     *
      * */
     private fun onResolutionNeeded(exception: ResolvableApiException) {
         exception.printStackTrace()
@@ -343,9 +315,7 @@ class LocationHelper : Fragment() {
 
     /**
      * Initiates location settings resolution process.
-     *
      * @param exception is used to resolve location settings
-     *
      * */
     private fun resolveLocationSettings(exception: Exception) {
         val resolvable = exception as ResolvableApiException
@@ -366,17 +336,12 @@ class LocationHelper : Fragment() {
 
     /**
      * Checks whether to continue the process or not. Makes sure the fragment is in foreground.
-     *
      * */
-    private fun shouldBeAllowedToProceed(): Boolean {
-        return lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
-    }
+    private fun shouldBeAllowedToProceed(): Boolean = lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
 
     /**
      * Checks whether the device location settings match with what the user requested
-     *
      * @return true is the current location settings satisfies the requirement, false otherwise.
-     *
      * */
     private fun checkIfRequiredLocationSettingsAreEnabled(): Boolean {
         val locationManager = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -388,7 +353,6 @@ class LocationHelper : Fragment() {
     /**
      * Retrieves the last known location using FusedLocationProviderClient.
      * In case of no last known location, initiates continues location to get a result.
-     *
      * */
     @SuppressLint("MissingPermission")
     private fun getLastKnownLocation() {
@@ -399,18 +363,17 @@ class LocationHelper : Fragment() {
         mFusedLocationProviderClient?.lastLocation?.addOnSuccessListener { location ->
             // Got last known location. In some rare situations this can be null.
             if (location != null) {
-                success(location)
+                sendResult(Locus.Success(location))
             } else {
                 startContinuousLocation()
             }
         }?.addOnFailureListener { exception ->
-            failure(LocationError(false, exception))
+            sendResult(Locus.Failure(exception))
         }
     }
 
     /**
      * Starts continuous location tracking using FusedLocationProviderClient
-     *
      * */
     @SuppressLint("MissingPermission")
     private fun startContinuousLocation() {
@@ -419,7 +382,7 @@ class LocationHelper : Fragment() {
             mLocationCallback,
             Looper.getMainLooper()
         )?.addOnFailureListener { exception ->
-            failure(LocationError(false, exception))
+            sendResult(Locus.Failure(exception))
         }
     }
 
@@ -429,9 +392,16 @@ class LocationHelper : Fragment() {
     internal fun stopContinuousLocation() {
         mFusedLocationProviderClient?.removeLocationUpdates(mLocationCallback)
     }
-}
 
-/**
- * Helper class to handle errors which can be passed to the top abstraction layer.
- * */
-class LocationError(val isPermissionDenied: Boolean, val throwable: Throwable? = null)
+    /**
+     * Sets result into live data synchronously
+     * */
+    private fun sendResult(result: Locus) {
+        locationLiveData.value = result
+    }
+
+    /**
+     * Sets result into live data asynchronously
+     * */
+    private fun sendResultAsync(result: Locus) = locationLiveData.postValue(result)
+}

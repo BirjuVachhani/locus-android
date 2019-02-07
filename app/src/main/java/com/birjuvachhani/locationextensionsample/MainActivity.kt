@@ -1,11 +1,10 @@
 /*
- * Copyright 2018 BirjuVachhani
- *
+ * Copyright 2019 Birju Vachhani (https://github.com/BirjuVachhani)
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,24 +36,28 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
     }
 
+    fun stopTracking(v: View) {
+        geoLocation.stopTrackingLocation()
+    }
+
     /**
      * Initiates location tracking process on button click
      * */
     fun startTracking(v: View) {
-        geoLocation.listenForLocation({ location ->
+
+        geoLocation.listenForLocation(this) {
             locationContainer.visibility = View.VISIBLE
-            tvLatitude.text = location.latitude.toString()
-            tvLongitude.text = location.longitude.toString()
+            tvLatitude.text = latitude.toString()
+            tvLongitude.text = longitude.toString()
             tvError.text = ""
             tvTime.text = getCurrentTimeString()
-            Log.e(TAG, "Latitude: ${location.latitude}\tLongitude: ${location.longitude}")
-        }, { error ->
+            Log.e(TAG, "Latitude: $latitude\tLongitude: $longitude")
+        } failure {
             tvLatitude.text = ""
             tvLongitude.text = ""
-            tvError.text = "Permission Denied: ${error.isPermissionDenied}, Throwable: ${error.throwable?.message}"
-            Log.e(TAG, "isDenied: ${error.isPermissionDenied}\t Error: ${error.throwable?.message}")
-        })
-
+            tvError.text = message
+            Log.e(TAG, "Error: $message")
+        }
     }
 
     /**
