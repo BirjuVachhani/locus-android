@@ -15,13 +15,28 @@
 
 package com.birjuvachhani.locationextension
 
-import android.arch.lifecycle.MutableLiveData
+/**
+ * Created by Birju Vachhani on 07/02/19.
+ */
 
 /**
- * Created by Birju Vachhani on 05/02/19.
- */
-internal object LocationResultHolder {
+ * handles failure execution calls
+ * */
+class BlockExecution internal constructor() {
 
-    val locationLiveData: MutableLiveData<Locus> = MutableLiveData()
+    private var failureFunc: Throwable.() -> Unit = {}
 
+    /**
+     * provides block to be executed when there's a failure
+     * */
+    infix fun failure(func: Throwable.() -> Unit) {
+        this.failureFunc = func
+    }
+
+    /**
+     * invokes failure function
+     * */
+    internal operator fun invoke(throwable: Throwable) {
+        failureFunc(throwable)
+    }
 }

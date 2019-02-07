@@ -20,8 +20,6 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
 import com.birjuvachhani.locationextension.GeoLocation
-import com.birjuvachhani.locationextension.Locus
-import com.birjuvachhani.locationextension.watch
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 
@@ -38,31 +36,27 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
     }
 
+    fun stopTracking(v: View) {
+        geoLocation.stopTrackingLocation()
+    }
+
     /**
      * Initiates location tracking process on button click
      * */
     fun startTracking(v: View) {
-        geoLocation.listenForLocation().watch(this) { callback ->
-            when (callback) {
-                is Locus.Success -> {
-                    locationContainer.visibility = View.VISIBLE
-                    tvLatitude.text = callback.location.toString()
-                    tvLongitude.text = callback.location.toString()
-                    tvError.text = ""
-                    tvTime.text = getCurrentTimeString()
-                    Log.e(TAG, "Latitude: ${callback.location.latitude}\tLongitude: ${callback.location.longitude}")
-                }
-                is Locus.PermissionDenied -> {
-                    tvLatitude.text = ""
-                    tvLongitude.text = ""
-                    tvError.text = "Permission Denied"
-                }
-                is Locus.Failure -> {
-                    tvLatitude.text = ""
-                    tvLongitude.text = ""
-                    Log.e(TAG, "Error: ${callback.error.message}")
-                }
-            }
+
+        geoLocation.listenForLocation(this) {
+            locationContainer.visibility = View.VISIBLE
+            tvLatitude.text = latitude.toString()
+            tvLongitude.text = longitude.toString()
+            tvError.text = ""
+            tvTime.text = getCurrentTimeString()
+            Log.e(TAG, "Latitude: $latitude\tLongitude: $longitude")
+        } failure {
+            tvLatitude.text = ""
+            tvLongitude.text = ""
+            tvError.text = message
+            Log.e(TAG, "Error: $message")
         }
     }
 

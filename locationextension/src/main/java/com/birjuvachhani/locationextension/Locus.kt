@@ -21,12 +21,19 @@ import android.location.Location
  * Created by Birju Vachhani on 05/02/19.
  */
 
+/**
+ * Represents states of Locus library
+ * */
 sealed class Locus {
 
-    data class Success(val location: Location) : Locus()
+    /**
+     * Represents success state for retrieving location
+     * */
+    data class Success internal constructor(val location: Location) : Locus()
 
-    object PermissionDenied : Locus()
-
-    data class Failure(val error: Throwable) : Locus()
+    /**
+     * Represents failure state for location process
+     * */
+    data class Failure internal constructor(val error: Throwable) : Locus()
 
 }

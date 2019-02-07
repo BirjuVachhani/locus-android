@@ -17,8 +17,9 @@ package com.birjuvachhani.locationextension
 
 import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.LifecycleObserver
-import android.arch.lifecycle.LiveData
+import android.arch.lifecycle.LifecycleOwner
 import android.arch.lifecycle.OnLifecycleEvent
+import android.location.Location
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
@@ -39,10 +40,7 @@ internal annotation class GeoLocationExtension
 
 /**
  * A helper class for location extension which provides dsl extensions for getting location
- *
  * @param func provides a function block to configure dialogs and LocationRequest object
- * @param activity is used to display dialog and to initiate the helper class for location
- *
  * */
 @GeoLocationExtension
 class GeoLocation(func: LocationOptions.() -> Unit = {}) {
@@ -96,7 +94,7 @@ class GeoLocation(func: LocationOptions.() -> Unit = {}) {
      * creates LocationOptions object from user configuration
      * @param func is a lambda receiver for LocationOptions which is used to build LocationOptions object
      * */
-    fun configure(func: LocationOptions.() -> Unit) {
+    private fun configure(func: LocationOptions.() -> Unit) {
         func.invoke(options)
     }
 
@@ -104,28 +102,45 @@ class GeoLocation(func: LocationOptions.() -> Unit = {}) {
      * This function is used to get location for one time only. It handles most of the errors internally though
      * it doesn't any mechanism to handle errors externally.
      * */
-    fun getCurrentLocation(): LiveData<Locus> {
+    fun getCurrentLocation(owner: LifecycleOwner, func: Location.() -> Unit): BlockExecution {
         initLocationHelper(true)
-        //startLocationProcess(options, success, {}, true)
-        return LocationResultHolder.locationLiveData
+        val blockExecution = BlockExecution()
+        locationHelper?.locationLiveData?.watch(owner) { locus ->
+            when (locus) {
+                is Locus.Success -> {
+                    func(locus.location)
+                }
+                is Locus.Failure -> {
+                    blockExecution(locus.error)
+                }
+            }
+        }
+        return blockExecution
     }
 
     /**
      * This function is used to get location updates continuously. It handles most of the errors internally though
      * it doesn't any mechanism to handle errors externally.
      * */
-    fun listenForLocation(): LiveData<Locus> {
+    fun listenForLocation(owner: LifecycleOwner, func: Location.() -> Unit): BlockExecution {
         initLocationHelper()
-        //startLocationProcess(options, success, {}, false)
-        return LocationResultHolder.locationLiveData
+        val blockExecution = BlockExecution()
+        locationHelper?.locationLiveData?.watch(owner) { locus ->
+            when (locus) {
+                is Locus.Success -> {
+                    func(locus.location)
+                }
+                is Locus.Failure -> {
+                    blockExecution(locus.error)
+                }
+            }
+        }
+        return blockExecution
     }
 
     /**
      * Getter method to get an Instance of LocationHelper. It always return an existing instance if there's any,
      * otherwise creates a new instance.
-     *
-     * @param activity is used to initiate LocationHelper instance.
-     *
      * @return Instance of LocationHelper class which can be used to initiate Location Retrieval process.
      * */
     private fun initLocationHelper(isOneTime: Boolean = false) {
@@ -140,39 +155,16 @@ class GeoLocation(func: LocationOptions.() -> Unit = {}) {
                     ?.add(helper, LocationHelper.TAG)
                     ?.commit()
             }
+        } else {
+            locationHelper?.initPermissionModel()
         }
     }
 
     /**
      * This function is used to stop receiving location updates.
-     *
      * */
     fun stopTrackingLocation() {
         locationHelper?.stopContinuousLocation()
     }
 }
 
-/**
- * Data class to store location related configurations which includes dialog messages and instance of LocationRequest
- * class.
- *
- * */
-@GeoLocationExtension
-class LocationOptions internal constructor() {
-    var rationaleText: String =
-        "Location permission is required in order to use this feature properly.Please grant the permission."
-    var blockedText: String =
-        "Location permission is blocked. Please allow permission from settings screen to use this feature"
-
-    /**
-     * Create an instance of LocationRequest class
-     *
-     * @param func is a LocationRequest's lambda receiver which provide a block to configure LocationRequest
-     *
-     * */
-    fun request(func: (@GeoLocationExtension LocationRequest).() -> Unit) {
-        locationRequest = LocationRequest().apply(func)
-    }
-
-    internal var locationRequest: LocationRequest = LocationRequest()
-}
