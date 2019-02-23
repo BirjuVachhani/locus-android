@@ -143,7 +143,7 @@ internal class LocationHelper : Fragment() {
      * Displays a rational dialog to provide more information about the necessity of location permission
      * */
     private fun displayRationale() {
-        val dialog = AlertDialog.Builder(requireContext())
+        AlertDialog.Builder(requireContext())
             .setTitle(getString(R.string.permission_required_title))
             .setMessage(options.rationaleText)
             .setPositiveButton(getString(R.string.grant)) { dialog, _ ->
@@ -153,11 +153,7 @@ internal class LocationHelper : Fragment() {
             .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
                 dialog.dismiss()
                 sendResult(LocusResult.Failure(Throwable(Constants.DENIED)))
-            }.create()
-
-        if (!requireActivity().isFinishing) {
-            dialog.show()
-        }
+            }.create().takeIf { !requireActivity().isFinishing }?.show()
     }
 
     /**
@@ -213,7 +209,7 @@ internal class LocationHelper : Fragment() {
      * This function is used to show a 'Permission Blocked' dialog when the permission is permanently denied.
      * */
     private fun showPermissionBlockedDialog() {
-        val dialog = AlertDialog.Builder(requireContext())
+        AlertDialog.Builder(requireContext())
             .setTitle(getString(R.string.permission_blocked_title))
             .setMessage(options.blockedText)
             .setPositiveButton(getString(R.string.enable)) { dialog, _ ->
@@ -223,10 +219,7 @@ internal class LocationHelper : Fragment() {
             .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
                 dialog.dismiss()
             }.create()
-
-        if (!requireActivity().isFinishing) {
-            dialog.show()
-        }
+            .takeIf { !requireActivity().isFinishing }?.show()
     }
 
     /**
