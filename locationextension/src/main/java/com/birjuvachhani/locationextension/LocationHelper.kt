@@ -43,12 +43,12 @@ import com.google.android.gms.location.*
 /**
  * Helper headless fragment to handle permission model and location retrieval process.
  * */
-class LocationHelper : Fragment() {
+internal class LocationHelper : Fragment() {
     private var isOneTime = false
     private var isRationaleDisplayed = false
     private var isJustBlocked = true
     private var options: LocationOptions = LocationOptions()
-    internal val locationLiveData = MutableLiveData<Locus>()
+    internal val locationLiveData = MutableLiveData<LocusResult>()
 
     private var mFusedLocationProviderClient: FusedLocationProviderClient? = null
     private val mLocationCallback = object : LocationCallback() {
@@ -56,7 +56,7 @@ class LocationHelper : Fragment() {
             super.onLocationResult(locationResult)
             locationResult?.let { result ->
                 if (result.locations.isNotEmpty()) {
-                    sendResult(Locus.Success(result.locations.first()))
+                    sendResult(LocusResult.Success(result.locations.first()))
                     if (isOneTime) {
                         stopContinuousLocation()
                     }
@@ -94,8 +94,28 @@ class LocationHelper : Fragment() {
 
     override fun onStart() {
         super.onStart()
+        if (hasPermissionsNotDefinedInManifest()) {
+            locationLiveData.value =
+                LocusResult.Failure(
+                    Throwable(
+                        """No location permission is defined in manifest.
+                            Please make sure that location permission is added to the manifest"""
+                    )
+                )
+            return
+        }
         initPermissionModel()
     }
+
+    private fun hasPermissionsNotDefinedInManifest(): Boolean =
+        requireContext().packageManager
+            .getPackageInfo(
+                requireContext().packageName,
+                PackageManager.GET_PERMISSIONS
+            )?.requestedPermissions?.run {
+            !contains(Manifest.permission.ACCESS_FINE_LOCATION)
+                    && !contains(Manifest.permission.ACCESS_COARSE_LOCATION)
+        } ?: true
 
     /**
      * Initiates permission model to request location permission in order to retrieve location successfully.=
@@ -123,7 +143,7 @@ class LocationHelper : Fragment() {
      * Displays a rational dialog to provide more information about the necessity of location permission
      * */
     private fun displayRationale() {
-        val dialog = AlertDialog.Builder(requireContext())
+        AlertDialog.Builder(requireContext())
             .setTitle(getString(R.string.permission_required_title))
             .setMessage(options.rationaleText)
             .setPositiveButton(getString(R.string.grant)) { dialog, _ ->
@@ -132,12 +152,8 @@ class LocationHelper : Fragment() {
             }
             .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
                 dialog.dismiss()
-                sendResult(Locus.Failure(Throwable(Constants.DENIED)))
-            }.create()
-
-        if (!requireActivity().isFinishing) {
-            dialog.show()
-        }
+                sendResult(LocusResult.Failure(Throwable(Constants.DENIED)))
+            }.create().takeIf { !requireActivity().isFinishing }?.show()
     }
 
     /**
@@ -178,12 +194,12 @@ class LocationHelper : Fragment() {
                     if (!shouldShowRequestPermissionRationale(LOCATION_PERMISSION)) {
                         //means permission is permanently blocked by user
                         if (!isJustBlocked) {
-                            sendResult(Locus.Failure(Throwable(Constants.PERMANENTLY_DENIED)))
+                            sendResult(LocusResult.Failure(Throwable(Constants.PERMANENTLY_DENIED)))
                             showPermissionBlockedDialog()
                         } else
                             isJustBlocked = false
                     }
-                    sendResult(Locus.Failure(Throwable(Constants.DENIED)))
+                    sendResult(LocusResult.Failure(Throwable(Constants.DENIED)))
                 }
             }
         }
@@ -193,7 +209,7 @@ class LocationHelper : Fragment() {
      * This function is used to show a 'Permission Blocked' dialog when the permission is permanently denied.
      * */
     private fun showPermissionBlockedDialog() {
-        val dialog = AlertDialog.Builder(requireContext())
+        AlertDialog.Builder(requireContext())
             .setTitle(getString(R.string.permission_blocked_title))
             .setMessage(options.blockedText)
             .setPositiveButton(getString(R.string.enable)) { dialog, _ ->
@@ -203,10 +219,7 @@ class LocationHelper : Fragment() {
             .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
                 dialog.dismiss()
             }.create()
-
-        if (!requireActivity().isFinishing) {
-            dialog.show()
-        }
+            .takeIf { !requireActivity().isFinishing }?.show()
     }
 
     /**
@@ -284,7 +297,7 @@ class LocationHelper : Fragment() {
                 if (exception is ResolvableApiException) {
                     onResolutionNeeded(exception)
                 } else {
-                    sendResult(Locus.Failure(exception))
+                    sendResult(LocusResult.Failure(exception))
                 }
             }
         }
@@ -363,12 +376,12 @@ class LocationHelper : Fragment() {
         mFusedLocationProviderClient?.lastLocation?.addOnSuccessListener { location ->
             // Got last known location. In some rare situations this can be null.
             if (location != null) {
-                sendResult(Locus.Success(location))
+                sendResult(LocusResult.Success(location))
             } else {
                 startContinuousLocation()
             }
         }?.addOnFailureListener { exception ->
-            sendResult(Locus.Failure(exception))
+            sendResult(LocusResult.Failure(exception))
         }
     }
 
@@ -382,7 +395,7 @@ class LocationHelper : Fragment() {
             mLocationCallback,
             Looper.getMainLooper()
         )?.addOnFailureListener { exception ->
-            sendResult(Locus.Failure(exception))
+            sendResult(LocusResult.Failure(exception))
         }
     }
 
@@ -396,12 +409,12 @@ class LocationHelper : Fragment() {
     /**
      * Sets result into live data synchronously
      * */
-    private fun sendResult(result: Locus) {
+    private fun sendResult(result: LocusResult) {
         locationLiveData.value = result
     }
 
     /**
      * Sets result into live data asynchronously
      * */
-    private fun sendResultAsync(result: Locus) = locationLiveData.postValue(result)
+    private fun sendResultAsync(result: LocusResult) = locationLiveData.postValue(result)
 }
