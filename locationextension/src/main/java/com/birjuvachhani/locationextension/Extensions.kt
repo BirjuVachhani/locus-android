@@ -47,6 +47,6 @@ val Throwable.isPermanentlyDenied: Boolean
  * Extension Function for initializing [MutableLiveData] with some initial value
  * @param data is the initial value
  * */
-fun <T> MutableLiveData<T>.initWith(data: T): MutableLiveData<T> = this.apply {
+internal fun <T> MutableLiveData<T>.initWith(data: T): MutableLiveData<T> = this.apply {
     value = data
 }

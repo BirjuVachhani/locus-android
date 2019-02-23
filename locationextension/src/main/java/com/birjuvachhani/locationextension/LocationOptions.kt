@@ -25,7 +25,7 @@ import com.google.android.gms.location.LocationRequest
  * Data class to store location related configurations which includes dialog messages and instance of LocationRequest
  * class.
  * */
-@GeoLocationExtension
+@LocusMarker
 class LocationOptions internal constructor() {
 
     var rationaleText: String =
@@ -37,7 +37,7 @@ class LocationOptions internal constructor() {
      * Create an instance of LocationRequest class
      * @param func is a LocationRequest's lambda receiver which provide a block to configure LocationRequest
      * */
-    fun request(func: (@GeoLocationExtension LocationRequest).() -> Unit) {
+    fun request(func: (@LocusMarker LocationRequest).() -> Unit) {
         locationRequest = LocationRequest().apply(func)
     }
 

@@ -19,7 +19,7 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
-import com.birjuvachhani.locationextension.GeoLocation
+import com.birjuvachhani.locationextension.Locus
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 
@@ -28,8 +28,8 @@ class MainActivity : AppCompatActivity() {
 
     private val TAG = this::class.java.simpleName
 
-    // create an instance of GeoLocation class to use it later to retrieve location on the go.
-    private val geoLocation = GeoLocation(this)
+    // create an instance of Locus class to use it later to retrieve location on the go.
+    private val locus = Locus(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun stopTracking(v: View) {
-        geoLocation.stopTrackingLocation()
+        locus.stopTrackingLocation()
     }
 
     /**
@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity() {
      * */
     fun startTracking(v: View) {
 
-        geoLocation.listenForLocation(this) {
+        locus.listenForLocation(this) {
             locationContainer.visibility = View.VISIBLE
             tvLatitude.text = latitude.toString()
             tvLongitude.text = longitude.toString()
@@ -71,6 +71,6 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         //stop receiving location when app is not in foreground.
-        geoLocation.stopTrackingLocation()
+        locus.stopTrackingLocation()
     }
 }
