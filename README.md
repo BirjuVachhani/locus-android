@@ -27,7 +27,7 @@ allprojects {
 
 ```
 dependencies {
-    implementation 'com.github.BirjuVachhani:location-extension-android:2.0.0'
+    implementation 'com.github.BirjuVachhani:location-extension-android:2.1.0'
 }
 ```
 
@@ -39,12 +39,12 @@ dependencies {
 
 #### Activity
 ```kotlin
-private val geoLocation = GeoLocation(this)
+private val locus = Locus(this)
 ```
 
 #### Fragment
 ```kotlin
-lateinit var geoLocation: GeoLocation
+lateinit var locus: Locus
 
 override fun onAttach(context: Context?) {
     super.onAttach(context)
@@ -55,14 +55,14 @@ override fun onAttach(context: Context?) {
 
 #### Retrieve Location Only Once
 ```kotlin
-geoLocation.getCurrentLocation { location ->
+locus.getCurrentLocation { location ->
     Log.e(TAG, "Latitude: ${location.latitude}\tLongitude: ${location.longitude}")
 }
 ```
 To handle errors:
 
 ```kotlin
-geoLocation.getCurrentLocation({ location ->
+locus.getCurrentLocation({ location ->
     Log.e(TAG, "Latitude: ${location.latitude}\tLongitude: ${location.longitude}")
 }, { error ->
     Log.e(TAG, "Permission Denied: ${error.isPermissionDenied}\tThrowable: ${error.throwable.message}")
@@ -71,14 +71,14 @@ geoLocation.getCurrentLocation({ location ->
 
 #### Continuous Location
 ```kotlin
-geoLocation.listenForLocation { location ->
+locus.listenForLocation { location ->
     Log.e(TAG, "Latitude: ${location.latitude}\tLongitude: ${location.longitude}")
 }
 ```
 To handle errors:
 
 ```kotlin
-geoLocation.listenForLocation({ location ->
+locus.listenForLocation({ location ->
     Log.e(TAG, "Latitude: ${location.latitude}\tLongitude: ${location.longitude}")
 }, { error ->
     Log.e(TAG, "Permission Denied: ${error.isPermissionDenied}\tThrowable: ${error.throwable.message}")
@@ -87,7 +87,7 @@ geoLocation.listenForLocation({ location ->
 
 ### 3. Stop Receiving Location
 ```kotlin
-geoLocation.stopTrackingLocation()
+locus.stopTrackingLocation()
 ```
 
 So easy right? That's what we wanted to achieve: a hassle free location retrieval process.
@@ -98,13 +98,13 @@ So easy right? That's what we wanted to achieve: a hassle free location retrieva
 You can use default settings by just initializing the [GeoLocation](https://github.com/BirjuVachhani/locus-android/blob/master/locationextension/src/main/java/com/birjuvachhani/locationextension/LocationExtension.kt) Class like this:
 
 ```kotlin
-private val geoLocation = GeoLocation(this)
+private val locus = Locus(this)
 ```
 
 To use custom [LocationRequest](https://developers.google.com/android/reference/com/google/android/gms/location/LocationRequest) object and custom dialog messages, you can initialize [GeoLocation](https://github.com/BirjuVachhani/locus-android/blob/master/locationextension/src/main/java/com/birjuvachhani/locationextension/LocationExtension.kt) class like this:
 
 ```kotlin
-private val geoLocation = GeoLocation(this) {
+private val geoLocation = Locus(this) {
     rationaleText = "This is custom rationale text"
     blockedText = "The permission is blocked and this is custom blocked message"
     request = {
