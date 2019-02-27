@@ -27,7 +27,7 @@ allprojects {
 
 ```
 dependencies {
-    implementation 'com.github.BirjuVachhani:location-extension-android:2.1.0'
+    implementation 'com.github.BirjuVachhani:locus-android:2.1.0'
 }
 ```
 
