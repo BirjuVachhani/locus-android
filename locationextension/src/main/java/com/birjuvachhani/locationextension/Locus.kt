@@ -153,7 +153,7 @@ class Locus(func: LocationOptions.() -> Unit = {}) {
                 }
                 fragmentManager?.beginTransaction()
                     ?.add(helper, LocationHelper.TAG)
-                    ?.commit()
+                    ?.commitAllowingStateLoss()
             }
         } else {
             locationHelper?.initPermissionModel()
