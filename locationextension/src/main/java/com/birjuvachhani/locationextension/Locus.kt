@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Birju Vachhani (https://github.com/BirjuVachhani)
+ * Copyright © 2019 Birju Vachhani (https://github.com/BirjuVachhani)
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,20 +15,19 @@
 
 package com.birjuvachhani.locationextension
 
-import android.arch.lifecycle.Lifecycle
-import android.arch.lifecycle.LifecycleObserver
 import android.arch.lifecycle.LifecycleOwner
-import android.arch.lifecycle.OnLifecycleEvent
 import android.location.Location
 import android.os.Bundle
+import android.os.Handler
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
 import android.support.v4.app.FragmentManager
 import com.google.android.gms.location.LocationRequest
 
 
-/**
- * Created by Birju Vachhani on 09-11-2018.
+/*
+ * Created by Birju Vachhani on 09 November 2018
+ * Copyright © 2019 locus-android. All rights reserved.
  */
 
 /**
@@ -40,34 +39,24 @@ internal annotation class LocusMarker
 
 /**
  * A helper class for location extension which provides dsl extensions for getting location
- * @param func provides a function block to configure dialogs and LocationRequest object
  * */
 @LocusMarker
-class Locus(func: LocationOptions.() -> Unit = {}) {
+class Locus {
 
     private var options = LocationOptions()
 
-    private var fragmentManager: FragmentManager? = null
-
     private var locationHelper: LocationHelper? = null
 
-    constructor(activity: FragmentActivity, func: LocationOptions.() -> Unit = {}) : this(func) {
-        fragmentManager = activity.supportFragmentManager
+    private var mFragmentManager: Lazy<FragmentManager>
+
+    constructor(activity: FragmentActivity, func: LocationOptions.() -> Unit = {}) {
+        configure(func)
+        mFragmentManager = LazyFragmentManager(activity)
     }
 
-    constructor(fragment: Fragment, func: LocationOptions.() -> Unit = {}) : this(func) {
-        fragment.lifecycle.addObserver(object : LifecycleObserver {
-
-            @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
-            fun onFragmentManagerAvailable() {
-                fragmentManager = fragment.fragmentManager
-            }
-
-            @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-            fun onFragmentManagerDestroyed() {
-                fragmentManager = null
-            }
-        })
+    constructor(fragment: Fragment, func: LocationOptions.() -> Unit = {}) {
+        configure(func)
+        mFragmentManager = LazyFragmentManager(fragment)
     }
 
     /**
@@ -87,7 +76,6 @@ class Locus(func: LocationOptions.() -> Unit = {}) {
         options.locationRequest.interval = Defaults.INTERVAL_IN_MS
         options.locationRequest.fastestInterval = Defaults.FASTEST_INTERVAL_IN_MS
         options.locationRequest.maxWaitTime = Defaults.MAX_WAIT_TIME_IN_MS
-        configure(func)
     }
 
     /**
@@ -144,16 +132,17 @@ class Locus(func: LocationOptions.() -> Unit = {}) {
      * @return Instance of LocationHelper class which can be used to initiate Location Retrieval process.
      * */
     private fun initLocationHelper(isOneTime: Boolean = false) {
-        locationHelper = fragmentManager?.findFragmentByTag(LocationHelper.TAG) as? LocationHelper
+        locationHelper = mFragmentManager.value.findFragmentByTag(LocationHelper.TAG) as? LocationHelper
         if (locationHelper == null) {
             locationHelper = LocationHelper.newInstance(options)
             locationHelper?.let { helper ->
                 helper.arguments = Bundle().apply {
                     putBoolean(Constants.IS_ONE_TIME_BUNDLE_KEY, isOneTime)
                 }
-                fragmentManager?.beginTransaction()
-                    ?.add(helper, LocationHelper.TAG)
-                    ?.commitAllowingStateLoss()
+                Handler().post {
+                    mFragmentManager.value.beginTransaction().add(helper, LocationHelper.TAG)
+                        .commitAllowingStateLoss()
+                }
             }
         } else {
             locationHelper?.initPermissionModel()

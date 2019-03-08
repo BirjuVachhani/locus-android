@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Birju Vachhani (https://github.com/BirjuVachhani)
+ * Copyright © 2019 Birju Vachhani (https://github.com/BirjuVachhani)
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,7 +22,6 @@ import android.view.View
 import com.birjuvachhani.locationextension.Locus
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
-
 
 class MainActivity : AppCompatActivity() {
 

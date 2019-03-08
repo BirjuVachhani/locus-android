@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Birju Vachhani (https://github.com/BirjuVachhani)
+ * Copyright © 2019 Birju Vachhani (https://github.com/BirjuVachhani)
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,9 +15,14 @@
 
 package com.birjuvachhani.locationextension
 
-/**
- * Created by Birju Vachhani on 06/02/19.
+/*
+ * Created by Birju Vachhani on 06 February 2019
+ * Copyright © 2019 locus-android. All rights reserved.
  */
+
+/**
+ * Holds all the constants used for the lib
+ * */
 internal object Constants {
     internal const val IS_ONE_TIME_BUNDLE_KEY = "isOneTime"
     internal const val DENIED = "denied"
