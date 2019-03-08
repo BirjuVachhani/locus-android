@@ -9,7 +9,7 @@ Locus is a kotlin library for android which makes it very easy to retrieve locat
 
 Please note that this library is still under development. Stable version of the library will be released soon. Stay tuned!
 
-| Current Version 	| 3.0.0-alpha01 	|
+| Current Version 	| 3.0.0-alpha02 	|
 |-----------------	|---------------	|
 | Platform        	| Android       	|
 | Language        	| Kotlin        	|
@@ -51,7 +51,7 @@ allprojects {
 
 ```
 dependencies {
-    implementation 'com.github.BirjuVachhani:locus-android:3.0.0-alpha01'
+    implementation 'com.github.BirjuVachhani:locus-android:3.0.0-alpha02'
 }
 ```
 
