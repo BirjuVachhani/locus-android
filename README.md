@@ -68,7 +68,7 @@ See [Wiki](https://github.com/BirjuVachhani/locus-android/wiki) on how to get st
 # License
 
 ```
-   Copyright 2018 BirjuVachhani
+   Copyright © 2019 BirjuVachhani
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
