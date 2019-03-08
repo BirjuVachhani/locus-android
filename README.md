@@ -4,11 +4,35 @@
 [![language](https://img.shields.io/github/languages/top/BirjuVachhani/location-extension-android.svg?style=for-the-badge&colorB=f18e33)](https://kotlinlang.org/)
 [![Platform](https://img.shields.io/badge/Platform-Android-green.svg?style=for-the-badge)](https://www.android.com/)
 [![API](https://img.shields.io/badge/API-16%2B-F44336.svg?style=for-the-badge)](https://android-arsenal.com/api?level=16)
-[![Travis (.org) branch](https://img.shields.io/travis/BirjuVachhani/location-extension-android/master.svg?style=for-the-badge)](https://travis-ci.org/BirjuVachhani/location-extension-android)
 
 Locus is a kotlin library for android which makes it very easy to retrieve location with just few lines of code. Everything including permission model and Location settings is handled internally which removes a lot of boilerplate code any developer have to write everytime. 
 
-Please note that this library is still under development. Stable version of the library will be released soon. Stay toned!
+Please note that this library is still under development. Stable version of the library will be released soon. Stay tuned!
+
+| Current Version 	| 3.0.0-alpha01 	|
+|-----------------	|---------------	|
+| Platform        	| Android       	|
+| Language        	| Kotlin        	|
+| SDK Level       	| 16+           	|
+| License         	| Apache 2.0    	|
+| Size            	| 49 KB            	|
+
+See [Wiki](https://github.com/BirjuVachhani/locus-android/wiki) for more information and configuration!
+
+## Features
+
+* Completely written in Kotlin
+* Easy Initialization
+* Handles Permission Model
+* No Boilerplate
+* Built on Kotlin DSL
+* Manifest Permission Check
+* Life-Cycle Aware Location Updates
+* Location Settings Check
+* Location Settings Request
+* Custom Location Options Configuration
+* Custom Relation Dialog configuration
+* Custom Permission Blocked Dialog configuration
 
 ## Gradle Dependency
 
@@ -27,109 +51,24 @@ allprojects {
 
 ```
 dependencies {
-    implementation 'com.github.BirjuVachhani:location-extension-android:2.0.0'
+    implementation 'com.github.BirjuVachhani:locus-android:3.0.0-alpha01'
 }
 ```
-
-![GitHub (pre-)release](https://img.shields.io/github/release-pre/birjuvachhani/location-extension-android.svg?style=for-the-badge&colorB=0091EA)
 
 ## Usage
 
-### 1. Init GeoLocation Class:
+See [Wiki](https://github.com/BirjuVachhani/locus-android/wiki) on how to get started with **Locus**.
 
-#### Activity
-```kotlin
-private val geoLocation = GeoLocation(this)
-```
+## Contribution
 
-#### Fragment
-```kotlin
-lateinit var geoLocation: GeoLocation
-
-override fun onAttach(context: Context?) {
-    super.onAttach(context)
-    this.geoLocation = GeoLocation(requireActivity())
-}
-```
-### 2. Retrieve Location
-
-#### Retrieve Location Only Once
-```kotlin
-geoLocation.getCurrentLocation { location ->
-    Log.e(TAG, "Latitude: ${location.latitude}\tLongitude: ${location.longitude}")
-}
-```
-To handle errors:
-
-```kotlin
-geoLocation.getCurrentLocation({ location ->
-    Log.e(TAG, "Latitude: ${location.latitude}\tLongitude: ${location.longitude}")
-}, { error ->
-    Log.e(TAG, "Permission Denied: ${error.isPermissionDenied}\tThrowable: ${error.throwable.message}")
-})
-```
-
-#### Continuous Location
-```kotlin
-geoLocation.listenForLocation { location ->
-    Log.e(TAG, "Latitude: ${location.latitude}\tLongitude: ${location.longitude}")
-}
-```
-To handle errors:
-
-```kotlin
-geoLocation.listenForLocation({ location ->
-    Log.e(TAG, "Latitude: ${location.latitude}\tLongitude: ${location.longitude}")
-}, { error ->
-    Log.e(TAG, "Permission Denied: ${error.isPermissionDenied}\tThrowable: ${error.throwable.message}")
-})
-```
-
-### 3. Stop Receiving Location
-```kotlin
-geoLocation.stopTrackingLocation()
-```
-
-So easy right? That's what we wanted to achieve: a hassle free location retrieval process.
-
-
-## Custom Configuration
-
-You can use default settings by just initializing the [GeoLocation](https://github.com/BirjuVachhani/locus-android/blob/master/locationextension/src/main/java/com/birjuvachhani/locationextension/LocationExtension.kt) Class like this:
-
-```kotlin
-private val geoLocation = GeoLocation(this)
-```
-
-To use custom [LocationRequest](https://developers.google.com/android/reference/com/google/android/gms/location/LocationRequest) object and custom dialog messages, you can initialize [GeoLocation](https://github.com/BirjuVachhani/locus-android/blob/master/locationextension/src/main/java/com/birjuvachhani/locationextension/LocationExtension.kt) class like this:
-
-```kotlin
-private val geoLocation = GeoLocation(this) {
-    rationaleText = "This is custom rationale text"
-    blockedText = "The permission is blocked and this is custom blocked message"
-    request = {
-        priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        interval = 1000
-        fastestInterval = 1000
-    }
-}
-```
-
-Here, **request** is provides a lambda block to configure [LocationRequest](https://developers.google.com/android/reference/com/google/android/gms/location/LocationRequest).
-
-Following are the default [LocationRequest](https://developers.google.com/android/reference/com/google/android/gms/location/LocationRequest) configuration which will be used in not provided externally.
-
-```kotlin
-priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-interval = 1000L
-fastestInterval = 1000L
-maxWaitTime = 1000L
-```
+* If you **find a bug**, open an issue or submit a fix via a pull request.
+* If you **have a feature request**, open an issue or submit an implementation via a pull request
+* If you **want to contribute**, submit a pull request.
 
 # License
 
 ```
-   Copyright 2018 BirjuVachhani
+   Copyright © 2019 BirjuVachhani
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
