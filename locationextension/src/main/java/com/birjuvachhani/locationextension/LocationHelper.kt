@@ -50,6 +50,7 @@ internal class LocationHelper : Fragment() {
     private var isJustBlocked = true
     private var options: LocationOptions = LocationOptions()
     internal val locationLiveData = MutableLiveData<LocusResult>()
+    private var isDisposed = false
 
     private var mFusedLocationProviderClient: FusedLocationProviderClient? = null
     private val mLocationCallback = object : LocationCallback() {
@@ -59,6 +60,7 @@ internal class LocationHelper : Fragment() {
                 if (result.locations.isNotEmpty()) {
                     sendResult(LocusResult.Success(result.locations.first()))
                     if (isOneTime) {
+                        isDisposed = true
                         stopContinuousLocation()
                     }
                 }
@@ -95,6 +97,7 @@ internal class LocationHelper : Fragment() {
 
     override fun onStart() {
         super.onStart()
+        if (isDisposed) return
         if (hasPermissionsNotDefinedInManifest()) {
             locationLiveData.value =
                 LocusResult.Failure(
@@ -378,6 +381,7 @@ internal class LocationHelper : Fragment() {
             // Got last known location. In some rare situations this can be null.
             if (location != null) {
                 sendResult(LocusResult.Success(location))
+                isDisposed = true
             } else {
                 startContinuousLocation()
             }
@@ -418,4 +422,8 @@ internal class LocationHelper : Fragment() {
      * Sets result into live data asynchronously
      * */
     private fun sendResultAsync(result: LocusResult) = locationLiveData.postValue(result)
+
+    fun reset() {
+        isDisposed = false
+    }
 }

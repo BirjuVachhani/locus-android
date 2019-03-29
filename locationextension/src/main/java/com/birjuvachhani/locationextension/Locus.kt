@@ -93,6 +93,7 @@ class Locus {
     fun getCurrentLocation(owner: LifecycleOwner, func: Location.() -> Unit): BlockExecution {
         initLocationHelper(true)
         val blockExecution = BlockExecution()
+        locationHelper?.reset()
         locationHelper?.locationLiveData?.watch(owner) { locus ->
             when (locus) {
                 is LocusResult.Success -> {
@@ -113,6 +114,7 @@ class Locus {
     fun listenForLocation(owner: LifecycleOwner, func: Location.() -> Unit): BlockExecution {
         initLocationHelper()
         val blockExecution = BlockExecution()
+        locationHelper?.reset()
         locationHelper?.locationLiveData?.watch(owner) { locus ->
             when (locus) {
                 is LocusResult.Success -> {
