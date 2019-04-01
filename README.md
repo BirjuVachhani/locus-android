@@ -59,11 +59,21 @@ dependencies {
 
 See [Wiki](https://github.com/BirjuVachhani/locus-android/wiki) on how to get started with **Locus**.
 
+### Pull Request
+To generate a pull request, please consider following [Pull Request Template](https://github.com/BirjuVachhani/locus-android/blob/master/PULL_REQUEST_TEMPLATE.md).
+
+### Issues
+To submit an issue, please check the [Issue Template](https://github.com/BirjuVachhani/locus-android/blob/master/ISSUE_TEMPLATE.md).
+
+Code of Conduct
+---
+[Code of Conduct](https://github.com/BirjuVachhani/locus-android/blob/master/CODE_OF_CONDUCT.md)
+
 ## Contribution
 
-* If you **find a bug**, open an issue or submit a fix via a pull request.
-* If you **have a feature request**, open an issue or submit an implementation via a pull request
-* If you **want to contribute**, submit a pull request.
+You are most welcome to contribute to this project!
+
+Please have a look at [Contributing Guidelines](https://github.com/BirjuVachhani/locus-android/blob/master/CONTRIBUTING.md), before contributing and proposing a change.
 
 # License
 
