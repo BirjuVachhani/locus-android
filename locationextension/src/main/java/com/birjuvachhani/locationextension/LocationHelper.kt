@@ -32,7 +32,6 @@ import android.os.Bundle
 import android.os.Looper
 import android.provider.Settings
 import android.support.v4.app.Fragment
-import com.bext.alertDialog
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 
@@ -317,16 +316,18 @@ internal class LocationHelper : Fragment() {
         exception.printStackTrace()
         if (!shouldBeAllowedToProceed()) return
         if (!requireActivity().isFinishing) {
-            requireContext().alertDialog {
-                title = getString(R.string.location_is_currently_disabled)
-                message = getString(R.string.please_enable_access_to_location)
-                positiveButtonText = getString(R.string.btn_settings)
-                positiveButtonClick = {
+            AlertDialog.Builder(requireContext())
+                .setTitle(R.string.location_is_currently_disabled)
+                .setMessage(R.string.please_enable_access_to_location)
+                .setPositiveButton(
+                    R.string.btn_settings
+                ) { dialog, _ ->
                     resolveLocationSettings(exception)
+                    dialog.dismiss()
                 }
-                negativeButtonText = getString(R.string.btn_cancel)
-                negativeButtonClick = {}
-            }
+                .setNegativeButton(R.string.btn_cancel) { dialog, _ ->
+                    dialog.dismiss()
+                }.create().takeIf { !requireActivity().isFinishing }?.show()
         }
     }
 
