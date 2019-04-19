@@ -51,7 +51,7 @@ allprojects {
 
 ```
 dependencies {
-    implementation 'com.github.BirjuVachhani:locus-android:3.0.0-alpha02'
+    implementation 'com.github.BirjuVachhani:locus-android:3.0.0-alpha04'
 }
 ```
 
