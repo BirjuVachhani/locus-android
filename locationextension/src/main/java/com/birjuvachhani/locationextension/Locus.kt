@@ -15,12 +15,12 @@
 
 package com.birjuvachhani.locationextension
 
-import android.arch.lifecycle.LifecycleOwner
 import android.location.Location
 import android.os.Bundle
 import android.os.Handler
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
+import android.support.v4.app.FragmentManager
 import android.util.Log
 import com.google.android.gms.location.LocationRequest
 
@@ -41,22 +41,26 @@ internal annotation class LocusMarker
  * A helper class for location extension which provides dsl extensions for getting location
  * */
 @LocusMarker
-class Locus {
+class Locus(func: LocationOptions.() -> Unit = {}) {
 
     private var options = LocationOptions()
 
-    private var locationHelper: LocationHelper? = null
+//    private var locationHelper: LocationHelper? = null
 
-    private var mFragmentManager: LazyFragmentManager
+//    private var mFragmentManager: LazyFragmentManager
 
-    constructor(activity: FragmentActivity, func: LocationOptions.() -> Unit = {}) {
+//    constructor(activity: FragmentActivity, func: LocationOptions.() -> Unit = {}) {
+//        configure(func)
+//        mFragmentManager = LazyFragmentManager(activity)
+//    }
+//
+//    constructor(fragment: Fragment, func: LocationOptions.() -> Unit = {}) {
+//        configure(func)
+//        mFragmentManager = LazyFragmentManager(fragment)
+//    }
+
+    init {
         configure(func)
-        mFragmentManager = LazyFragmentManager(activity)
-    }
-
-    constructor(fragment: Fragment, func: LocationOptions.() -> Unit = {}) {
-        configure(func)
-        mFragmentManager = LazyFragmentManager(fragment)
     }
 
     /**
@@ -90,11 +94,11 @@ class Locus {
      * This function is used to get location for one time only. It handles most of the errors internally though
      * it doesn't any mechanism to handle errors externally.
      * */
-    fun getCurrentLocation(owner: LifecycleOwner, func: Location.() -> Unit): BlockExecution {
-        initLocationHelper(true)
+    fun getCurrentLocation(activity: FragmentActivity, func: Location.() -> Unit): BlockExecution {
+        val helper = getOrInitLocationHelper(activity.supportFragmentManager, true)
         val blockExecution = BlockExecution()
-        locationHelper?.reset()
-        locationHelper?.locationLiveData?.watch(owner) { locus ->
+        helper.reset()
+        helper.locationLiveData.watch(activity) { locus ->
             when (locus) {
                 is LocusResult.Success -> {
                     func(locus.location)
@@ -104,6 +108,29 @@ class Locus {
                 }
             }
         }
+        Handler().post { helper.initPermissionModel() }
+        return blockExecution
+    }
+
+    /**
+     * This function is used to get location for one time only. It handles most of the errors internally though
+     * it doesn't any mechanism to handle errors externally.
+     * */
+    fun getCurrentLocation(fragment: Fragment, func: Location.() -> Unit): BlockExecution {
+        val helper = getOrInitLocationHelper(fragment.childFragmentManager, true)
+        val blockExecution = BlockExecution()
+        helper.reset()
+        helper.locationLiveData.watch(fragment) { locus ->
+            when (locus) {
+                is LocusResult.Success -> {
+                    func(locus.location)
+                }
+                is LocusResult.Failure -> {
+                    blockExecution(locus.error)
+                }
+            }
+        }
+        Handler().post { helper.initPermissionModel() }
         return blockExecution
     }
 
@@ -111,11 +138,11 @@ class Locus {
      * This function is used to get location updates continuously. It handles most of the errors internally though
      * it doesn't any mechanism to handle errors externally.
      * */
-    fun listenForLocation(owner: LifecycleOwner, func: Location.() -> Unit): BlockExecution {
-        initLocationHelper()
+    fun listenForLocation(activity: FragmentActivity, func: Location.() -> Unit): BlockExecution {
+        val helper = getOrInitLocationHelper(activity.supportFragmentManager)
         val blockExecution = BlockExecution()
-        locationHelper?.reset()
-        locationHelper?.locationLiveData?.watch(owner) { locus ->
+        helper.reset()
+        helper.locationLiveData.watch(activity) { locus ->
             when (locus) {
                 is LocusResult.Success -> {
                     func(locus.location)
@@ -125,6 +152,29 @@ class Locus {
                 }
             }
         }
+        Handler().post { helper.initPermissionModel() }
+        return blockExecution
+    }
+
+    /**
+     * This function is used to get location updates continuously. It handles most of the errors internally though
+     * it doesn't any mechanism to handle errors externally.
+     * */
+    fun listenForLocation(fragment: Fragment, func: Location.() -> Unit): BlockExecution {
+        val helper = getOrInitLocationHelper(fragment.childFragmentManager)
+        val blockExecution = BlockExecution()
+        helper.reset()
+        helper.locationLiveData.watch(fragment) { locus ->
+            when (locus) {
+                is LocusResult.Success -> {
+                    func(locus.location)
+                }
+                is LocusResult.Failure -> {
+                    blockExecution(locus.error)
+                }
+            }
+        }
+        Handler().post { helper.initPermissionModel() }
         return blockExecution
     }
 
@@ -133,36 +183,31 @@ class Locus {
      * otherwise creates a new instance.
      * @return Instance of LocationHelper class which can be used to initiate Location Retrieval process.
      * */
-    private fun initLocationHelper(isOneTime: Boolean = false) {
-        locationHelper = mFragmentManager.value.findFragmentByTag(mFragmentManager.tag) as? LocationHelper
-        if (locationHelper == null) {
+    private fun getOrInitLocationHelper(manager: FragmentManager, isOneTime: Boolean = false): LocationHelper {
+        var helper = manager.findFragmentByTag(LocationHelper.TAG) as? LocationHelper
+        if (helper == null) {
             Log.e("LocationHelper", "No instance found so creating new")
-            locationHelper = LocationHelper.newInstance(options, mFragmentManager.tag)
-            locationHelper?.let { helper ->
-                helper.arguments = Bundle().apply {
-                    putBoolean(Constants.IS_ONE_TIME_BUNDLE_KEY, isOneTime)
-                }
-                Handler().post {
-                    mFragmentManager.value.beginTransaction().add(helper, mFragmentManager.tag)
-                        .commitNow()
-                }
+            helper = LocationHelper.newInstance(options)
+            helper.arguments = Bundle().apply {
+                putBoolean(Constants.IS_ONE_TIME_BUNDLE_KEY, isOneTime)
             }
-            Handler().post {
-                locationHelper?.initPermissionModel()
-            }
-        } else {
-            Log.e("LocationHelper", "No instance found so creating new")
-            Handler().post {
-                locationHelper?.initPermissionModel()
-            }
+            manager.beginTransaction().add(helper, LocationHelper.TAG).commitNow()
         }
+        return helper
     }
 
     /**
      * This function is used to stop receiving location updates.
      * */
-    fun stopTrackingLocation() {
-        locationHelper?.stopContinuousLocation()
+    fun stopTrackingLocation(fragment: Fragment) {
+        getOrInitLocationHelper(fragment.childFragmentManager).stopContinuousLocation()
+    }
+
+    /**
+     * This function is used to stop receiving location updates.
+     * */
+    fun stopTrackingLocation(activity: FragmentActivity) {
+        getOrInitLocationHelper(activity.supportFragmentManager).stopContinuousLocation()
     }
 }
 

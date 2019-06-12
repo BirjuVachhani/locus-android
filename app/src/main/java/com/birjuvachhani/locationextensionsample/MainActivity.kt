@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity() {
     private val TAG = this::class.java.simpleName
 
     // create an instance of Locus class to use it later to retrieve location on the go.
-    private val locus = Locus(this)
+    private val locus = Locus()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun stopTracking(v: View) {
-        locus.stopTrackingLocation()
+        locus.stopTrackingLocation(this)
     }
 
     /**
@@ -70,6 +70,6 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         //stop receiving location when app is not in foreground.
-        locus.stopTrackingLocation()
+        locus.stopTrackingLocation(this)
     }
 }
