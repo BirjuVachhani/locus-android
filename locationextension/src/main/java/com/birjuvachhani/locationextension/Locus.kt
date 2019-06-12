@@ -147,10 +147,14 @@ class Locus {
                         .commitNow()
                 }
             }
-            locationHelper?.initPermissionModel()
+            Handler().post {
+                locationHelper?.initPermissionModel()
+            }
         } else {
             Log.e("LocationHelper", "No instance found so creating new")
-            locationHelper?.initPermissionModel()
+            Handler().post {
+                locationHelper?.initPermissionModel()
+            }
         }
     }
 
