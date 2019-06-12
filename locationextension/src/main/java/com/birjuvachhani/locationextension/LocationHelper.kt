@@ -150,8 +150,8 @@ internal class LocationHelper : Fragment() {
             .setTitle(options.rationaleTitle)
             .setMessage(options.rationaleText)
             .setPositiveButton(getString(R.string.grant)) { dialog, _ ->
-                requestLocationPermission()
                 dialog.dismiss()
+                requestLocationPermission()
             }
             .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
                 dialog.dismiss()
