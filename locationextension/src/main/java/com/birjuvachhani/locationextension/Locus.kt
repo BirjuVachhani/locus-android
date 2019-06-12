@@ -45,20 +45,6 @@ class Locus(func: LocationOptions.() -> Unit = {}) {
 
     private var options = LocationOptions()
 
-//    private var locationHelper: LocationHelper? = null
-
-//    private var mFragmentManager: LazyFragmentManager
-
-//    constructor(activity: FragmentActivity, func: LocationOptions.() -> Unit = {}) {
-//        configure(func)
-//        mFragmentManager = LazyFragmentManager(activity)
-//    }
-//
-//    constructor(fragment: Fragment, func: LocationOptions.() -> Unit = {}) {
-//        configure(func)
-//        mFragmentManager = LazyFragmentManager(fragment)
-//    }
-
     init {
         configure(func)
     }
