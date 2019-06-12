@@ -82,7 +82,7 @@ class Locus {
      * creates LocationOptions object from user configuration
      * @param func is a lambda receiver for LocationOptions which is used to build LocationOptions object
      * */
-    private fun configure(func: LocationOptions.() -> Unit) {
+    fun configure(func: LocationOptions.() -> Unit) {
         func(options)
     }
 

@@ -147,7 +147,7 @@ internal class LocationHelper : Fragment() {
      * */
     private fun displayRationale() {
         AlertDialog.Builder(requireContext())
-            .setTitle(getString(R.string.permission_required_title))
+            .setTitle(options.rationaleTitle)
             .setMessage(options.rationaleText)
             .setPositiveButton(getString(R.string.grant)) { dialog, _ ->
                 requestLocationPermission()
@@ -213,7 +213,7 @@ internal class LocationHelper : Fragment() {
      * */
     private fun showPermissionBlockedDialog() {
         AlertDialog.Builder(requireContext())
-            .setTitle(getString(R.string.permission_blocked_title))
+            .setTitle(options.blockedTitle)
             .setMessage(options.blockedText)
             .setPositiveButton(getString(R.string.enable)) { dialog, _ ->
                 dialog.dismiss()
