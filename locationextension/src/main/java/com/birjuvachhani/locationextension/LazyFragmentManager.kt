@@ -27,6 +27,7 @@ import android.support.v4.app.FragmentManager
 class LazyFragmentManager(private val instance: Any) : Lazy<FragmentManager> {
 
     private lateinit var manager: FragmentManager
+    val tag = instance::class.java.simpleName
 
     override val value: FragmentManager
         get() {
