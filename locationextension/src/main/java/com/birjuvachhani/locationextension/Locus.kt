@@ -21,6 +21,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
+import android.util.Log
 import com.google.android.gms.location.LocationRequest
 
 
@@ -135,17 +136,20 @@ class Locus {
     private fun initLocationHelper(isOneTime: Boolean = false) {
         locationHelper = mFragmentManager.value.findFragmentByTag(mFragmentManager.tag) as? LocationHelper
         if (locationHelper == null) {
-            locationHelper = LocationHelper.newInstance(options)
+            Log.e("LocationHelper", "No instance found so creating new")
+            locationHelper = LocationHelper.newInstance(options, mFragmentManager.tag)
             locationHelper?.let { helper ->
                 helper.arguments = Bundle().apply {
                     putBoolean(Constants.IS_ONE_TIME_BUNDLE_KEY, isOneTime)
                 }
                 Handler().post {
                     mFragmentManager.value.beginTransaction().add(helper, mFragmentManager.tag)
-                        .commitAllowingStateLoss()
+                        .commitNow()
                 }
             }
+            locationHelper?.initPermissionModel()
         } else {
+            Log.e("LocationHelper", "No instance found so creating new")
             locationHelper?.initPermissionModel()
         }
     }
