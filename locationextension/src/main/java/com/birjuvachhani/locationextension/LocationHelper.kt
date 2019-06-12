@@ -32,6 +32,7 @@ import android.os.Bundle
 import android.os.Looper
 import android.provider.Settings
 import android.support.v4.app.Fragment
+import android.util.Log
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 
@@ -66,9 +67,19 @@ internal class LocationHelper : Fragment() {
             }
         }
     }
+    internal var tag = "LocationHelper"
+
+    override fun onAttach(context: Context?) {
+        super.onAttach(context)
+        Log.e("LocationHelper - $tag", "Attached to the activity")
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+        Log.e("LocationHelper - $tag", "Detached to the activity")
+    }
 
     companion object {
-        const val TAG = "LocationHelper"
         private const val REQUEST_CODE_LOCATION_SETTINGS = 123
         private const val LOCATION_PERMISSION = Manifest.permission.ACCESS_FINE_LOCATION
         private const val REQUEST_LOCATION_CODE = 7
@@ -76,8 +87,11 @@ internal class LocationHelper : Fragment() {
         /**
          * Creates a new instance o this class and returns it.
          * */
-        fun newInstance(options: LocationOptions): LocationHelper {
-            return LocationHelper().apply { this.options = options }
+        fun newInstance(options: LocationOptions, tag: String): LocationHelper {
+            return LocationHelper().apply {
+                this.options = options
+                this.tag = tag
+            }
         }
     }
 
@@ -107,7 +121,7 @@ internal class LocationHelper : Fragment() {
                 )
             return
         }
-        initPermissionModel()
+//        initPermissionModel()
     }
 
     private fun hasPermissionsNotDefinedInManifest(): Boolean =
