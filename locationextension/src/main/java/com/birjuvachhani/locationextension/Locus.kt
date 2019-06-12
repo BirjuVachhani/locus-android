@@ -21,7 +21,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
-import android.support.v4.app.FragmentManager
 import com.google.android.gms.location.LocationRequest
 
 
@@ -47,7 +46,7 @@ class Locus {
 
     private var locationHelper: LocationHelper? = null
 
-    private var mFragmentManager: Lazy<FragmentManager>
+    private var mFragmentManager: LazyFragmentManager
 
     constructor(activity: FragmentActivity, func: LocationOptions.() -> Unit = {}) {
         configure(func)
@@ -134,7 +133,7 @@ class Locus {
      * @return Instance of LocationHelper class which can be used to initiate Location Retrieval process.
      * */
     private fun initLocationHelper(isOneTime: Boolean = false) {
-        locationHelper = mFragmentManager.value.findFragmentByTag(LocationHelper.TAG) as? LocationHelper
+        locationHelper = mFragmentManager.value.findFragmentByTag(mFragmentManager.tag) as? LocationHelper
         if (locationHelper == null) {
             locationHelper = LocationHelper.newInstance(options)
             locationHelper?.let { helper ->
@@ -142,7 +141,7 @@ class Locus {
                     putBoolean(Constants.IS_ONE_TIME_BUNDLE_KEY, isOneTime)
                 }
                 Handler().post {
-                    mFragmentManager.value.beginTransaction().add(helper, LocationHelper.TAG)
+                    mFragmentManager.value.beginTransaction().add(helper, mFragmentManager.tag)
                         .commitAllowingStateLoss()
                 }
             }
