@@ -31,6 +31,8 @@ class LocationOptions internal constructor() {
 
     var rationaleText: String =
         "Location permission is required in order to use this feature properly.Please grant the permission."
+    var rationaleTitle: String = "Location permission required!"
+    var blockedTitle: String = "Location Permission Blocked"
     var blockedText: String =
         "Location permission is blocked. Please allow permission from settings screen to use this feature"
 
