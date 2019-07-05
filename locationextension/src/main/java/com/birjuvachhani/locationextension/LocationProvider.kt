@@ -16,10 +16,10 @@
 package com.birjuvachhani.locationextension
 
 import android.annotation.SuppressLint
-import android.arch.lifecycle.MutableLiveData
 import android.content.Context
 import android.location.LocationManager
 import android.os.Looper
+import androidx.lifecycle.MutableLiveData
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices

@@ -5,10 +5,10 @@ apply plugin: 'com.github.dcendents.android-maven'
 group='com.github.BirjuVachhani'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 28
+        targetSdkVersion 29
         versionCode 2
         versionName "1.0.2"
     }
@@ -26,15 +26,7 @@ android {
 }
 
 dependencies {
-    api fileTree(include: ['*.jar'], dir: 'libs')
-    api 'com.android.support:appcompat-v7:28.0.0'
-    api 'com.android.support:animated-vector-drawable:28.0.0'
-    api 'com.android.support:support-media-compat:28.0.0'
-    api 'com.android.support:support-v4:28.0.0'
-    api "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    api 'com.google.android.gms:play-services-location:16.0.0'
-//    implementation 'com.github.BirjuVachhani:bext:1.0.0-alpha'
-}
-repositories {
-    mavenCentral()
+    compileOnly 'androidx.appcompat:appcompat:1.0.2'
+    compileOnly "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compileOnly 'com.google.android.gms:play-services-location:17.0.0'
 }
