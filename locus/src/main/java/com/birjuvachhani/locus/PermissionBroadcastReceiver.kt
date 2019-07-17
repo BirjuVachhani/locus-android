@@ -13,18 +13,10 @@
  * limitations under the License.
  */
 
-package com.birjuvachhani.locationextension
+package com.birjuvachhani.locus
 
 /*
- * Created by Birju Vachhani on 06 February 2019
+ * Created by Birju Vachhani on 17 July 2019
  * Copyright © 2019 locus-android. All rights reserved.
  */
 
-/**
- * Holds all the constants used for the lib
- * */
-internal object Constants {
-    internal const val IS_ONE_TIME_BUNDLE_KEY = "isOneTime"
-    internal const val DENIED = "denied"
-    internal const val PERMANENTLY_DENIED = "permanently_denied"
-}

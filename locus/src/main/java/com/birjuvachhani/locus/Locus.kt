@@ -13,17 +13,15 @@
  * limitations under the License.
  */
 
-package com.birjuvachhani.locationextension
+package com.birjuvachhani.locus
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
 import android.location.Location
-import android.os.Bundle
-import android.os.Handler
-import android.util.Log
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
-import androidx.fragment.app.FragmentManager
-import com.google.android.gms.location.LocationRequest
-
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 /*
  * Created by Birju Vachhani on 09 November 2018
@@ -41,38 +39,22 @@ internal annotation class LocusMarker
  * A helper class for location extension which provides dsl extensions for getting location
  * */
 @LocusMarker
-class Locus(func: LocationOptions.() -> Unit = {}) {
+class Locus(func: Configuration.() -> Unit = {}) {
 
-    private var options = LocationOptions()
+    private val options = Configuration()
+    private lateinit var locationprovider: LocationProvider
+    private var isOneTime: Boolean = false
+    private val permissionBroadcastReceiver = PermissionBroadcastReceiver()
 
     init {
         configure(func)
     }
 
     /**
-     * This class is used to create a default LocationRequest object if not provided externally
+     * creates Configuration object from user configuration
+     * @param func is a lambda receiver for Configuration which is used to build Configuration object
      * */
-    private object Defaults {
-        internal const val INTERVAL_IN_MS = 1000L
-        internal const val FASTEST_INTERVAL_IN_MS = 1000L
-        internal const val MAX_WAIT_TIME_IN_MS = 1000L
-    }
-
-    /**
-     * Initializes Locus class with default LocationOptions or user specific if provided externally
-     * */
-    init {
-        options.locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        options.locationRequest.interval = Defaults.INTERVAL_IN_MS
-        options.locationRequest.fastestInterval = Defaults.FASTEST_INTERVAL_IN_MS
-        options.locationRequest.maxWaitTime = Defaults.MAX_WAIT_TIME_IN_MS
-    }
-
-    /**
-     * creates LocationOptions object from user configuration
-     * @param func is a lambda receiver for LocationOptions which is used to build LocationOptions object
-     * */
-    fun configure(func: LocationOptions.() -> Unit) {
+    fun configure(func: Configuration.() -> Unit) {
         func(options)
     }
 
@@ -81,7 +63,11 @@ class Locus(func: LocationOptions.() -> Unit = {}) {
      * it doesn't any mechanism to handle errors externally.
      * */
     fun getCurrentLocation(activity: FragmentActivity, func: Location.() -> Unit): BlockExecution {
-        val helper = getOrInitLocationHelper(activity.supportFragmentManager, true)
+        initLocationProvider(activity)
+        isOneTime = true
+        val blockExecution = BlockExecution()
+
+        /*val helper = getOrInitLocationHelper(activity.supportFragmentManager, true)
         val blockExecution = BlockExecution()
         helper.reset()
         helper.locationLiveData.watch(activity) { locus ->
@@ -94,7 +80,7 @@ class Locus(func: LocationOptions.() -> Unit = {}) {
                 }
             }
         }
-        Handler().post { helper.initPermissionModel() }
+        Handler().post { helper.initPermissionModel() }*/
         return blockExecution
     }
 
@@ -102,7 +88,7 @@ class Locus(func: LocationOptions.() -> Unit = {}) {
      * This function is used to get location for one time only. It handles most of the errors internally though
      * it doesn't any mechanism to handle errors externally.
      * */
-    fun getCurrentLocation(fragment: Fragment, func: Location.() -> Unit): BlockExecution {
+    /*fun getCurrentLocation(fragment: Fragment, func: Location.() -> Unit): BlockExecution {
         val helper = getOrInitLocationHelper(fragment.childFragmentManager, true)
         val blockExecution = BlockExecution()
         helper.reset()
@@ -118,13 +104,14 @@ class Locus(func: LocationOptions.() -> Unit = {}) {
         }
         Handler().post { helper.initPermissionModel() }
         return blockExecution
-    }
+    }*/
 
     /**
      * This function is used to get location updates continuously. It handles most of the errors internally though
      * it doesn't any mechanism to handle errors externally.
      * */
-    fun listenForLocation(activity: FragmentActivity, func: Location.() -> Unit): BlockExecution {
+    /*fun listenForLocation(activity: FragmentActivity, func: Location.() -> Unit): BlockExecution {
+        initLocationProvider(activity)
         val helper = getOrInitLocationHelper(activity.supportFragmentManager)
         val blockExecution = BlockExecution()
         helper.reset()
@@ -140,13 +127,19 @@ class Locus(func: LocationOptions.() -> Unit = {}) {
         }
         Handler().post { helper.initPermissionModel() }
         return blockExecution
+    }*/
+
+    private fun initLocationProvider(context: Context) {
+        if (!::locationprovider.isInitialized) {
+            locationprovider = LocationProvider(context)
+        }
     }
 
     /**
      * This function is used to get location updates continuously. It handles most of the errors internally though
      * it doesn't any mechanism to handle errors externally.
      * */
-    fun listenForLocation(fragment: Fragment, func: Location.() -> Unit): BlockExecution {
+    /*fun listenForLocation(fragment: Fragment, func: Location.() -> Unit): BlockExecution {
         val helper = getOrInitLocationHelper(fragment.childFragmentManager)
         val blockExecution = BlockExecution()
         helper.reset()
@@ -162,38 +155,42 @@ class Locus(func: LocationOptions.() -> Unit = {}) {
         }
         Handler().post { helper.initPermissionModel() }
         return blockExecution
-    }
+    }*/
 
-    /**
-     * Getter method to get an Instance of LocationHelper. It always return an existing instance if there's any,
-     * otherwise creates a new instance.
-     * @return Instance of LocationHelper class which can be used to initiate Location Retrieval process.
-     * */
-    private fun getOrInitLocationHelper(manager: FragmentManager, isOneTime: Boolean = false): LocationHelper {
-        var helper = manager.findFragmentByTag(LocationHelper.TAG) as? LocationHelper
-        if (helper == null) {
-            Log.e("LocationHelper", "No instance found so creating new")
-            helper = LocationHelper.newInstance(options)
-            helper.arguments = Bundle().apply {
-                putBoolean(Constants.IS_ONE_TIME_BUNDLE_KEY, isOneTime)
-            }
-            manager.beginTransaction().add(helper, LocationHelper.TAG).commitNow()
-        }
-        return helper
-    }
 
     /**
      * This function is used to stop receiving location updates.
      * */
     fun stopTrackingLocation(fragment: Fragment) {
-        getOrInitLocationHelper(fragment.childFragmentManager).stopContinuousLocation()
+        // TODO
     }
 
     /**
      * This function is used to stop receiving location updates.
      * */
     fun stopTrackingLocation(activity: FragmentActivity) {
-        getOrInitLocationHelper(activity.supportFragmentManager).stopContinuousLocation()
+        // TODO
+    }
+
+    inner class PermissionBroadcastReceiver : BroadcastReceiver() {
+
+        override fun onReceive(context: Context, intent: Intent?) {
+            val status = intent?.getStringExtra(Constants.INTENT_EXTRA_PERMISSION_RESULT) ?: return
+            when (status) {
+                "granted" -> {
+                    // TODO: start location updates
+                }
+                "denied" -> {
+                    // TODO: permission denied, let the user know
+                }
+                "resolution_failed" -> {
+                    // TODO: resolution failed. Do something!
+                }
+            }
+            // TODO: process received state of permission request
+            // TODO: determine if needs to be unregistered
+            LocalBroadcastManager.getInstance(context).unregisterReceiver(permissionBroadcastReceiver)
+        }
     }
 }
 

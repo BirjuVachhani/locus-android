@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.birjuvachhani.locationextension
+package com.birjuvachhani.locus
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData

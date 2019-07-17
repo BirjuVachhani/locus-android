@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.birjuvachhani.locationextension
+package com.birjuvachhani.locus
 
 import com.google.android.gms.location.LocationRequest
 
@@ -27,7 +27,13 @@ import com.google.android.gms.location.LocationRequest
  * class.
  * */
 @LocusMarker
-class LocationOptions internal constructor() {
+class Configuration internal constructor() {
+
+    companion object {
+        internal const val INTERVAL_IN_MS = 1000L
+        internal const val FASTEST_INTERVAL_IN_MS = 1000L
+        internal const val MAX_WAIT_TIME_IN_MS = 1000L
+    }
 
     var rationaleText: String =
         "Location permission is required in order to use this feature properly.Please grant the permission."
@@ -35,6 +41,14 @@ class LocationOptions internal constructor() {
     var blockedTitle: String = "Location Permission Blocked"
     var blockedText: String =
         "Location permission is blocked. Please allow permission from settings screen to use this feature"
+    internal var locationRequest: LocationRequest = LocationRequest()
+
+    init {
+        locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        locationRequest.interval = INTERVAL_IN_MS
+        locationRequest.fastestInterval = FASTEST_INTERVAL_IN_MS
+        locationRequest.maxWaitTime = MAX_WAIT_TIME_IN_MS
+    }
 
     /**
      * Create an instance of LocationRequest class
@@ -44,6 +58,5 @@ class LocationOptions internal constructor() {
         locationRequest = LocationRequest().apply(func)
     }
 
-    internal var locationRequest: LocationRequest = LocationRequest()
 
 }

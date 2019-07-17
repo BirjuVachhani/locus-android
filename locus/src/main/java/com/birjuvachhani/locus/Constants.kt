@@ -13,28 +13,21 @@
  * limitations under the License.
  */
 
-package com.birjuvachhani.locationextension
-
-import android.location.Location
+package com.birjuvachhani.locus
 
 /*
- * Created by Birju Vachhani on 05 February 2019
+ * Created by Birju Vachhani on 06 February 2019
  * Copyright © 2019 locus-android. All rights reserved.
  */
 
 /**
- * Represents states of LocusResult library
+ * Holds all the constants used for the lib
  * */
-sealed class LocusResult {
-
-    /**
-     * Represents success state for retrieving location
-     * */
-    data class Success internal constructor(val location: Location) : LocusResult()
-
-    /**
-     * Represents failure state for location process
-     * */
-    data class Failure internal constructor(val error: Throwable) : LocusResult()
-
+internal object Constants {
+    internal const val IS_ONE_TIME_BUNDLE_KEY = "isOneTime"
+    internal const val DENIED = "denied"
+    internal const val PERMANENTLY_DENIED = "permanently_denied"
+    internal const val INTENT_EXTRA_LOCATION_REQUEST = "request"
+    internal const val INTENT_EXTRA_RESOLUTION_ENABLED = "resolution"
+    internal const val INTENT_EXTRA_PERMISSION_RESULT = "permission_result"
 }

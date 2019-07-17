@@ -15,15 +15,16 @@
 
 package com.birjuvachhani.locationextensionsample
 
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import com.birjuvachhani.locationextension.Locus
-import kotlinx.android.synthetic.main.activity_main.*
+import androidx.core.app.ActivityCompat
+import com.birjuvachhani.locus.Locus
+import com.google.android.gms.location.LocationRequest
 import java.util.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsResultCallback {
 
     private val TAG = this::class.java.simpleName
 
@@ -33,6 +34,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        val request = LocationRequest.create()
+        Intent(this, MainActivity::class.java).apply {
+            putExtra("request", request)
+        }
     }
 
     fun stopTracking(v: View) {
@@ -44,19 +49,19 @@ class MainActivity : AppCompatActivity() {
      * */
     fun startTracking(v: View) {
 
-        locus.listenForLocation(this) {
-            locationContainer.visibility = View.VISIBLE
-            tvLatitude.text = latitude.toString()
-            tvLongitude.text = longitude.toString()
-            tvError.text = ""
-            tvTime.text = getCurrentTimeString()
-            Log.e(TAG, "Latitude: $latitude\tLongitude: $longitude")
-        } failure {
-            tvLatitude.text = ""
-            tvLongitude.text = ""
-            tvError.text = message
-            Log.e(TAG, "Error: $message")
-        }
+        /* locus.listenForLocation(this) {
+             locationContainer.visibility = View.VISIBLE
+             tvLatitude.text = latitude.toString()
+             tvLongitude.text = longitude.toString()
+             tvError.text = ""
+             tvTime.text = getCurrentTimeString()
+             Log.e(TAG, "Latitude: $latitude\tLongitude: $longitude")
+         } failure {
+             tvLatitude.text = ""
+             tvLongitude.text = ""
+             tvError.text = message
+             Log.e(TAG, "Error: $message")
+         }*/
     }
 
     /**

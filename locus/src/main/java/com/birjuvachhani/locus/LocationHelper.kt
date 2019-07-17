@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.birjuvachhani.locationextension
+package com.birjuvachhani.locus
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -47,7 +47,7 @@ internal class LocationHelper : Fragment() {
     private var isOneTime = false
     private var isRationaleDisplayed = false
     private var isJustBlocked = true
-    private var options: LocationOptions = LocationOptions()
+    private var options: Configuration = Configuration()
     internal val locationLiveData = MutableLiveData<LocusResult>()
     private var isDisposed = false
 
@@ -76,7 +76,7 @@ internal class LocationHelper : Fragment() {
         /**
          * Creates a new instance o this class and returns it.
          * */
-        fun newInstance(options: LocationOptions): LocationHelper {
+        fun newInstance(options: Configuration): LocationHelper {
             return LocationHelper().apply {
                 this.options = options
             }

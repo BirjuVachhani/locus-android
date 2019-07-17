@@ -1,1 +1,1 @@
-include ':app', ':locationextension'
+include ':app', ':locus'
