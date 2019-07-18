@@ -18,15 +18,26 @@ package com.birjuvachhani.locus
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.location.Location
+import android.location.LocationManager
+import android.util.Log
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.LifecycleOwner
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import java.util.concurrent.atomic.AtomicBoolean
 
 /*
  * Created by Birju Vachhani on 09 November 2018
  * Copyright © 2019 locus-android. All rights reserved.
  */
+
+internal val isRequestingPermission = AtomicBoolean().apply {
+    set(false)
+}
 
 /**
  * Marker class for Locus Extensions
@@ -40,10 +51,8 @@ internal annotation class LocusMarker
  * */
 @LocusMarker
 class Locus(func: Configuration.() -> Unit = {}) {
-
     private val options = Configuration()
     private lateinit var locationprovider: LocationProvider
-    private var isOneTime: Boolean = false
     private val permissionBroadcastReceiver = PermissionBroadcastReceiver()
 
     init {
@@ -62,25 +71,14 @@ class Locus(func: Configuration.() -> Unit = {}) {
      * This function is used to get location for one time only. It handles most of the errors internally though
      * it doesn't any mechanism to handle errors externally.
      * */
-    fun getCurrentLocation(activity: FragmentActivity, func: Location.() -> Unit): BlockExecution {
-        initLocationProvider(activity)
-        isOneTime = true
-        val blockExecution = BlockExecution()
+    fun <T> getCurrentLocation(
+        contextAndLifecycleOwner: T,
+        func: Location.() -> Unit
+    ): BlockExecution where T : Context, T : LifecycleOwner {
+        initLocationProvider(contextAndLifecycleOwner)
+        val blockExecution = observeOneTimeUpdates(contextAndLifecycleOwner, func)
 
-        /*val helper = getOrInitLocationHelper(activity.supportFragmentManager, true)
-        val blockExecution = BlockExecution()
-        helper.reset()
-        helper.locationLiveData.watch(activity) { locus ->
-            when (locus) {
-                is LocusResult.Success -> {
-                    func(locus.location)
-                }
-                is LocusResult.Failure -> {
-                    blockExecution(locus.error)
-                }
-            }
-        }
-        Handler().post { helper.initPermissionModel() }*/
+        checkAndStartUpdates(contextAndLifecycleOwner)
         return blockExecution
     }
 
@@ -88,46 +86,123 @@ class Locus(func: Configuration.() -> Unit = {}) {
      * This function is used to get location for one time only. It handles most of the errors internally though
      * it doesn't any mechanism to handle errors externally.
      * */
-    /*fun getCurrentLocation(fragment: Fragment, func: Location.() -> Unit): BlockExecution {
-        val helper = getOrInitLocationHelper(fragment.childFragmentManager, true)
-        val blockExecution = BlockExecution()
-        helper.reset()
-        helper.locationLiveData.watch(fragment) { locus ->
-            when (locus) {
-                is LocusResult.Success -> {
-                    func(locus.location)
-                }
-                is LocusResult.Failure -> {
-                    blockExecution(locus.error)
-                }
-            }
+    fun getCurrentLocation(fragment: Fragment, func: Location.() -> Unit): BlockExecution {
+        if (!fragment.isAdded || fragment.activity == null) {
+            Log.e("Locus", "Cannot start location updates, Fragment is not attached yet.")
+            return BlockExecution()
         }
-        Handler().post { helper.initPermissionModel() }
+        initLocationProvider(fragment.requireContext())
+        val blockExecution = observeOneTimeUpdates(fragment, func)
+
+        checkAndStartUpdates(fragment.requireContext())
         return blockExecution
-    }*/
+    }
 
     /**
-     * This function is used to get location updates continuously. It handles most of the errors internally though
+     * This function is used to get location for one time only. It handles most of the errors internally though
      * it doesn't any mechanism to handle errors externally.
      * */
-    /*fun listenForLocation(activity: FragmentActivity, func: Location.() -> Unit): BlockExecution {
-        initLocationProvider(activity)
-        val helper = getOrInitLocationHelper(activity.supportFragmentManager)
+    fun <T> listenForLocation(
+        contextAndLifecycleOwner: T,
+        func: Location.() -> Unit
+    ): BlockExecution where T : Context, T : LifecycleOwner {
+        initLocationProvider(contextAndLifecycleOwner)
+        val blockExecution = observeForContinuesUpdates(contextAndLifecycleOwner, func)
+
+        checkAndStartUpdates(contextAndLifecycleOwner)
+        return blockExecution
+    }
+
+    /**
+     * This function is used to get location for one time only. It handles most of the errors internally though
+     * it doesn't any mechanism to handle errors externally.
+     * */
+    fun listenForLocation(fragment: Fragment, func: Location.() -> Unit): BlockExecution {
+        if (!fragment.isAdded || fragment.activity == null) {
+            Log.e("Locus", "Cannot start location updates, Fragment is not attached yet.")
+            return BlockExecution()
+        }
+        initLocationProvider(fragment.requireContext())
+        val blockExecution = observeForContinuesUpdates(fragment, func)
+
+        checkAndStartUpdates(fragment.requireContext())
+        return blockExecution
+    }
+
+    private fun observeForContinuesUpdates(owner: LifecycleOwner, func: Location.() -> Unit): BlockExecution {
         val blockExecution = BlockExecution()
-        helper.reset()
-        helper.locationLiveData.watch(activity) { locus ->
-            when (locus) {
+        locationprovider.locationLiveData.removeObservers(owner)
+        locationprovider.locationLiveData.watch(owner) { result ->
+            when (result) {
                 is LocusResult.Success -> {
-                    func(locus.location)
+                    func(result.location)
                 }
                 is LocusResult.Failure -> {
-                    blockExecution(locus.error)
+                    blockExecution(result.error)
                 }
             }
         }
-        Handler().post { helper.initPermissionModel() }
         return blockExecution
-    }*/
+    }
+
+
+    private fun checkAndStartUpdates(context: Context) {
+        if (hasLocationPermission(context) && isSettingsEnabled(context)) {
+            locationprovider.startContinuousLocation()
+        } else {
+            LocalBroadcastManager
+                .getInstance(context)
+                .registerReceiver(permissionBroadcastReceiver, IntentFilter(context.packageName))
+            initPermissionRequest(context)
+        }
+    }
+
+    private fun observeOneTimeUpdates(owner: LifecycleOwner, func: Location.() -> Unit): BlockExecution {
+        val blockExecution = BlockExecution()
+        locationprovider.locationLiveData.removeObservers(owner)
+        locationprovider.locationLiveData.watch(owner) { result ->
+            when (result) {
+                is LocusResult.Success -> {
+                    func(result.location)
+                }
+                is LocusResult.Failure -> {
+                    blockExecution(result.error)
+                }
+            }
+            locationprovider.stopContinuousLocation()
+            locationprovider.locationLiveData.removeObservers(owner)
+        }
+        return blockExecution
+    }
+
+    private fun initPermissionRequest(context: Context) {
+        if (!isRequestingPermission.getAndSet(true)) {
+            context.startActivity(Intent(context, LocusActivity::class.java).apply {
+                if (options.shouldResolveRequest) {
+                    putExtra(Constants.INTENT_EXTRA_CONFIGURATION, options)
+                }
+            })
+        } else {
+            Log.e("BIRJU", "A request is already ongoing")
+        }
+    }
+
+    private fun hasLocationPermission(context: Context) = ContextCompat.checkSelfPermission(
+        context,
+        android.Manifest.permission.ACCESS_COARSE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED
+
+    /**
+     * Checks whether the device location settings match with what the user requested
+     * @return true is the current location settings satisfies the requirement, false otherwise.
+     * */
+    private fun isSettingsEnabled(context: Context): Boolean {
+        if (!options.shouldResolveRequest) return true
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(
+            LocationManager.NETWORK_PROVIDER
+        )
+    }
 
     private fun initLocationProvider(context: Context) {
         if (!::locationprovider.isInitialized) {
@@ -136,59 +211,50 @@ class Locus(func: Configuration.() -> Unit = {}) {
     }
 
     /**
-     * This function is used to get location updates continuously. It handles most of the errors internally though
-     * it doesn't any mechanism to handle errors externally.
-     * */
-    /*fun listenForLocation(fragment: Fragment, func: Location.() -> Unit): BlockExecution {
-        val helper = getOrInitLocationHelper(fragment.childFragmentManager)
-        val blockExecution = BlockExecution()
-        helper.reset()
-        helper.locationLiveData.watch(fragment) { locus ->
-            when (locus) {
-                is LocusResult.Success -> {
-                    func(locus.location)
-                }
-                is LocusResult.Failure -> {
-                    blockExecution(locus.error)
-                }
-            }
-        }
-        Handler().post { helper.initPermissionModel() }
-        return blockExecution
-    }*/
-
-
-    /**
      * This function is used to stop receiving location updates.
      * */
     fun stopTrackingLocation(fragment: Fragment) {
-        // TODO
+        locationprovider.locationLiveData.removeObservers(fragment)
+        locationprovider.stopContinuousLocation()
     }
 
     /**
      * This function is used to stop receiving location updates.
      * */
     fun stopTrackingLocation(activity: FragmentActivity) {
-        // TODO
+        locationprovider.locationLiveData.removeObservers(activity)
+        locationprovider.stopContinuousLocation()
     }
 
     inner class PermissionBroadcastReceiver : BroadcastReceiver() {
 
         override fun onReceive(context: Context, intent: Intent?) {
+            Log.e("BIRJU", "Received Permission broadcast")
             val status = intent?.getStringExtra(Constants.INTENT_EXTRA_PERMISSION_RESULT) ?: return
+            isRequestingPermission.set(false)
             when (status) {
                 "granted" -> {
-                    // TODO: start location updates
+                    initLocationProvider(context)
+                    locationprovider.startContinuousLocation()
+                    Log.e("BIRJU", "Permission granted")
                 }
                 "denied" -> {
                     // TODO: permission denied, let the user know
+                    Log.e("BIRJU", "Permission denied")
+                }
+                "permanently_denied" -> {
+                    // TODO: permission denied, let the user know
+                    Log.e("BIRJU", "Permission permanently denied")
                 }
                 "resolution_failed" -> {
                     // TODO: resolution failed. Do something!
+                    Log.e("BIRJU", "Location settings resolution failed")
+                }
+                "location_settings_denied" -> {
+                    // TODO: user denied turn on location settings!
+                    Log.e("BIRJU", "User denied turn on location settings")
                 }
             }
-            // TODO: process received state of permission request
-            // TODO: determine if needs to be unregistered
             LocalBroadcastManager.getInstance(context).unregisterReceiver(permissionBroadcastReceiver)
         }
     }

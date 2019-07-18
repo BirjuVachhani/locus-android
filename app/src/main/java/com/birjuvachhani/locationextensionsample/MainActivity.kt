@@ -17,11 +17,13 @@ package com.birjuvachhani.locationextensionsample
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.birjuvachhani.locus.Locus
 import com.google.android.gms.location.LocationRequest
+import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 
 class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsResultCallback {
@@ -48,20 +50,19 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
      * Initiates location tracking process on button click
      * */
     fun startTracking(v: View) {
-
-        /* locus.listenForLocation(this) {
-             locationContainer.visibility = View.VISIBLE
-             tvLatitude.text = latitude.toString()
-             tvLongitude.text = longitude.toString()
-             tvError.text = ""
-             tvTime.text = getCurrentTimeString()
-             Log.e(TAG, "Latitude: $latitude\tLongitude: $longitude")
-         } failure {
-             tvLatitude.text = ""
-             tvLongitude.text = ""
-             tvError.text = message
-             Log.e(TAG, "Error: $message")
-         }*/
+        locus.listenForLocation(this) {
+            locationContainer.visibility = View.VISIBLE
+            tvLatitude.text = latitude.toString()
+            tvLongitude.text = longitude.toString()
+            tvError.text = ""
+            tvTime.text = getCurrentTimeString()
+            Log.e(TAG, "Latitude: $latitude\tLongitude: $longitude")
+        } failure {
+            tvLatitude.text = ""
+            tvLongitude.text = ""
+            tvError.text = message
+            Log.e(TAG, "Error: $message")
+        }
     }
 
     /**

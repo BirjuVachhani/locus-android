@@ -22,6 +22,7 @@ import androidx.lifecycle.MutableLiveData
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import java.util.concurrent.atomic.AtomicBoolean
 
 /*
  * Created by Birju Vachhani on 10 April 2019
@@ -30,8 +31,8 @@ import com.google.android.gms.location.LocationServices
 
 internal class LocationProvider(context: Context) {
 
-    internal val options: Configuration = Configuration()
-    internal var isOneTime: Boolean = true
+    private val options: Configuration = Configuration()
+    private val isRequestOngoing = AtomicBoolean().apply { set(false) }
 
     private var mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
     internal val locationLiveData = MutableLiveData<LocusResult>()
@@ -42,35 +43,8 @@ internal class LocationProvider(context: Context) {
             locationResult?.let { result ->
                 if (result.locations.isNotEmpty()) {
                     sendResult(LocusResult.Success(result.locations.first()))
-                    if (isOneTime) {
-                        stopContinuousLocation()
-                        locationLiveData.value = null
-                    }
                 }
             }
-        }
-    }
-
-    /**
-     * Retrieves the last known location using FusedLocationProviderClient.
-     * In case of no last known location, initiates continues location to get a result.
-     * */
-    @SuppressLint("MissingPermission")
-    fun initLocation() {
-        if (!isOneTime) {
-            startContinuousLocation()
-            return
-        }
-        mFusedLocationProviderClient?.lastLocation?.addOnSuccessListener { location ->
-            // Got last known location. In some rare situations this can be null.
-            if (location != null) {
-                sendResult(LocusResult.Success(location))
-                stopContinuousLocation()
-            } else {
-                startContinuousLocation()
-            }
-        }?.addOnFailureListener { exception ->
-            sendResult(LocusResult.Failure(exception))
         }
     }
 
@@ -78,7 +52,8 @@ internal class LocationProvider(context: Context) {
      * Starts continuous location tracking using FusedLocationProviderClient
      * */
     @SuppressLint("MissingPermission")
-    private fun startContinuousLocation() {
+    internal fun startContinuousLocation() {
+        if (isRequestOngoing.getAndSet(true)) return
         mFusedLocationProviderClient?.requestLocationUpdates(
             options.locationRequest,
             mLocationCallback,
@@ -92,13 +67,15 @@ internal class LocationProvider(context: Context) {
      * Sets result into live data synchronously
      * */
     private fun sendResult(result: LocusResult) {
-        locationLiveData.value = result
+        locationLiveData.postValue(result)
     }
 
     /**
      * Stops location tracking by removing location callback from FusedLocationProviderClient
      * */
     internal fun stopContinuousLocation() {
+        isRequestOngoing.set(false)
+        locationLiveData.postValue(null)
         mFusedLocationProviderClient?.removeLocationUpdates(mLocationCallback)
     }
 }

@@ -25,7 +25,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
-import android.view.WindowManager
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -33,7 +32,6 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.common.api.ResolvableApiException
-import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.LocationSettingsRequest
 
@@ -41,14 +39,15 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
 
     companion object {
         private const val REQUEST_CODE_LOCATION_SETTINGS = 123
-        private const val LOCATION_PERMISSION = android.Manifest.permission.ACCESS_COARSE_LOCATION
+        private const val COARSE_LOCATION_PERMISSION = android.Manifest.permission.ACCESS_COARSE_LOCATION
+        private const val FINE_LOCATION_PERMISSION = android.Manifest.permission.ACCESS_FINE_LOCATION
         private const val PERMISSION_REQUEST_CODE = 777
     }
 
     private val localBroadcastManager: LocalBroadcastManager by lazy {
         LocalBroadcastManager.getInstance(this)
     }
-    private lateinit var locationRequest: LocationRequest
+    private var configuration: Configuration = Configuration()
     private var isResolutionEnabled: Boolean = false
     private val pref: SharedPreferences by lazy {
         getSharedPreferences("permissions_pref", Context.MODE_PRIVATE)
@@ -57,25 +56,26 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_location_permission)
-        window.addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
+//        window.addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
+
+        Log.e("BIRJU", "Activity Created")
 
         isResolutionEnabled =
-            intent?.getParcelableExtra<LocationRequest>(Constants.INTENT_EXTRA_LOCATION_REQUEST)?.let {
-                locationRequest = it
-                true
+            intent?.getParcelableExtra<Configuration>(Constants.INTENT_EXTRA_CONFIGURATION)?.let {
+                configuration = it
+                configuration.shouldResolveRequest
             } ?: false
 
-        processIntent(intent)
         initPermissionModel()
     }
 
-    private fun processIntent(intent: Intent?) {
-        intent ?: return
-        // TODO: get data from intent like dialog texts and titles
+    override fun onPause() {
+        super.onPause()
+        Log.e("BIRJU", "Activity Paused")
     }
 
     /**
-     * Initiates permission model to request [permission].
+     * Initiates permission model to request location permission.
      *
      * It follows google's recommendations for permission model.
      *
@@ -84,23 +84,25 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * 3. If not, check if the permission is requested for the first time or not.
      * 4. If yes, save that in preferences and request permission.
      * 5. If not, then the permission is permanently denied.
-     * @param permission String is the permission that needs to be requested.
      */
     private fun initPermissionModel() {
         Log.e(this::class.java.simpleName, "Initializing permission model")
         if (!hasPermission()) {
             //doesn't have permission, checking if user has been asked for permission earlier
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, LOCATION_PERMISSION)) {
+            if (shouldShowRationale()) {
                 // should show rationale
+                Log.e("BIRJU", "should display rationale")
                 showPermissionRationale()
             } else {
-                if (isPermissionAskedFirstTime(LOCATION_PERMISSION)) {
+                if (isPermissionAskedFirstTime()) {
+                    Log.e("BIRJU", "permission asked first time")
                     // request permission
-                    setPermissionAsked(LOCATION_PERMISSION)
-                    requestPermission(LOCATION_PERMISSION)
+                    setPermissionAsked()
+                    Log.e("BIRJU", "permission asked flag saved to preferences")
+                    requestPermission()
                 } else {
                     // permanently denied
-                    onPermissionPermanentlyDenied()
+                    showPermanentlyDeniedDialog()
                 }
             }
         } else {
@@ -109,25 +111,35 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         }
     }
 
+    private fun shouldShowRationale(): Boolean {
+        return ActivityCompat.shouldShowRequestPermissionRationale(
+            this,
+            COARSE_LOCATION_PERMISSION
+        ) || ActivityCompat.shouldShowRequestPermissionRationale(this, FINE_LOCATION_PERMISSION)
+    }
+
     /**
      * Checks whether the app has location permission or not
      * @return true is the app has location permission, false otherwise.
      * */
     private fun hasPermission(): Boolean =
-        ContextCompat.checkSelfPermission(this, LOCATION_PERMISSION) == PackageManager.PERMISSION_GRANTED
+        ContextCompat.checkSelfPermission(this, COARSE_LOCATION_PERMISSION) == PackageManager.PERMISSION_GRANTED
 
     private fun showPermissionRationale() {
         AlertDialog.Builder(this)
-            .setTitle("Permission Required")
-            .setMessage("This feature requires location permission to function. Please grant location permission.")
+            .setTitle(configuration.rationaleTitle)
+            .setMessage(configuration.rationaleText)
             .setPositiveButton("Grant") { dialog, _ ->
-                initPermissionModel()
+                requestPermission()
                 dialog.dismiss()
             }
-            .setNegativeButton("CANCEL") { dialog, _ ->
+            .setNegativeButton("DENY") { dialog, _ ->
                 dialog.dismiss()
                 onPermissionDenied()
-            }.takeIf { !isFinishing }?.show()
+            }
+            .setCancelable(false)
+            .create()
+            .takeIf { !isFinishing }?.show()
     }
 
     /**
@@ -135,23 +147,25 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      *
      * The value is stored in the shared preferences.
      * @receiver Fragment is used to get context.
-     * @param permission String is the permission that needs to be checked.
      * @return Boolean true if the permission is asked for the first time, false otherwise.
      */
-    private fun isPermissionAskedFirstTime(permission: String): Boolean = pref.getBoolean(permission, true)
+    private fun isPermissionAskedFirstTime(): Boolean = pref.getBoolean(FINE_LOCATION_PERMISSION, true)
 
     /**
-     * Writes the false value into shared preferences which indicates that the [permission] has been requested previously.
+     * Writes the false value into shared preferences which indicates that the location permission has been requested previously.
      * @receiver Fragment is used to get context.
-     * @param permission String is the permission that needs to be checked.
      */
-    private fun setPermissionAsked(permission: String) = pref.edit().putBoolean(permission, false).apply()
+    private fun setPermissionAsked() = pref.edit().putBoolean(FINE_LOCATION_PERMISSION, false).commit()
 
     /**
      * Actual request for the permission
      * */
-    private fun requestPermission(permission: String) =
-        ActivityCompat.requestPermissions(this, arrayOf(permission), PERMISSION_REQUEST_CODE)
+    private fun requestPermission() =
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(FINE_LOCATION_PERMISSION, COARSE_LOCATION_PERMISSION),
+            PERMISSION_REQUEST_CODE
+        )
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         if (requestCode == PERMISSION_REQUEST_CODE) {
@@ -163,6 +177,10 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         }
     }
 
+    override fun onNewIntent(intent: Intent?) {
+        Log.e("BIRJU", "Got new intent")
+    }
+
     private fun onPermissionGranted() {
         if (isResolutionEnabled) {
             checkIfLocationSettingsAreEnabled()
@@ -172,21 +190,35 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     }
 
     private fun onPermissionDenied() {
-        // TODO: send broadcast
+        Log.e("BIRJU", "Sending permisison de")
+        sendResultBroadcast(Intent(packageName).putExtra(Constants.INTENT_EXTRA_PERMISSION_RESULT, "denied"))
+
     }
 
-    private fun onPermissionPermanentlyDenied() {
+    private fun showPermanentlyDeniedDialog() {
         AlertDialog.Builder(this)
-            .setTitle("Permission Blocked")
-            .setMessage("This feature requires location permission to function. Please grant location permission for settings.")
+            .setTitle(configuration.blockedTitle)
+            .setMessage(configuration.blockedText)
             .setPositiveButton("OPEN SETTINGS") { dialog, _ ->
                 openSettings()
                 dialog.dismiss()
             }
             .setNegativeButton("CANCEL") { dialog, _ ->
                 dialog.dismiss()
-                onPermissionDenied()
-            }.takeIf { !isFinishing }?.show()
+                onPermissionPermanentlyDenied()
+            }
+            .setCancelable(false)
+            .create()
+            .takeIf { !isFinishing }?.show()
+    }
+
+    private fun onPermissionPermanentlyDenied() {
+        sendResultBroadcast(
+            Intent(packageName).putExtra(
+                Constants.INTENT_EXTRA_PERMISSION_RESULT,
+                "permanently_denied"
+            )
+        )
     }
 
     private fun openSettings() {
@@ -195,7 +227,8 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         val uri = Uri.fromParts("package", packageName, null)
         intent.data = uri
         startActivity(intent)
-        // TODO: how to get result from this activity
+        finish()
+        // TODO: how to get result from this activity, remove finish method call after getting result
     }
 
     /**
@@ -207,7 +240,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
             shouldProceedForLocation()
         } else {
             val builder = LocationSettingsRequest.Builder()
-            builder.addLocationRequest(locationRequest)
+            builder.addLocationRequest(configuration.locationRequest)
             builder.setAlwaysShow(true)
 
             val client = LocationServices.getSettingsClient(this)
@@ -228,7 +261,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     }
 
     private fun shouldProceedForLocation() {
-        // TODO: send success broadcast
+        sendResultBroadcast(Intent(packageName).putExtra(Constants.INTENT_EXTRA_PERMISSION_RESULT, "granted"))
     }
 
     /**
@@ -252,22 +285,25 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         exception.printStackTrace()
         if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) return
         if (!isFinishing) {
-            android.app.AlertDialog.Builder(this)
+            AlertDialog.Builder(this)
                 .setTitle("Location is currently disabled")
                 .setMessage("Please enable access to Location from Settings.")
-                .setPositiveButton(R.string.btn_settings) { dialog, _ ->
+                .setPositiveButton("ENABLE") { dialog, _ ->
                     resolveLocationSettings(exception)
                     dialog.dismiss()
                 }
                 .setNegativeButton(R.string.btn_cancel) { dialog, _ ->
                     dialog.dismiss()
                     onResolutionDenied()
-                }.create().takeIf { !isFinishing }?.show()
+                }
+                .setCancelable(false)
+                .create()
+                .takeIf { !isFinishing }?.show()
         }
     }
 
     private fun onResolutionDenied() {
-        // TODO: send broadcast of resolution denied
+        sendResultBroadcast(Intent(packageName).putExtra(Constants.INTENT_EXTRA_PERMISSION_RESULT, "resolution_failed"))
     }
 
     /**
@@ -291,10 +327,43 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         }
     }
 
-    fun sendResultBroadcast(intent: Intent) {
-        intent.action = packageName
-        localBroadcastManager.sendBroadcast(intent)
-        // TODO: determine if needed to be finished
-//        finish()
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == REQUEST_CODE_LOCATION_SETTINGS) {
+            if (resultCode == RESULT_OK) {
+                sendResultBroadcast(
+                    Intent(packageName).putExtra(
+                        Constants.INTENT_EXTRA_PERMISSION_RESULT,
+                        "granted"
+                    )
+                )
+            } else {
+                sendResultBroadcast(
+                    Intent(packageName).putExtra(
+                        Constants.INTENT_EXTRA_PERMISSION_RESULT,
+                        "location_settings_denied"
+                    )
+                )
+            }
+        }
     }
+
+    private fun sendResultBroadcast(intent: Intent) {
+        intent.action = packageName
+        Log.e("BIRJU", "Sending permission broadcast: $intent")
+        localBroadcastManager.sendBroadcast(intent)
+        isRequestingPermission.set(false)
+        finish()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        isRequestingPermission.set(false)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.e("BIRJU", "Activity resumed")
+    }
+
+
 }

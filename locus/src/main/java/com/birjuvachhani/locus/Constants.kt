@@ -27,7 +27,6 @@ internal object Constants {
     internal const val IS_ONE_TIME_BUNDLE_KEY = "isOneTime"
     internal const val DENIED = "denied"
     internal const val PERMANENTLY_DENIED = "permanently_denied"
-    internal const val INTENT_EXTRA_LOCATION_REQUEST = "request"
-    internal const val INTENT_EXTRA_RESOLUTION_ENABLED = "resolution"
+    internal const val INTENT_EXTRA_CONFIGURATION = "request"
     internal const val INTENT_EXTRA_PERMISSION_RESULT = "permission_result"
 }
