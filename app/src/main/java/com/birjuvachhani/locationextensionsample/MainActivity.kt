@@ -15,15 +15,18 @@
 
 package com.birjuvachhani.locationextensionsample
 
+import android.content.Intent
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
-import com.birjuvachhani.locationextension.Locus
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import com.birjuvachhani.locus.Locus
+import com.google.android.gms.location.LocationRequest
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsResultCallback {
 
     private val TAG = this::class.java.simpleName
 
@@ -33,6 +36,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        val request = LocationRequest.create()
+        Intent(this, MainActivity::class.java).apply {
+            putExtra("request", request)
+        }
+        Locus.setLogging(true)
     }
 
     fun stopTracking(v: View) {
@@ -43,7 +51,6 @@ class MainActivity : AppCompatActivity() {
      * Initiates location tracking process on button click
      * */
     fun startTracking(v: View) {
-
         locus.listenForLocation(this) {
             locationContainer.visibility = View.VISIBLE
             tvLatitude.text = latitude.toString()

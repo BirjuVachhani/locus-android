@@ -13,31 +13,28 @@
  * limitations under the License.
  */
 
-package com.birjuvachhani.locationextension
+package com.birjuvachhani.locus
+
+import android.location.Location
 
 /*
- * Created by Birju Vachhani on 07 February 2019
+ * Created by Birju Vachhani on 05 February 2019
  * Copyright © 2019 locus-android. All rights reserved.
  */
 
 /**
- * handles failure execution calls
+ * Represents states of LocusResult library
  * */
-class BlockExecution internal constructor() {
-
-    private var failureFunc: Throwable.() -> Unit = {}
+sealed class LocusResult {
 
     /**
-     * provides block to be executed when there's a failure
+     * Represents success state for retrieving location
      * */
-    infix fun failure(func: Throwable.() -> Unit) {
-        this.failureFunc = func
-    }
+    data class Success internal constructor(val location: Location) : LocusResult()
 
     /**
-     * invokes failure function
+     * Represents failure state for location process
      * */
-    internal operator fun invoke(throwable: Throwable) {
-        failureFunc(throwable)
-    }
+    data class Failure internal constructor(val error: Throwable) : LocusResult()
+
 }

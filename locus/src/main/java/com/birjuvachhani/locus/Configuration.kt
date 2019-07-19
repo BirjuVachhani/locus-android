@@ -13,9 +13,11 @@
  * limitations under the License.
  */
 
-package com.birjuvachhani.locationextension
+package com.birjuvachhani.locus
 
+import android.os.Parcelable
 import com.google.android.gms.location.LocationRequest
+import kotlinx.android.parcel.Parcelize
 
 /*
  * Created by Birju Vachhani on 07 February 2019
@@ -27,14 +29,23 @@ import com.google.android.gms.location.LocationRequest
  * class.
  * */
 @LocusMarker
-class LocationOptions internal constructor() {
-
+@Parcelize
+data class Configuration(
     var rationaleText: String =
-        "Location permission is required in order to use this feature properly.Please grant the permission."
-    var rationaleTitle: String = "Location permission required!"
-    var blockedTitle: String = "Location Permission Blocked"
+        "Location permission is required in order to use this feature properly.Please grant the permission.",
+    var rationaleTitle: String = "Location permission required!",
+    var blockedTitle: String = "Location Permission Blocked",
     var blockedText: String =
-        "Location permission is blocked. Please allow permission from settings screen to use this feature"
+        "Location permission is blocked. Please allow permission from settings screen to use this feature",
+    internal var locationRequest: LocationRequest = getDefaultRequest(),
+    var shouldResolveRequest: Boolean = true
+) : Parcelable {
+
+    companion object {
+        internal const val INTERVAL_IN_MS = 1000L
+        internal const val FASTEST_INTERVAL_IN_MS = 1000L
+        internal const val MAX_WAIT_TIME_IN_MS = 1000L
+    }
 
     /**
      * Create an instance of LocationRequest class
@@ -44,6 +55,13 @@ class LocationOptions internal constructor() {
         locationRequest = LocationRequest().apply(func)
     }
 
-    internal var locationRequest: LocationRequest = LocationRequest()
+}
 
+fun getDefaultRequest(): LocationRequest {
+    return LocationRequest().apply {
+        priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        interval = Configuration.INTERVAL_IN_MS
+        fastestInterval = Configuration.FASTEST_INTERVAL_IN_MS
+        maxWaitTime = Configuration.MAX_WAIT_TIME_IN_MS
+    }
 }

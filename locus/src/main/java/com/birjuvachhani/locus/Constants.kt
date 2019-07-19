@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.birjuvachhani.locationextension
+package com.birjuvachhani.locus
 
 /*
  * Created by Birju Vachhani on 06 February 2019
@@ -27,4 +27,6 @@ internal object Constants {
     internal const val IS_ONE_TIME_BUNDLE_KEY = "isOneTime"
     internal const val DENIED = "denied"
     internal const val PERMANENTLY_DENIED = "permanently_denied"
+    internal const val INTENT_EXTRA_CONFIGURATION = "request"
+    internal const val INTENT_EXTRA_PERMISSION_RESULT = "permission_result"
 }

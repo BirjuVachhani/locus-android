@@ -13,28 +13,31 @@
  * limitations under the License.
  */
 
-package com.birjuvachhani.locationextension
+package com.birjuvachhani.locus
 
-import android.location.Location
+import android.util.Log
 
 /*
- * Created by Birju Vachhani on 05 February 2019
+ * Created by Birju Vachhani on 19 July 2019
  * Copyright © 2019 locus-android. All rights reserved.
  */
 
-/**
- * Represents states of LocusResult library
- * */
-sealed class LocusResult {
+internal var isLoggingEnabled: Boolean = false
 
-    /**
-     * Represents success state for retrieving location
-     * */
-    data class Success internal constructor(val location: Location) : LocusResult()
+internal inline fun <reified T : Any> T.logError(log: String) {
+    if (isLoggingEnabled) {
+        Log.e(this::class.java.simpleName, log)
+    }
+}
 
-    /**
-     * Represents failure state for location process
-     * */
-    data class Failure internal constructor(val error: Throwable) : LocusResult()
+internal inline fun <reified T : Any> T.logError(throwable: Throwable) {
+    if (isLoggingEnabled) {
+        Log.e(this::class.java.simpleName, throwable.message.toString())
+    }
+}
 
+internal inline fun <reified T : Any> T.logDebug(log: String) {
+    if (isLoggingEnabled) {
+        Log.d(this::class.java.simpleName, log)
+    }
 }
