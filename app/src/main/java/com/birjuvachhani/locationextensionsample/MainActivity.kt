@@ -40,6 +40,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         Intent(this, MainActivity::class.java).apply {
             putExtra("request", request)
         }
+        Locus.setLogging(true)
     }
 
     fun stopTracking(v: View) {

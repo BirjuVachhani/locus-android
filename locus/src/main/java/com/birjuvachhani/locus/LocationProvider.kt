@@ -42,6 +42,7 @@ internal class LocationProvider(context: Context) {
             super.onLocationResult(locationResult)
             locationResult?.let { result ->
                 if (result.locations.isNotEmpty()) {
+                    logDebug("Received location ${result.locations.first()}")
                     sendResult(LocusResult.Success(result.locations.first()))
                 }
             }
@@ -74,6 +75,7 @@ internal class LocationProvider(context: Context) {
      * Stops location tracking by removing location callback from FusedLocationProviderClient
      * */
     internal fun stopContinuousLocation() {
+        logDebug("Stopping location updates")
         isRequestOngoing.set(false)
         locationLiveData.postValue(null)
         mFusedLocationProviderClient?.removeLocationUpdates(mLocationCallback)

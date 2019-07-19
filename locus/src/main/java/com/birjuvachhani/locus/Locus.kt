@@ -54,6 +54,13 @@ class Locus(func: Configuration.() -> Unit = {}) {
     private val options = Configuration()
     private lateinit var locationprovider: LocationProvider
     private val permissionBroadcastReceiver = PermissionBroadcastReceiver()
+    private var runnable: Runnable? = null
+
+    companion object {
+        fun setLogging(shouldLog: Boolean) {
+            isLoggingEnabled = shouldLog
+        }
+    }
 
     init {
         configure(func)
@@ -102,14 +109,11 @@ class Locus(func: Configuration.() -> Unit = {}) {
      * This function is used to get location for one time only. It handles most of the errors internally though
      * it doesn't any mechanism to handle errors externally.
      * */
-    fun <T> listenForLocation(
-        contextAndLifecycleOwner: T,
-        func: Location.() -> Unit
-    ): BlockExecution where T : Context, T : LifecycleOwner {
-        initLocationProvider(contextAndLifecycleOwner)
-        val blockExecution = observeForContinuesUpdates(contextAndLifecycleOwner, func)
+    fun listenForLocation(activity: FragmentActivity, func: Location.() -> Unit): BlockExecution {
+        initLocationProvider(activity)
+        val blockExecution = observeForContinuesUpdates(activity, func)
 
-        checkAndStartUpdates(contextAndLifecycleOwner)
+        checkAndStartUpdates(activity)
         return blockExecution
     }
 
@@ -131,14 +135,17 @@ class Locus(func: Configuration.() -> Unit = {}) {
 
     private fun observeForContinuesUpdates(owner: LifecycleOwner, func: Location.() -> Unit): BlockExecution {
         val blockExecution = BlockExecution()
-        locationprovider.locationLiveData.removeObservers(owner)
-        locationprovider.locationLiveData.watch(owner) { result ->
-            when (result) {
-                is LocusResult.Success -> {
-                    func(result.location)
-                }
-                is LocusResult.Failure -> {
-                    blockExecution(result.error)
+        runnable = Runnable {
+            locationprovider.locationLiveData.removeObservers(owner)
+            locationprovider.locationLiveData.watch(owner) { result ->
+                when (result) {
+                    is LocusResult.Success -> {
+                        func(result.location)
+                    }
+                    is LocusResult.Failure -> {
+                        blockExecution(result.error)
+                        logError(result.error)
+                    }
                 }
             }
         }
@@ -149,6 +156,8 @@ class Locus(func: Configuration.() -> Unit = {}) {
     private fun checkAndStartUpdates(context: Context) {
         if (hasLocationPermission(context) && isSettingsEnabled(context)) {
             locationprovider.startContinuousLocation()
+            runnable?.run()
+            runnable = null
         } else {
             LocalBroadcastManager
                 .getInstance(context)
@@ -159,18 +168,22 @@ class Locus(func: Configuration.() -> Unit = {}) {
 
     private fun observeOneTimeUpdates(owner: LifecycleOwner, func: Location.() -> Unit): BlockExecution {
         val blockExecution = BlockExecution()
-        locationprovider.locationLiveData.removeObservers(owner)
-        locationprovider.locationLiveData.watch(owner) { result ->
-            when (result) {
-                is LocusResult.Success -> {
-                    func(result.location)
-                }
-                is LocusResult.Failure -> {
-                    blockExecution(result.error)
-                }
-            }
-            locationprovider.stopContinuousLocation()
+
+        runnable = Runnable {
             locationprovider.locationLiveData.removeObservers(owner)
+            locationprovider.locationLiveData.watch(owner) { result ->
+                when (result) {
+                    is LocusResult.Success -> {
+                        func(result.location)
+                    }
+                    is LocusResult.Failure -> {
+                        blockExecution(result.error)
+                        logError(result.error)
+                    }
+                }
+                locationprovider.stopContinuousLocation()
+                locationprovider.locationLiveData.removeObservers(owner)
+            }
         }
         return blockExecution
     }
@@ -183,7 +196,7 @@ class Locus(func: Configuration.() -> Unit = {}) {
                 }
             })
         } else {
-            Log.e("BIRJU", "A request is already ongoing")
+            logDebug("A request is already ongoing")
         }
     }
 
@@ -222,37 +235,41 @@ class Locus(func: Configuration.() -> Unit = {}) {
      * This function is used to stop receiving location updates.
      * */
     fun stopTrackingLocation(activity: FragmentActivity) {
-        locationprovider.locationLiveData.removeObservers(activity)
-        locationprovider.stopContinuousLocation()
+        if (::locationprovider.isInitialized) {
+            locationprovider.locationLiveData.removeObservers(activity)
+            locationprovider.stopContinuousLocation()
+        }
     }
 
     inner class PermissionBroadcastReceiver : BroadcastReceiver() {
 
         override fun onReceive(context: Context, intent: Intent?) {
-            Log.e("BIRJU", "Received Permission broadcast")
+            logDebug("Received Permission broadcast")
             val status = intent?.getStringExtra(Constants.INTENT_EXTRA_PERMISSION_RESULT) ?: return
             isRequestingPermission.set(false)
             when (status) {
                 "granted" -> {
                     initLocationProvider(context)
                     locationprovider.startContinuousLocation()
-                    Log.e("BIRJU", "Permission granted")
+                    runnable?.run()
+                    runnable = null
+                    logDebug("Permission granted")
                 }
                 "denied" -> {
                     // TODO: permission denied, let the user know
-                    Log.e("BIRJU", "Permission denied")
+                    logDebug("Permission denied")
                 }
                 "permanently_denied" -> {
                     // TODO: permission denied, let the user know
-                    Log.e("BIRJU", "Permission permanently denied")
+                    logDebug("Permission permanently denied")
                 }
                 "resolution_failed" -> {
                     // TODO: resolution failed. Do something!
-                    Log.e("BIRJU", "Location settings resolution failed")
+                    logDebug("Location settings resolution failed")
                 }
                 "location_settings_denied" -> {
                     // TODO: user denied turn on location settings!
-                    Log.e("BIRJU", "User denied turn on location settings")
+                    logDebug("User denied turn on location settings")
                 }
             }
             LocalBroadcastManager.getInstance(context).unregisterReceiver(permissionBroadcastReceiver)

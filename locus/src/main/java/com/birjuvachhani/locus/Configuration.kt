@@ -63,6 +63,5 @@ fun getDefaultRequest(): LocationRequest {
         interval = Configuration.INTERVAL_IN_MS
         fastestInterval = Configuration.FASTEST_INTERVAL_IN_MS
         maxWaitTime = Configuration.MAX_WAIT_TIME_IN_MS
-        numUpdates = 1
     }
 }

@@ -24,7 +24,6 @@ import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -42,6 +41,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         private const val COARSE_LOCATION_PERMISSION = android.Manifest.permission.ACCESS_COARSE_LOCATION
         private const val FINE_LOCATION_PERMISSION = android.Manifest.permission.ACCESS_FINE_LOCATION
         private const val PERMISSION_REQUEST_CODE = 777
+        private const val SETTINGS_ACTIVITY_REQUEST_CODE = 659
     }
 
     private val localBroadcastManager: LocalBroadcastManager by lazy {
@@ -58,8 +58,6 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         setContentView(R.layout.activity_location_permission)
 //        window.addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
 
-        Log.e("BIRJU", "Activity Created")
-
         isResolutionEnabled =
             intent?.getParcelableExtra<Configuration>(Constants.INTENT_EXTRA_CONFIGURATION)?.let {
                 configuration = it
@@ -67,11 +65,6 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
             } ?: false
 
         initPermissionModel()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        Log.e("BIRJU", "Activity Paused")
     }
 
     /**
@@ -86,19 +79,18 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * 5. If not, then the permission is permanently denied.
      */
     private fun initPermissionModel() {
-        Log.e(this::class.java.simpleName, "Initializing permission model")
+        logDebug("Initializing permission model")
         if (!hasPermission()) {
             //doesn't have permission, checking if user has been asked for permission earlier
             if (shouldShowRationale()) {
                 // should show rationale
-                Log.e("BIRJU", "should display rationale")
+                logDebug("should display rationale")
                 showPermissionRationale()
             } else {
                 if (isPermissionAskedFirstTime()) {
-                    Log.e("BIRJU", "permission asked first time")
+                    logDebug("permission asked first time")
                     // request permission
                     setPermissionAsked()
-                    Log.e("BIRJU", "permission asked flag saved to preferences")
                     requestPermission()
                 } else {
                     // permanently denied
@@ -177,10 +169,6 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         }
     }
 
-    override fun onNewIntent(intent: Intent?) {
-        Log.e("BIRJU", "Got new intent")
-    }
-
     private fun onPermissionGranted() {
         if (isResolutionEnabled) {
             checkIfLocationSettingsAreEnabled()
@@ -190,9 +178,8 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     }
 
     private fun onPermissionDenied() {
-        Log.e("BIRJU", "Sending permisison de")
+        logDebug("Sending permission denied")
         sendResultBroadcast(Intent(packageName).putExtra(Constants.INTENT_EXTRA_PERMISSION_RESULT, "denied"))
-
     }
 
     private fun showPermanentlyDeniedDialog() {
@@ -226,14 +213,13 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
         val uri = Uri.fromParts("package", packageName, null)
         intent.data = uri
-        startActivity(intent)
-        finish()
+        startActivityForResult(intent, SETTINGS_ACTIVITY_REQUEST_CODE)
         // TODO: how to get result from this activity, remove finish method call after getting result
     }
 
     /**
      * Checks whether the current location settings allows retrieval of location or not.
-     * If settings are enabled then retrieves the location, otherwise initiate the process of settings resolution
+     * If settings are isLoggingEnabled then retrieves the location, otherwise initiate the process of settings resolution
      * */
     private fun checkIfLocationSettingsAreEnabled() {
         if (checkIfRequiredLocationSettingsAreEnabled()) {
@@ -330,12 +316,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == REQUEST_CODE_LOCATION_SETTINGS) {
             if (resultCode == RESULT_OK) {
-                sendResultBroadcast(
-                    Intent(packageName).putExtra(
-                        Constants.INTENT_EXTRA_PERMISSION_RESULT,
-                        "granted"
-                    )
-                )
+                shouldProceedForLocation()
             } else {
                 sendResultBroadcast(
                     Intent(packageName).putExtra(
@@ -344,12 +325,18 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
                     )
                 )
             }
+        } else if (requestCode == SETTINGS_ACTIVITY_REQUEST_CODE) {
+            if (hasPermission()) {
+                onPermissionGranted()
+            } else {
+                onPermissionPermanentlyDenied()
+            }
         }
     }
 
     private fun sendResultBroadcast(intent: Intent) {
         intent.action = packageName
-        Log.e("BIRJU", "Sending permission broadcast: $intent")
+        logDebug("Sending permission broadcast: $intent")
         localBroadcastManager.sendBroadcast(intent)
         isRequestingPermission.set(false)
         finish()
@@ -359,11 +346,4 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         super.onDestroy()
         isRequestingPermission.set(false)
     }
-
-    override fun onResume() {
-        super.onResume()
-        Log.e("BIRJU", "Activity resumed")
-    }
-
-
 }
