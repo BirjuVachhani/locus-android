@@ -9,7 +9,7 @@
         <activity
             android:name=".LocusActivity"
             android:launchMode="singleTask"
-            android:theme="@style/PermissionTheme" />
+            android:theme="@style/LocusTheme" />
     </application>
 
 </manifest>
