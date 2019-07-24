@@ -53,11 +53,19 @@ data class Configuration(
      * */
     fun request(func: (@LocusMarker LocationRequest).() -> Unit) {
         locationRequest = LocationRequest().apply(func)
+        fun setDefault() {
+
+        }
+        setDefault()
     }
 
 }
 
-fun getDefaultRequest(): LocationRequest {
+/**
+ * Creates [LocationRequest] instance with default settings
+ * @return LocationRequest
+ */
+private fun getDefaultRequest(): LocationRequest {
     return LocationRequest().apply {
         priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         interval = Configuration.INTERVAL_IN_MS
