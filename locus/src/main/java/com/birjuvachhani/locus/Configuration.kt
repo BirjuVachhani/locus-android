@@ -37,6 +37,8 @@ data class Configuration(
     var blockedTitle: String = "Location Permission Blocked",
     var blockedText: String =
         "Location permission is blocked. Please allow permission from settings screen to use this feature",
+    var resolutionTitle: String = "Location is currently disabled",
+    var resolutionText: String = "Please enable access to device location to proceed further.",
     internal var locationRequest: LocationRequest = getDefaultRequest(),
     var shouldResolveRequest: Boolean = true
 ) : Parcelable {
