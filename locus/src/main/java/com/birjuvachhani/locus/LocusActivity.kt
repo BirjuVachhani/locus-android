@@ -42,6 +42,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         private const val FINE_LOCATION_PERMISSION = android.Manifest.permission.ACCESS_FINE_LOCATION
         private const val PERMISSION_REQUEST_CODE = 777
         private const val SETTINGS_ACTIVITY_REQUEST_CODE = 659
+        private const val PREF_NAME = "locus_pref"
     }
 
     private val localBroadcastManager: LocalBroadcastManager by lazy {
@@ -50,7 +51,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     private var configuration: Configuration = Configuration()
     private var isResolutionEnabled: Boolean = false
     private val pref: SharedPreferences by lazy {
-        getSharedPreferences("permissions_pref", Context.MODE_PRIVATE)
+        getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -127,11 +128,11 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         AlertDialog.Builder(this)
             .setTitle(configuration.rationaleTitle)
             .setMessage(configuration.rationaleText)
-            .setPositiveButton("Grant") { dialog, _ ->
+            .setPositiveButton(R.string.grant) { dialog, _ ->
                 requestPermission()
                 dialog.dismiss()
             }
-            .setNegativeButton("DENY") { dialog, _ ->
+            .setNegativeButton(R.string.deny) { dialog, _ ->
                 dialog.dismiss()
                 onPermissionDenied()
             }
@@ -191,7 +192,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      */
     private fun onPermissionDenied() {
         logDebug("Sending permission denied")
-        sendResultBroadcast(Intent(packageName).putExtra(Constants.INTENT_EXTRA_PERMISSION_RESULT, "denied"))
+        sendResultBroadcast(Intent(packageName).putExtra(Constants.INTENT_EXTRA_PERMISSION_RESULT, Constants.DENIED))
     }
 
     /**
@@ -201,11 +202,11 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         AlertDialog.Builder(this)
             .setTitle(configuration.blockedTitle)
             .setMessage(configuration.blockedText)
-            .setPositiveButton("OPEN SETTINGS") { dialog, _ ->
+            .setPositiveButton(R.string.open_settings) { dialog, _ ->
                 openSettings()
                 dialog.dismiss()
             }
-            .setNegativeButton("CANCEL") { dialog, _ ->
+            .setNegativeButton(R.string.cancel) { dialog, _ ->
                 dialog.dismiss()
                 onPermissionPermanentlyDenied()
             }
@@ -221,7 +222,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         sendResultBroadcast(
             Intent(packageName).putExtra(
                 Constants.INTENT_EXTRA_PERMISSION_RESULT,
-                "permanently_denied"
+                Constants.PERMANENTLY_DENIED
             )
         )
     }
@@ -260,7 +261,8 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
                 if (exception is ResolvableApiException) {
                     onResolutionNeeded(exception)
                 } else {
-                    // TODO: resolution failed
+                    // resolution failed somehow
+                    onResolutionDenied()
                 }
             }
         }
@@ -270,7 +272,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * Sends success broadcast so that location retrieval process can be initiated
      */
     private fun shouldProceedForLocation() {
-        sendResultBroadcast(Intent(packageName).putExtra(Constants.INTENT_EXTRA_PERMISSION_RESULT, "granted"))
+        sendResultBroadcast(Intent(packageName).putExtra(Constants.INTENT_EXTRA_PERMISSION_RESULT, Constants.GRANTED))
     }
 
     /**
@@ -295,13 +297,13 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) return
         if (!isFinishing) {
             AlertDialog.Builder(this)
-                .setTitle("Location is currently disabled")
-                .setMessage("Please enable access to Location from Settings.")
-                .setPositiveButton("ENABLE") { dialog, _ ->
+                .setTitle(configuration.resolutionTitle)
+                .setMessage(configuration.resolutionText)
+                .setPositiveButton(R.string.enable) { dialog, _ ->
                     resolveLocationSettings(exception)
                     dialog.dismiss()
                 }
-                .setNegativeButton(R.string.btn_cancel) { dialog, _ ->
+                .setNegativeButton(R.string.cancel) { dialog, _ ->
                     dialog.dismiss()
                     onResolutionDenied()
                 }
@@ -315,7 +317,12 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * Sends broadcast indicating the denial of user for resolving location settings
      */
     private fun onResolutionDenied() {
-        sendResultBroadcast(Intent(packageName).putExtra(Constants.INTENT_EXTRA_PERMISSION_RESULT, "resolution_failed"))
+        sendResultBroadcast(
+            Intent(packageName).putExtra(
+                Constants.INTENT_EXTRA_PERMISSION_RESULT,
+                Constants.RESOLUTION_FAILED
+            )
+        )
     }
 
     /**
@@ -347,7 +354,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
                 sendResultBroadcast(
                     Intent(packageName).putExtra(
                         Constants.INTENT_EXTRA_PERMISSION_RESULT,
-                        "location_settings_denied"
+                        Constants.LOCATION_SETTINGS_DENIED
                     )
                 )
             }

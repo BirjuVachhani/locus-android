@@ -304,29 +304,17 @@ class Locus(func: Configuration.() -> Unit = {}) {
             logDebug("Received Permission broadcast")
             val status = intent?.getStringExtra(Constants.INTENT_EXTRA_PERMISSION_RESULT) ?: return
             isRequestingPermission.set(false)
+            runnable?.run()
+            runnable = null
             when (status) {
-                "granted" -> {
+                Constants.GRANTED -> {
                     initLocationProvider(context)
                     locationprovider.startContinuousLocation(options.locationRequest)
-                    runnable?.run()
-                    runnable = null
                     logDebug("Permission granted")
                 }
-                "denied" -> {
-                    // TODO: permission denied, let the user know
-                    logDebug("Permission denied")
-                }
-                "permanently_denied" -> {
-                    // TODO: permission denied, let the user know
-                    logDebug("Permission permanently denied")
-                }
-                "resolution_failed" -> {
-                    // TODO: resolution failed. Do something!
-                    logDebug("Location settings resolution failed")
-                }
-                "location_settings_denied" -> {
-                    // TODO: user denied turn on location settings!
-                    logDebug("User denied turn on location settings")
+                else -> {
+                    locationprovider.locationLiveData.postValue(LocusResult.Failure(Throwable(status)))
+                    logDebug(status)
                 }
             }
             LocalBroadcastManager.getInstance(context).unregisterReceiver(permissionBroadcastReceiver)
