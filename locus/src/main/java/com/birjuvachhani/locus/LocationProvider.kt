@@ -20,6 +20,7 @@ import android.content.Context
 import android.os.Looper
 import androidx.lifecycle.MutableLiveData
 import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import java.util.concurrent.atomic.AtomicBoolean
@@ -29,9 +30,16 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Copyright © 2019 locus-android. All rights reserved.
  */
 
+/**
+ * Responsible for starting and stopping location updates=
+ * @property isRequestOngoing AtomicBoolean which indicates that whether a location request is ongoing or not
+ * @property mFusedLocationProviderClient (com.google.android.gms.location.FusedLocationProviderClient..com.google.android.gms.location.FusedLocationProviderClient?) used to request location
+ * @property locationLiveData MutableLiveData<LocusResult> contains location results
+ * @property mLocationCallback <no name provided>
+ * @constructor
+ */
 internal class LocationProvider(context: Context) {
 
-    private val options: Configuration = Configuration()
     private val isRequestOngoing = AtomicBoolean().apply { set(false) }
 
     private var mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
@@ -53,10 +61,10 @@ internal class LocationProvider(context: Context) {
      * Starts continuous location tracking using FusedLocationProviderClient
      * */
     @SuppressLint("MissingPermission")
-    internal fun startContinuousLocation() {
+    internal fun startContinuousLocation(request: LocationRequest) {
         if (isRequestOngoing.getAndSet(true)) return
         mFusedLocationProviderClient?.requestLocationUpdates(
-            options.locationRequest,
+            request,
             mLocationCallback,
             Looper.getMainLooper()
         )?.addOnFailureListener { exception ->

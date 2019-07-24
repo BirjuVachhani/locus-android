@@ -56,7 +56,6 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_location_permission)
-//        window.addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
 
         isResolutionEnabled =
             intent?.getParcelableExtra<Configuration>(Constants.INTENT_EXTRA_CONFIGURATION)?.let {
@@ -103,6 +102,10 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         }
     }
 
+    /**
+     * Determines whether the rationale needs to be shown or not
+     * @return Boolean true if needs to be shown, false otherwise
+     */
     private fun shouldShowRationale(): Boolean {
         return ActivityCompat.shouldShowRequestPermissionRationale(
             this,
@@ -117,6 +120,9 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     private fun hasPermission(): Boolean =
         ContextCompat.checkSelfPermission(this, COARSE_LOCATION_PERMISSION) == PackageManager.PERMISSION_GRANTED
 
+    /**
+     * Displays a permission rationale dialog
+     */
     private fun showPermissionRationale() {
         AlertDialog.Builder(this)
             .setTitle(configuration.rationaleTitle)
@@ -169,6 +175,9 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         }
     }
 
+    /**
+     * handles the flow when the permission is granted successfully. It either sends success broadcast if the permission is granted and location setting resolution is disabled or proceeds for checking location settings
+     */
     private fun onPermissionGranted() {
         if (isResolutionEnabled) {
             checkIfLocationSettingsAreEnabled()
@@ -177,11 +186,17 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         }
     }
 
+    /**
+     * Sends denied broadcast when user denies to grant location permission
+     */
     private fun onPermissionDenied() {
         logDebug("Sending permission denied")
         sendResultBroadcast(Intent(packageName).putExtra(Constants.INTENT_EXTRA_PERMISSION_RESULT, "denied"))
     }
 
+    /**
+     * Shows permission permanently blocked dialog
+     */
     private fun showPermanentlyDeniedDialog() {
         AlertDialog.Builder(this)
             .setTitle(configuration.blockedTitle)
@@ -199,6 +214,9 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
             .takeIf { !isFinishing }?.show()
     }
 
+    /**
+     * Sends broadcast indicating permanent denial of location permission
+     */
     private fun onPermissionPermanentlyDenied() {
         sendResultBroadcast(
             Intent(packageName).putExtra(
@@ -208,13 +226,15 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         )
     }
 
+    /**
+     * Opens app settings screen
+     */
     private fun openSettings() {
         val intent = Intent()
         intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
         val uri = Uri.fromParts("package", packageName, null)
         intent.data = uri
         startActivityForResult(intent, SETTINGS_ACTIVITY_REQUEST_CODE)
-        // TODO: how to get result from this activity, remove finish method call after getting result
     }
 
     /**
@@ -246,6 +266,9 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         }
     }
 
+    /**
+     * Sends success broadcast so that location retrieval process can be initiated
+     */
     private fun shouldProceedForLocation() {
         sendResultBroadcast(Intent(packageName).putExtra(Constants.INTENT_EXTRA_PERMISSION_RESULT, "granted"))
     }
@@ -288,6 +311,9 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         }
     }
 
+    /**
+     * Sends broadcast indicating the denial of user for resolving location settings
+     */
     private fun onResolutionDenied() {
         sendResultBroadcast(Intent(packageName).putExtra(Constants.INTENT_EXTRA_PERMISSION_RESULT, "resolution_failed"))
     }
@@ -334,6 +360,10 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         }
     }
 
+    /**
+     * Sends local broadcast with provided [intent]
+     * @param intent Intent contains data that needs to be sent into the broadcast
+     */
     private fun sendResultBroadcast(intent: Intent) {
         intent.action = packageName
         logDebug("Sending permission broadcast: $intent")

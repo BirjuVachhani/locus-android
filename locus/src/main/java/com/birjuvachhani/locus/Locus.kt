@@ -51,12 +51,17 @@ internal annotation class LocusMarker
  * */
 @LocusMarker
 class Locus(func: Configuration.() -> Unit = {}) {
-    private val options = Configuration()
+    private var options = Configuration()
     private lateinit var locationprovider: LocationProvider
     private val permissionBroadcastReceiver = PermissionBroadcastReceiver()
     private var runnable: Runnable? = null
 
     companion object {
+
+        /**
+         * Enables logging for this library
+         * @param shouldLog Boolean true to enable, false otherwise
+         */
         fun setLogging(shouldLog: Boolean) {
             isLoggingEnabled = shouldLog
         }
@@ -75,24 +80,34 @@ class Locus(func: Configuration.() -> Unit = {}) {
     }
 
     /**
-     * This function is used to get location for one time only. It handles most of the errors internally though
-     * it doesn't any mechanism to handle errors externally.
-     * */
+     * Initiates location retrieval process to receive only one location result.
+     *
+     * This method internally handles runtime location permission which is needed for Android M and above. It also handles rationale dialogs and permission blocked dialogs also. These dialogs can be configured using [configure] method. It also handles location resolution process for requested location settings. It shows setting resolution dialog if needed and ask for user's permission to change location settings. Please note that these success and failure callbacks are lifecycle aware so no updates will be dispatched if the Activity is not in right state.
+     *
+     * @param activity FragmentActivity is the Activity instance from where the location request is triggered
+     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> provides a success block which will grant access to retrieved location
+     * @return BlockExecution that can be used to handle exceptions and failures during location retrieval process
+     */
     fun <T> getCurrentLocation(
-        contextAndLifecycleOwner: T,
+        activity: FragmentActivity,
         func: Location.() -> Unit
     ): BlockExecution where T : Context, T : LifecycleOwner {
-        initLocationProvider(contextAndLifecycleOwner)
-        val blockExecution = observeOneTimeUpdates(contextAndLifecycleOwner, func)
+        initLocationProvider(activity)
+        val blockExecution = observeOneTimeUpdates(activity, func)
 
-        checkAndStartUpdates(contextAndLifecycleOwner)
+        checkAndStartUpdates(activity)
         return blockExecution
     }
 
     /**
-     * This function is used to get location for one time only. It handles most of the errors internally though
-     * it doesn't any mechanism to handle errors externally.
-     * */
+     * Initiates location retrieval process to receive only one location result.
+     *
+     * This method internally handles runtime location permission which is needed for Android M and above. It also handles rationale dialogs and permission blocked dialogs also. These dialogs can be configured using [configure] method. It also handles location resolution process for requested location settings. It shows setting resolution dialog if needed and ask for user's permission to change location settings. Please note that these success and failure callbacks are lifecycle aware so no updates will be dispatched if the Fragment is not in right state.
+     *
+     * @param fragment Fragment is the Fragment from which the location request is initiated
+     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> provides a success block which will grant access to retrieved location
+     * @return BlockExecution that can be used to handle exceptions and failures during location retrieval process
+     */
     fun getCurrentLocation(fragment: Fragment, func: Location.() -> Unit): BlockExecution {
         if (!fragment.isAdded || fragment.activity == null) {
             Log.e("Locus", "Cannot start location updates, Fragment is not attached yet.")
@@ -106,9 +121,14 @@ class Locus(func: Configuration.() -> Unit = {}) {
     }
 
     /**
-     * This function is used to get location for one time only. It handles most of the errors internally though
-     * it doesn't any mechanism to handle errors externally.
-     * */
+     * Initiates location retrieval process to receive continuous location updates.
+     *
+     * This method internally handles runtime location permission which is needed for Android M and above. It also handles rationale dialogs and permission blocked dialogs also. These dialogs can be configured using [configure] method. It also handles location resolution process for requested location settings. It shows setting resolution dialog if needed and ask for user's permission to change location settings. Please note that these success and failure callbacks are lifecycle aware so no updates will be dispatched if the Activity is not in right state.
+     *
+     * @param activity FragmentActivity is the Activity instance from where the location request is triggered
+     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> provides a success block which will grant access to retrieved location
+     * @return BlockExecution that can be used to handle exceptions and failures during location retrieval process
+     */
     fun listenForLocation(activity: FragmentActivity, func: Location.() -> Unit): BlockExecution {
         initLocationProvider(activity)
         val blockExecution = observeForContinuesUpdates(activity, func)
@@ -118,9 +138,14 @@ class Locus(func: Configuration.() -> Unit = {}) {
     }
 
     /**
-     * This function is used to get location for one time only. It handles most of the errors internally though
-     * it doesn't any mechanism to handle errors externally.
-     * */
+     * Initiates location retrieval process to receive continuous location updates.
+     *
+     * This method internally handles runtime location permission which is needed for Android M and above. It also handles rationale dialogs and permission blocked dialogs also. These dialogs can be configured using [configure] method. It also handles location resolution process for requested location settings. It shows setting resolution dialog if needed and ask for user's permission to change location settings. Please note that these success and failure callbacks are lifecycle aware so no updates will be dispatched if the Fragment is not in right state.
+     *
+     * @param fragment Fragment is the Fragment from which the location request is initiated
+     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> provides a success block which will grant access to retrieved location
+     * @return BlockExecution that can be used to handle exceptions and failures during location retrieval process
+     */
     fun listenForLocation(fragment: Fragment, func: Location.() -> Unit): BlockExecution {
         if (!fragment.isAdded || fragment.activity == null) {
             Log.e("Locus", "Cannot start location updates, Fragment is not attached yet.")
@@ -133,6 +158,12 @@ class Locus(func: Configuration.() -> Unit = {}) {
         return blockExecution
     }
 
+    /**
+     * Registers an observer on location results that observes continuously. This observation is done in lifecycle aware way. That means that no updates will be dispatched if if it is not the right lifecycle state.
+     * @param owner LifecycleOwner is the owner of the lifecycle that will be used to observe on location results
+     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> will called when a new result is available
+     * @return BlockExecution provides a way to handle errors and exceptions occurred during this process
+     */
     private fun observeForContinuesUpdates(owner: LifecycleOwner, func: Location.() -> Unit): BlockExecution {
         val blockExecution = BlockExecution()
         runnable = Runnable {
@@ -152,10 +183,13 @@ class Locus(func: Configuration.() -> Unit = {}) {
         return blockExecution
     }
 
-
+    /**
+     * Checks for location permission and then initiates permission model if the location permission is not granted already.
+     * @param context Context is the Android Context
+     */
     private fun checkAndStartUpdates(context: Context) {
         if (hasLocationPermission(context) && isSettingsEnabled(context)) {
-            locationprovider.startContinuousLocation()
+            locationprovider.startContinuousLocation(options.locationRequest)
             runnable?.run()
             runnable = null
         } else {
@@ -166,6 +200,12 @@ class Locus(func: Configuration.() -> Unit = {}) {
         }
     }
 
+    /**
+     * Registers an observer on location results that observes only for one time. This observation is done in lifecycle aware way. That means that no updates will be dispatched if if it is not the right lifecycle state.
+     * @param owner LifecycleOwner is the owner of the lifecycle that will be used to observe on location results
+     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> will called when a new result is available
+     * @return BlockExecution provides a way to handle errors and exceptions occurred during this process
+     */
     private fun observeOneTimeUpdates(owner: LifecycleOwner, func: Location.() -> Unit): BlockExecution {
         val blockExecution = BlockExecution()
 
@@ -188,6 +228,10 @@ class Locus(func: Configuration.() -> Unit = {}) {
         return blockExecution
     }
 
+    /**
+     * Initiates permission request by starting [LocusActivity] which is responsible to handle permission model and location settings resolution
+     * @param context Context is the Android Context used to start the [LocusActivity]
+     */
     private fun initPermissionRequest(context: Context) {
         if (!isRequestingPermission.getAndSet(true)) {
             context.startActivity(Intent(context, LocusActivity::class.java).apply {
@@ -200,6 +244,11 @@ class Locus(func: Configuration.() -> Unit = {}) {
         }
     }
 
+    /**
+     * Checks whether the app has location permission or not
+     * @param context Context is the Android Context used to request a check for location permission
+     * @return Boolean true if the location permission is already granted, false otherwise
+     */
     private fun hasLocationPermission(context: Context) = ContextCompat.checkSelfPermission(
         context,
         android.Manifest.permission.ACCESS_COARSE_LOCATION
@@ -217,6 +266,10 @@ class Locus(func: Configuration.() -> Unit = {}) {
         )
     }
 
+    /**
+     * Initializes [LocationProvider] which is responsible to start and stop location updates
+     * @param context Context is the Android Context used to initialize [LocationProvider]
+     */
     private fun initLocationProvider(context: Context) {
         if (!::locationprovider.isInitialized) {
             locationprovider = LocationProvider(context)
@@ -224,23 +277,27 @@ class Locus(func: Configuration.() -> Unit = {}) {
     }
 
     /**
-     * This function is used to stop receiving location updates.
-     * */
-    fun stopTrackingLocation(fragment: Fragment) {
-        locationprovider.locationLiveData.removeObservers(fragment)
+     * Stops the ongoing location retrieval process.
+     *
+     * Note that this only stops location updates, it cannot stop ongoing permission request.
+     *
+     * @param owner LifecycleOwner is the same  Lifecycle owner that is used to start these location updates
+     */
+    fun stopTrackingLocation(owner: LifecycleOwner) {
+        locationprovider.locationLiveData.removeObservers(owner)
         locationprovider.stopContinuousLocation()
     }
 
     /**
-     * This function is used to stop receiving location updates.
-     * */
-    fun stopTrackingLocation(activity: FragmentActivity) {
-        if (::locationprovider.isInitialized) {
-            locationprovider.locationLiveData.removeObservers(activity)
-            locationprovider.stopContinuousLocation()
-        }
+     * Resets location configs to default
+     */
+    fun setDefaultConfig() {
+        options = Configuration()
     }
 
+    /**
+     * Receives local broadcasts related to permission model
+     */
     inner class PermissionBroadcastReceiver : BroadcastReceiver() {
 
         override fun onReceive(context: Context, intent: Intent?) {
@@ -250,7 +307,7 @@ class Locus(func: Configuration.() -> Unit = {}) {
             when (status) {
                 "granted" -> {
                     initLocationProvider(context)
-                    locationprovider.startContinuousLocation()
+                    locationprovider.startContinuousLocation(options.locationRequest)
                     runnable?.run()
                     runnable = null
                     logDebug("Permission granted")
