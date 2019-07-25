@@ -55,10 +55,6 @@ data class Configuration(
      * */
     fun request(func: (@LocusMarker LocationRequest).() -> Unit) {
         locationRequest = LocationRequest().apply(func)
-        fun setDefault() {
-
-        }
-        setDefault()
     }
 
 }
