@@ -23,6 +23,7 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
 import android.util.Log
+import androidx.annotation.RequiresPermission
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
@@ -159,6 +160,63 @@ class Locus(func: Configuration.() -> Unit = {}) {
     }
 
     /**
+     * Initiates location retrieval process to receive one time location update without executing permission model.
+     *
+     * This method can be used to receive one time location update from services or from background. It doesn't handle location permission model so before calling this method, ensure that the location permission is granted.
+     *
+     * @param context context used to initialize FusedLocationProviderClient
+     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> provides a success block which will grant access to retrieved location
+     * @return BlockExecution that can be used to handle exceptions and failures during location retrieval process
+     */
+    @RequiresPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION)
+    fun fetchCurrentLocation(context: Context, func: Location.() -> Unit): BlockExecution {
+        initLocationProvider(context)
+        val blockExecution = BlockExecution()
+        locationprovider.locationLiveData.observeForever { result ->
+            when (result) {
+                is LocusResult.Success -> {
+                    func(result.location)
+                    locationprovider.stopContinuousLocation()
+                }
+                is LocusResult.Failure -> {
+                    blockExecution(result.error)
+                    logError(result.error)
+                }
+            }
+        }
+        checkAndStartUpdatesWithoutPermissionRequest(context)
+        return blockExecution
+    }
+
+    /**
+     * Initiates location retrieval process to receive continuous location updates without executing permission model.
+     *
+     * This method can be used to receive location updates from services or from background. It doesn't handle location permission model so before calling this method, ensure that the location permission is granted. Also, it doesn't observe location updates in lifecycle aware way. So don't forget to stop updates manually when needed to be stopped.
+     *
+     * @param context context is the Fragment from which the location request is initiated
+     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> provides a success block which will grant access to retrieved location
+     * @return BlockExecution that can be used to handle exceptions and failures during location retrieval process
+     */
+    @RequiresPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION)
+    fun observeLocationUpdates(context: Context, func: Location.() -> Unit): BlockExecution {
+        initLocationProvider(context)
+        val blockExecution = BlockExecution()
+        locationprovider.locationLiveData.observeForever { result ->
+            when (result) {
+                is LocusResult.Success -> {
+                    func(result.location)
+                }
+                is LocusResult.Failure -> {
+                    blockExecution(result.error)
+                    logError(result.error)
+                }
+            }
+        }
+        checkAndStartUpdatesWithoutPermissionRequest(context)
+        return blockExecution
+    }
+
+    /**
      * Registers an observer on location results that observes continuously. This observation is done in lifecycle aware way. That means that no updates will be dispatched if if it is not the right lifecycle state.
      * @param owner LifecycleOwner is the owner of the lifecycle that will be used to observe on location results
      * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> will called when a new result is available
@@ -181,6 +239,20 @@ class Locus(func: Configuration.() -> Unit = {}) {
             }
         }
         return blockExecution
+    }
+
+    /**
+     * Checks for location permission and then initiates permission model if the location permission is not granted already.
+     * @param context Context is the Android Context
+     */
+    private fun checkAndStartUpdatesWithoutPermissionRequest(context: Context) {
+        if (hasLocationPermission(context) && isSettingsEnabled(context)) {
+            locationprovider.startContinuousLocation(options.locationRequest)
+            runnable?.run()
+            runnable = null
+        } else {
+            locationprovider.locationLiveData.postValue(LocusResult.Failure(Throwable("Cannot continue without location permission")))
+        }
     }
 
     /**
