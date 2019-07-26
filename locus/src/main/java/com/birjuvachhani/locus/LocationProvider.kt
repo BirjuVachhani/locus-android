@@ -43,7 +43,7 @@ internal class LocationProvider(context: Context) {
     private val isRequestOngoing = AtomicBoolean().apply { set(false) }
 
     private var mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
-    internal val locationLiveData = MutableLiveData<LocusResult>()
+    internal var locationLiveData = MutableLiveData<LocusResult>()
 
     private val mLocationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult?) {
@@ -59,6 +59,8 @@ internal class LocationProvider(context: Context) {
 
     /**
      * Starts continuous location tracking using FusedLocationProviderClient
+     *
+     * If somehow continuous location retrieval fails then it tries to retrieve last known location.
      * */
     @SuppressLint("MissingPermission")
     internal fun startContinuousLocation(request: LocationRequest) {
@@ -67,8 +69,15 @@ internal class LocationProvider(context: Context) {
             request,
             mLocationCallback,
             Looper.getMainLooper()
-        )?.addOnFailureListener { exception ->
-            sendResult(LocusResult.Failure(exception))
+        )?.addOnFailureListener {
+            mFusedLocationProviderClient?.lastLocation?.addOnCompleteListener {
+                if (!it.isSuccessful) return@addOnCompleteListener
+                it.result?.let { location ->
+                    sendResult(LocusResult.Success(location))
+                }
+            }?.addOnFailureListener {
+                sendResult(LocusResult.Failure(it))
+            }
         }
     }
 
@@ -86,6 +95,7 @@ internal class LocationProvider(context: Context) {
         logDebug("Stopping location updates")
         isRequestOngoing.set(false)
         locationLiveData.postValue(null)
+        locationLiveData = MutableLiveData()
         mFusedLocationProviderClient?.removeLocationUpdates(mLocationCallback)
     }
 }
