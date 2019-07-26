@@ -172,16 +172,19 @@ class Locus(func: Configuration.() -> Unit = {}) {
     fun fetchCurrentLocation(context: Context, func: Location.() -> Unit): BlockExecution {
         initLocationProvider(context)
         val blockExecution = BlockExecution()
-        locationprovider.locationLiveData.observeForever { result ->
-            when (result) {
-                is LocusResult.Success -> {
-                    func(result.location)
-                    locationprovider.stopContinuousLocation()
+        runnable = Runnable {
+            locationprovider.locationLiveData.observeOnce { result ->
+                when (result) {
+                    is LocusResult.Success -> {
+                        func(result.location)
+                        locationprovider.stopContinuousLocation()
+                    }
+                    is LocusResult.Failure -> {
+                        blockExecution(result.error)
+                        logError(result.error)
+                    }
                 }
-                is LocusResult.Failure -> {
-                    blockExecution(result.error)
-                    logError(result.error)
-                }
+                locationprovider.stopContinuousLocation()
             }
         }
         checkAndStartUpdatesWithoutPermissionRequest(context)
@@ -201,14 +204,16 @@ class Locus(func: Configuration.() -> Unit = {}) {
     fun observeLocationUpdates(context: Context, func: Location.() -> Unit): BlockExecution {
         initLocationProvider(context)
         val blockExecution = BlockExecution()
-        locationprovider.locationLiveData.observeForever { result ->
-            when (result) {
-                is LocusResult.Success -> {
-                    func(result.location)
-                }
-                is LocusResult.Failure -> {
-                    blockExecution(result.error)
-                    logError(result.error)
+        runnable = Runnable {
+            locationprovider.locationLiveData.observeForever { result ->
+                when (result) {
+                    is LocusResult.Success -> {
+                        func(result.location)
+                    }
+                    is LocusResult.Failure -> {
+                        blockExecution(result.error)
+                        logError(result.error)
+                    }
                 }
             }
         }
@@ -283,7 +288,7 @@ class Locus(func: Configuration.() -> Unit = {}) {
 
         runnable = Runnable {
             locationprovider.locationLiveData.removeObservers(owner)
-            locationprovider.locationLiveData.watch(owner) { result ->
+            locationprovider.locationLiveData.observeOnce(owner) { result ->
                 when (result) {
                     is LocusResult.Success -> {
                         func(result.location)
@@ -294,7 +299,6 @@ class Locus(func: Configuration.() -> Unit = {}) {
                     }
                 }
                 locationprovider.stopContinuousLocation()
-                locationprovider.locationLiveData.removeObservers(owner)
             }
         }
         return blockExecution
@@ -357,6 +361,14 @@ class Locus(func: Configuration.() -> Unit = {}) {
      */
     fun stopTrackingLocation(owner: LifecycleOwner) {
         locationprovider.locationLiveData.removeObservers(owner)
+        locationprovider.stopContinuousLocation()
+    }
+
+    /**
+     * Stops the ongoing location retrieval process.
+     * Note that this only stops location updates, it cannot stop ongoing permission request.
+     */
+    fun stopObservingLocation() {
         locationprovider.stopContinuousLocation()
     }
 

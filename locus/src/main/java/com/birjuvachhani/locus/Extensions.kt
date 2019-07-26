@@ -33,6 +33,28 @@ fun <T : Any> LiveData<T?>.watch(owner: LifecycleOwner, func: (T) -> Unit) {
     })
 }
 
+fun <T : Any> LiveData<T?>.observeOnce(lifecycleOwner: LifecycleOwner, func: (T) -> Unit) {
+    observe(lifecycleOwner, object : Observer<T?> {
+        override fun onChanged(t: T?) {
+            if (t != null) {
+                func(t)
+                removeObserver(this)
+            }
+        }
+    })
+}
+
+fun <T : Any> LiveData<T?>.observeOnce(func: (T) -> Unit) {
+    observeForever(object : Observer<T?> {
+        override fun onChanged(t: T?) {
+            if (t != null) {
+                func(t)
+                removeObserver(this)
+            }
+        }
+    })
+}
+
 // Extension property to check if the error caused because the user denied permission or not
 val Throwable.isDenied get() = this.message == Constants.DENIED
 
