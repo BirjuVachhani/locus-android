@@ -33,6 +33,12 @@ fun <T : Any> LiveData<T?>.watch(owner: LifecycleOwner, func: (T) -> Unit) {
     })
 }
 
+/**
+ * Observes LiveData for only one time in lifecycle aware way and then removes the observer
+ * @receiver LiveData<T?>
+ * @param lifecycleOwner LifecycleOwner
+ * @param func Function1<T, Unit> will be called upon getting data in observer
+ */
 fun <T : Any> LiveData<T?>.observeOnce(lifecycleOwner: LifecycleOwner, func: (T) -> Unit) {
     observe(lifecycleOwner, object : Observer<T?> {
         override fun onChanged(t: T?) {
@@ -44,6 +50,11 @@ fun <T : Any> LiveData<T?>.observeOnce(lifecycleOwner: LifecycleOwner, func: (T)
     })
 }
 
+/**
+ * Observes LiveData for only one time in and then removes the observer
+ * @receiver LiveData<T?>
+ * @param func Function1<T, Unit> will be called upon getting data in observer
+ */
 fun <T : Any> LiveData<T?>.observeOnce(func: (T) -> Unit) {
     observeForever(object : Observer<T?> {
         override fun onChanged(t: T?) {
