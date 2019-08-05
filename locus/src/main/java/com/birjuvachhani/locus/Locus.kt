@@ -89,10 +89,7 @@ class Locus(func: Configuration.() -> Unit = {}) {
      * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> provides a success block which will grant access to retrieved location
      * @return BlockExecution that can be used to handle exceptions and failures during location retrieval process
      */
-    fun <T> getCurrentLocation(
-        activity: FragmentActivity,
-        func: Location.() -> Unit
-    ): BlockExecution where T : Context, T : LifecycleOwner {
+    fun getCurrentLocation(activity: FragmentActivity, func: Location.() -> Unit): BlockExecution {
         initLocationProvider(activity)
         val blockExecution = observeOneTimeUpdates(activity, func)
 
