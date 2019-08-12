@@ -54,6 +54,8 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
     }
 
+    private var isBackground = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_location_permission)
@@ -63,7 +65,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
                 configuration = it
                 configuration.shouldResolveRequest
             } ?: false
-
+        isBackground = intent?.getBooleanExtra(Constants.INTENT_EXTRA_IS_BACKGROUND, false) ?: false
         initPermissionModel()
     }
 
@@ -374,6 +376,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     private fun sendResultBroadcast(intent: Intent) {
         intent.action = packageName
         logDebug("Sending permission broadcast: $intent")
+        intent.putExtra(Constants.INTENT_EXTRA_IS_BACKGROUND, isBackground)
         localBroadcastManager.sendBroadcast(intent)
         isRequestingPermission.set(false)
         finish()
