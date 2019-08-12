@@ -16,6 +16,7 @@
 package com.birjuvachhani.locus
 
 import android.annotation.SuppressLint
+import android.app.PendingIntent
 import android.content.Context
 import android.os.Looper
 import androidx.lifecycle.MutableLiveData
@@ -40,6 +41,9 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 internal class LocationProvider(context: Context) {
 
+    private val pendingIntent: PendingIntent by lazy {
+        LocationBroadcastReceiver.getPendingIntent(context)
+    }
     private val isRequestOngoing = AtomicBoolean().apply { set(false) }
 
     private var mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
@@ -82,6 +86,30 @@ internal class LocationProvider(context: Context) {
     }
 
     /**
+     * Starts continuous location tracking using FusedLocationProviderClient
+     *
+     * If somehow continuous location retrieval fails then it tries to retrieve last known location.
+     * */
+    @SuppressLint("MissingPermission")
+    internal fun startBackgroundLocationUpdates(context: Context, request: LocationRequest) {
+        if (isRequestOngoing.getAndSet(true)) return
+        logDebug("Starting location updates")
+        mFusedLocationProviderClient?.requestLocationUpdates(
+            request,
+            pendingIntent
+        )?.addOnFailureListener {
+            mFusedLocationProviderClient?.lastLocation?.addOnCompleteListener {
+                if (!it.isSuccessful) return@addOnCompleteListener
+                it.result?.let { location ->
+                    backgroundLocationLiveData.postValue(LocusResult.Success(location))
+                }
+            }?.addOnFailureListener {
+                backgroundLocationLiveData.postValue(LocusResult.Failure(it))
+            }
+        }
+    }
+
+    /**
      * Sets result into live data synchronously
      * */
     private fun sendResult(result: LocusResult) {
@@ -97,5 +125,15 @@ internal class LocationProvider(context: Context) {
         locationLiveData.postValue(null)
         locationLiveData = MutableLiveData()
         mFusedLocationProviderClient?.removeLocationUpdates(mLocationCallback)
+    }
+
+    /**
+     * Stops location tracking by removing location callback from FusedLocationProviderClient
+     * */
+    internal fun stopBackgroundLocation() {
+        logDebug("Stopping background location updates")
+        isRequestOngoing.set(false)
+        backgroundLocationLiveData = MutableLiveData()
+        mFusedLocationProviderClient?.removeLocationUpdates(pendingIntent)
     }
 }

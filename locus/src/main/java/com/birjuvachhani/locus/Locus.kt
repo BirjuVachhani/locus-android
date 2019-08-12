@@ -15,6 +15,10 @@
 
 package com.birjuvachhani.locus
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -22,8 +26,10 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
+import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresPermission
+import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
@@ -78,6 +84,26 @@ class Locus(func: Configuration.() -> Unit = {}) {
      * */
     fun configure(func: Configuration.() -> Unit) {
         func(options)
+    }
+
+    fun startBackgroundLocationUpdates(service: Service, func: Location.() -> Unit): BlockExecution {
+        initLocationProvider(service)
+        val blockExecution = BlockExecution()
+        runnable = Runnable {
+            backgroundLocationLiveData.observeForever { result ->
+                when (result) {
+                    is LocusResult.Success -> {
+                        func(result.location)
+                    }
+                    is LocusResult.Failure -> {
+                        blockExecution(result.error)
+                        logError(result.error)
+                    }
+                }
+            }
+        }
+        checkAndStartBackgroundUpdates(service)
+        return blockExecution
     }
 
     /**
@@ -275,6 +301,24 @@ class Locus(func: Configuration.() -> Unit = {}) {
     }
 
     /**
+     * Checks for location permission and then initiates permission model
+     * if the location permission is not granted already.
+     * @param context Context is the Android Context
+     */
+    private fun checkAndStartBackgroundUpdates(context: Context) {
+        if (hasLocationPermission(context) && isSettingsEnabled(context)) {
+            locationprovider.startBackgroundLocationUpdates(context, options.locationRequest)
+            runnable?.run()
+            runnable = null
+        } else {
+            LocalBroadcastManager
+                .getInstance(context)
+                .registerReceiver(permissionBroadcastReceiver, IntentFilter(context.packageName))
+            initPermissionRequestForBackgroundUpdates(context)
+        }
+    }
+
+    /**
      * Registers an observer on location results that observes only for one time. This observation is done in lifecycle aware way. That means that no updates will be dispatched if if it is not the right lifecycle state.
      * @param owner LifecycleOwner is the owner of the lifecycle that will be used to observe on location results
      * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> will called when a new result is available
@@ -314,6 +358,43 @@ class Locus(func: Configuration.() -> Unit = {}) {
             })
         } else {
             logDebug("A request is already ongoing")
+        }
+    }
+
+    /**
+     * Initiates permission request by starting [LocusActivity] which is responsible to handle permission model and location settings resolution
+     * @param context Context is the Android Context used to start the [LocusActivity]
+     */
+    private fun initPermissionRequestForBackgroundUpdates(context: Context) {
+        if (!isRequestingPermission.getAndSet(true)) {
+            val intent = Intent(context, LocusActivity::class.java).apply {
+                if (options.shouldResolveRequest) {
+                    putExtra(Constants.INTENT_EXTRA_CONFIGURATION, options)
+                    putExtra(Constants.INTENT_EXTRA_IS_BACKGROUND, true)
+                }
+            }
+            val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            showPermissionNotification(context, pendingIntent)
+        } else {
+            logDebug("A request is already ongoing")
+        }
+    }
+
+    private fun showPermissionNotification(context: Context, pendingIntent: PendingIntent) {
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel =
+                NotificationChannel("permission_channel", "Permission Channel", NotificationManager.IMPORTANCE_DEFAULT)
+            manager.createNotificationChannel(channel)
+        }
+        with(NotificationCompat.Builder(context, "permission_channel")) {
+            setContentTitle("Require Location Permission")
+            setContentText("This feature requires location permission to access device location. Please allow to access device location")
+            setSmallIcon(R.drawable.ic_location_on)
+            addAction(NotificationCompat.Action.Builder(0, "Grant", pendingIntent).build())
+            setPriority(NotificationManager.IMPORTANCE_HIGH)
+            setAutoCancel(true)
+            manager.notify(865, build())
         }
     }
 
@@ -370,6 +451,14 @@ class Locus(func: Configuration.() -> Unit = {}) {
     }
 
     /**
+     * Stops the ongoing location retrieval process.
+     * Note that this only stops location updates, it cannot stop ongoing permission request.
+     */
+    fun stopBackgroundLocation() {
+        locationprovider.stopContinuousLocation()
+    }
+
+    /**
      * Resets location configs to default
      */
     fun setDefaultConfig() {
@@ -384,13 +473,21 @@ class Locus(func: Configuration.() -> Unit = {}) {
         override fun onReceive(context: Context, intent: Intent?) {
             logDebug("Received Permission broadcast")
             val status = intent?.getStringExtra(Constants.INTENT_EXTRA_PERMISSION_RESULT) ?: return
+            val isBackground = intent.getBooleanExtra(Constants.INTENT_EXTRA_IS_BACKGROUND, false)
             isRequestingPermission.set(false)
             runnable?.run()
             runnable = null
             when (status) {
                 Constants.GRANTED -> {
                     initLocationProvider(context)
-                    locationprovider.startContinuousLocation(options.locationRequest)
+                    if (isBackground) {
+                        locationprovider.startBackgroundLocationUpdates(
+                            context.applicationContext,
+                            options.locationRequest
+                        )
+                    } else {
+                        locationprovider.startContinuousLocation(options.locationRequest)
+                    }
                     logDebug("Permission granted")
                 }
                 else -> {

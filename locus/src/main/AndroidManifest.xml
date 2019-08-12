@@ -10,6 +10,15 @@
             android:name=".LocusActivity"
             android:launchMode="singleTask"
             android:theme="@style/LocusTheme" />
+
+        <receiver
+            android:name=".LocationBroadcastReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.birjuvachhani.locus.LocationProvider.LocationBroadcastReceiver.action.PROCESS_UPDATES" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
