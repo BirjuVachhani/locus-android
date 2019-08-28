@@ -18,7 +18,6 @@ package com.birjuvachhani.locus
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -54,12 +53,24 @@ internal val isRequestingPermission = AtomicBoolean().apply {
 internal annotation class LocusMarker
 
 /**
- * A helper class for location extension which provides dsl extensions for getting location
- * */
+ * A helper class for location extension which provides
+ * dsl extensions for getting location
+ *
+ * @property options Configuration holds the configuration of the library
+ *
+ * @property locationProvider LocationProvider is used to retrieve location
+ *
+ * @property permissionBroadcastReceiver PermissionBroadcastReceiver
+ * receives all the permission broadcast from the [LocusActivity]
+ *
+ * @property runnable Runnable? holds references to the LiveData observers
+ * that needs to be executed after starting the location updates in order
+ * to not miss the location updates.
+ */
 @LocusMarker
 class Locus(func: Configuration.() -> Unit = {}) {
     private var options = Configuration()
-    private lateinit var locationprovider: LocationProvider
+    private lateinit var locationProvider: LocationProvider
     private val permissionBroadcastReceiver = PermissionBroadcastReceiver()
     private var runnable: Runnable? = null
 
@@ -67,6 +78,9 @@ class Locus(func: Configuration.() -> Unit = {}) {
 
         /**
          * Enables logging for this library
+         *
+         * Most of the events are logged on debug level and errors are logged on error level.
+         *
          * @param shouldLog Boolean true to enable, false otherwise
          */
         fun setLogging(shouldLog: Boolean) {
@@ -80,14 +94,39 @@ class Locus(func: Configuration.() -> Unit = {}) {
 
     /**
      * creates Configuration object from user configuration
-     * @param func is a lambda receiver for Configuration which is used to build Configuration object
+     *
+     * @param func is a lambda receiver for Configuration which is used
+     * to build Configuration object
      * */
     fun configure(func: Configuration.() -> Unit) {
         func(options)
     }
 
-    fun startBackgroundLocationUpdates(service: Service, func: Location.() -> Unit): BlockExecution {
-        initLocationProvider(service)
+    /**
+     * Starts location updates that be used while the app is in background.
+     *
+     * The problem with the FusedLocationProviderClient is that when we provide
+     * a LocationCallback instance to receive location updates, it stops receiving
+     * updates after some time when app goes in background. This use case prevents
+     * from getting location updates in services and while the app is in background.
+     *
+     * The preferable workaround is to use PendingIntent instead of using LocationCallback
+     * to receive location updates. This way works perfectly even when the app is in background.
+     * Therefore, this method is expected to be used in services and in cases where background
+     * location updates are needed.
+     *
+     * @param context Context is the Android context
+     *
+     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> lambda block
+     * will be executed on location process result
+     *
+     * @return BlockExecution which can be used to register failure callback
+     */
+    fun startBackgroundLocationUpdates(
+        context: Context,
+        func: Location.() -> Unit
+    ): BlockExecution {
+        initLocationProvider(context)
         val blockExecution = BlockExecution()
         runnable = Runnable {
             backgroundLocationLiveData.observeForever { result ->
@@ -102,18 +141,30 @@ class Locus(func: Configuration.() -> Unit = {}) {
                 }
             }
         }
-        checkAndStartBackgroundUpdates(service)
+        checkAndStartBackgroundUpdates(context)
         return blockExecution
     }
 
     /**
      * Initiates location retrieval process to receive only one location result.
      *
-     * This method internally handles runtime location permission which is needed for Android M and above. It also handles rationale dialogs and permission blocked dialogs also. These dialogs can be configured using [configure] method. It also handles location resolution process for requested location settings. It shows setting resolution dialog if needed and ask for user's permission to change location settings. Please note that these success and failure callbacks are lifecycle aware so no updates will be dispatched if the Activity is not in right state.
+     * This method internally handles runtime location permission which is needed
+     * for Android M and above. It also handles rationale dialogs and permission
+     * blocked dialogs also. These dialogs can be configured using [configure] method.
+     * It also handles location resolution process for requested location settings.
+     * It shows setting resolution dialog if needed and ask for user's permission to
+     * change location settings. Please note that these success and failure callbacks
+     * are lifecycle aware so no updates will be dispatched if the Activity
+     * is not in right state.
      *
-     * @param activity FragmentActivity is the Activity instance from where the location request is triggered
-     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> provides a success block which will grant access to retrieved location
-     * @return BlockExecution that can be used to handle exceptions and failures during location retrieval process
+     * @param activity FragmentActivity is the Activity instance from where
+     * the location request is triggered
+     *
+     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> provides
+     * a success block which will grant access to retrieved location
+     *
+     * @return BlockExecution that can be used to handle exceptions and failures
+     * during location retrieval process
      */
     fun getCurrentLocation(activity: FragmentActivity, func: Location.() -> Unit): BlockExecution {
         initLocationProvider(activity)
@@ -126,11 +177,22 @@ class Locus(func: Configuration.() -> Unit = {}) {
     /**
      * Initiates location retrieval process to receive only one location result.
      *
-     * This method internally handles runtime location permission which is needed for Android M and above. It also handles rationale dialogs and permission blocked dialogs also. These dialogs can be configured using [configure] method. It also handles location resolution process for requested location settings. It shows setting resolution dialog if needed and ask for user's permission to change location settings. Please note that these success and failure callbacks are lifecycle aware so no updates will be dispatched if the Fragment is not in right state.
+     * This method internally handles runtime location permission which is needed
+     * for Android M and above. It also handles rationale dialogs and permission
+     * blocked dialogs also. These dialogs can be configured using [configure] method.
+     * It also handles location resolution process for requested location settings.
+     * It shows setting resolution dialog if needed and ask for user's permission to
+     * change location settings. Please note that these success and failure callbacks
+     * are lifecycle aware so no updates will be dispatched if the Fragment is not
+     * in right state.
      *
      * @param fragment Fragment is the Fragment from which the location request is initiated
-     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> provides a success block which will grant access to retrieved location
-     * @return BlockExecution that can be used to handle exceptions and failures during location retrieval process
+     *
+     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> provides
+     * a success block which will grant access to retrieved location
+     *
+     * @return BlockExecution that can be used to handle exceptions and
+     * failures during location retrieval process
      */
     fun getCurrentLocation(fragment: Fragment, func: Location.() -> Unit): BlockExecution {
         if (!fragment.isAdded || fragment.activity == null) {
@@ -147,11 +209,23 @@ class Locus(func: Configuration.() -> Unit = {}) {
     /**
      * Initiates location retrieval process to receive continuous location updates.
      *
-     * This method internally handles runtime location permission which is needed for Android M and above. It also handles rationale dialogs and permission blocked dialogs also. These dialogs can be configured using [configure] method. It also handles location resolution process for requested location settings. It shows setting resolution dialog if needed and ask for user's permission to change location settings. Please note that these success and failure callbacks are lifecycle aware so no updates will be dispatched if the Activity is not in right state.
+     * This method internally handles runtime location permission which is needed
+     * for Android M and above. It also handles rationale dialogs and permission blocked
+     * dialogs also. These dialogs can be configured using [configure] method.
+     * It also handles location resolution process for requested location settings.
+     * It shows setting resolution dialog if needed and ask for user's permission to
+     * change location settings. Please note that these success and failure callbacks
+     * are lifecycle aware so no updates will be dispatched if the Activity
+     * is not in right state.
      *
-     * @param activity FragmentActivity is the Activity instance from where the location request is triggered
-     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> provides a success block which will grant access to retrieved location
-     * @return BlockExecution that can be used to handle exceptions and failures during location retrieval process
+     * @param activity FragmentActivity is the Activity instance from where
+     * the location request is triggered
+     *
+     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> provides
+     * a success block which will grant access to retrieved location
+     *
+     * @return BlockExecution that can be used to handle exceptions and failures
+     * during location retrieval process
      */
     fun listenForLocation(activity: FragmentActivity, func: Location.() -> Unit): BlockExecution {
         initLocationProvider(activity)
@@ -164,11 +238,23 @@ class Locus(func: Configuration.() -> Unit = {}) {
     /**
      * Initiates location retrieval process to receive continuous location updates.
      *
-     * This method internally handles runtime location permission which is needed for Android M and above. It also handles rationale dialogs and permission blocked dialogs also. These dialogs can be configured using [configure] method. It also handles location resolution process for requested location settings. It shows setting resolution dialog if needed and ask for user's permission to change location settings. Please note that these success and failure callbacks are lifecycle aware so no updates will be dispatched if the Fragment is not in right state.
+     * This method internally handles runtime location permission which is needed
+     * for Android M and above. It also handles rationale dialogs and permission
+     * blocked dialogs also. These dialogs can be configured using [configure] method.
+     * It also handles location resolution process for requested location settings.
+     * It shows setting resolution dialog if needed and ask for user's permission to
+     * change location settings. Please note that these success and failure callbacks
+     * are lifecycle aware so no updates will be dispatched if the Fragment
+     * is not in right state.
      *
-     * @param fragment Fragment is the Fragment from which the location request is initiated
-     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> provides a success block which will grant access to retrieved location
-     * @return BlockExecution that can be used to handle exceptions and failures during location retrieval process
+     * @param fragment Fragment is the Fragment from which the
+     * location request is initiated
+     *
+     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> provides
+     * a success block which will grant access to retrieved location
+     *
+     * @return BlockExecution that can be used to handle exceptions and failures
+     * during location retrieval process
      */
     fun listenForLocation(fragment: Fragment, func: Location.() -> Unit): BlockExecution {
         if (!fragment.isAdded || fragment.activity == null) {
@@ -183,31 +269,38 @@ class Locus(func: Configuration.() -> Unit = {}) {
     }
 
     /**
-     * Initiates location retrieval process to receive one time location update without executing permission model.
+     * Initiates location retrieval process to receive one time location
+     * update without executing permission model.
      *
-     * This method can be used to receive one time location update from services or from background. It doesn't handle location permission model so before calling this method, ensure that the location permission is granted.
+     * This method can be used to receive one time location update from services
+     * or from background. It doesn't handle location permission model so before
+     * calling this method, ensure that the location permission is granted.
      *
      * @param context context used to initialize FusedLocationProviderClient
-     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> provides a success block which will grant access to retrieved location
-     * @return BlockExecution that can be used to handle exceptions and failures during location retrieval process
+     *
+     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> provides
+     * a success block which will grant access to retrieved location
+     *
+     * @return BlockExecution that can be used to handle exceptions and failures
+     * during location retrieval process
      */
     @RequiresPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION)
     fun fetchCurrentLocation(context: Context, func: Location.() -> Unit): BlockExecution {
         initLocationProvider(context)
         val blockExecution = BlockExecution()
         runnable = Runnable {
-            locationprovider.locationLiveData.observeOnce { result ->
+            locationProvider.locationLiveData.observeOnce { result ->
                 when (result) {
                     is LocusResult.Success -> {
                         func(result.location)
-                        locationprovider.stopContinuousLocation()
+                        locationProvider.stopContinuousLocation()
                     }
                     is LocusResult.Failure -> {
                         blockExecution(result.error)
                         logError(result.error)
                     }
                 }
-                locationprovider.stopContinuousLocation()
+                locationProvider.stopContinuousLocation()
             }
         }
         checkAndStartUpdatesWithoutPermissionRequest(context)
@@ -215,20 +308,30 @@ class Locus(func: Configuration.() -> Unit = {}) {
     }
 
     /**
-     * Initiates location retrieval process to receive continuous location updates without executing permission model.
+     * Initiates location retrieval process to receive continuous location
+     * updates without executing permission model.
      *
-     * This method can be used to receive location updates from services or from background. It doesn't handle location permission model so before calling this method, ensure that the location permission is granted. Also, it doesn't observe location updates in lifecycle aware way. So don't forget to stop updates manually when needed to be stopped.
+     * This method can be used to receive location updates from services or
+     * from background. It doesn't handle location permission model so before
+     * calling this method, ensure that the location permission is granted.
+     * Also, it doesn't observe location updates in lifecycle aware way.
+     * So don't forget to stop updates manually when needed to be stopped.
      *
-     * @param context context is the Fragment from which the location request is initiated
-     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> provides a success block which will grant access to retrieved location
-     * @return BlockExecution that can be used to handle exceptions and failures during location retrieval process
+     * @param context context is the Fragment from which the
+     * location request is initiated
+     *
+     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> provides
+     * a success block which will grant access to retrieved location
+     *
+     * @return BlockExecution that can be used to handle exceptions and failures
+     * during location retrieval process
      */
     @RequiresPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION)
     fun observeLocationUpdates(context: Context, func: Location.() -> Unit): BlockExecution {
         initLocationProvider(context)
         val blockExecution = BlockExecution()
         runnable = Runnable {
-            locationprovider.locationLiveData.observeForever { result ->
+            locationProvider.locationLiveData.observeForever { result ->
                 when (result) {
                     is LocusResult.Success -> {
                         func(result.location)
@@ -245,16 +348,24 @@ class Locus(func: Configuration.() -> Unit = {}) {
     }
 
     /**
-     * Registers an observer on location results that observes continuously. This observation is done in lifecycle aware way. That means that no updates will be dispatched if if it is not the right lifecycle state.
-     * @param owner LifecycleOwner is the owner of the lifecycle that will be used to observe on location results
-     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> will called when a new result is available
-     * @return BlockExecution provides a way to handle errors and exceptions occurred during this process
+     * Registers an observer on location results that observes continuously.
+     * This observation is done in lifecycle aware way. That means that no updates
+     * will be dispatched if if it is not the right lifecycle state.
+     *
+     * @param owner LifecycleOwner is the owner of the lifecycle that will be
+     * used to observe on location results
+     *
+     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> will
+     * called when a new result is available
+     *
+     * @return BlockExecution provides a way to handle errors and exceptions
+     * occurred during this process
      */
     private fun observeForContinuesUpdates(owner: LifecycleOwner, func: Location.() -> Unit): BlockExecution {
         val blockExecution = BlockExecution()
         runnable = Runnable {
-            locationprovider.locationLiveData.removeObservers(owner)
-            locationprovider.locationLiveData.watch(owner) { result ->
+            locationProvider.locationLiveData.removeObservers(owner)
+            locationProvider.locationLiveData.watch(owner) { result ->
                 when (result) {
                     is LocusResult.Success -> {
                         func(result.location)
@@ -270,26 +381,28 @@ class Locus(func: Configuration.() -> Unit = {}) {
     }
 
     /**
-     * Checks for location permission and then initiates permission model if the location permission is not granted already.
+     * Checks for location permission and then initiates permission model
+     * if the location permission is not granted already.
      * @param context Context is the Android Context
      */
     private fun checkAndStartUpdatesWithoutPermissionRequest(context: Context) {
         if (hasLocationPermission(context) && isSettingsEnabled(context)) {
-            locationprovider.startContinuousLocation(options.locationRequest)
+            locationProvider.startContinuousLocation(options.locationRequest)
             runnable?.run()
             runnable = null
         } else {
-            locationprovider.locationLiveData.postValue(LocusResult.Failure(Throwable("Cannot continue without location permission")))
+            locationProvider.locationLiveData.postValue(LocusResult.Failure(Throwable("Cannot continue without location permission")))
         }
     }
 
     /**
-     * Checks for location permission and then initiates permission model if the location permission is not granted already.
+     * Checks for location permission and then initiates permission model
+     * if the location permission is not granted already.
      * @param context Context is the Android Context
      */
     private fun checkAndStartUpdates(context: Context) {
         if (hasLocationPermission(context) && isSettingsEnabled(context)) {
-            locationprovider.startContinuousLocation(options.locationRequest)
+            locationProvider.startContinuousLocation(options.locationRequest)
             runnable?.run()
             runnable = null
         } else {
@@ -307,7 +420,7 @@ class Locus(func: Configuration.() -> Unit = {}) {
      */
     private fun checkAndStartBackgroundUpdates(context: Context) {
         if (hasLocationPermission(context) && isSettingsEnabled(context)) {
-            locationprovider.startBackgroundLocationUpdates(context, options.locationRequest)
+            locationProvider.startBackgroundLocationUpdates(context, options.locationRequest)
             runnable?.run()
             runnable = null
         } else {
@@ -319,17 +432,22 @@ class Locus(func: Configuration.() -> Unit = {}) {
     }
 
     /**
-     * Registers an observer on location results that observes only for one time. This observation is done in lifecycle aware way. That means that no updates will be dispatched if if it is not the right lifecycle state.
-     * @param owner LifecycleOwner is the owner of the lifecycle that will be used to observe on location results
-     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> will called when a new result is available
-     * @return BlockExecution provides a way to handle errors and exceptions occurred during this process
+     * Registers an observer on location results that observes only for one time.
+     * This observation is done in lifecycle aware way. That means that no updates
+     * will be dispatched if if it is not the right lifecycle state.
+     * @param owner LifecycleOwner is the owner of the lifecycle that will be
+     * used to observe on location results
+     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> will
+     * called when a new result is available
+     * @return BlockExecution provides a way to handle errors and exceptions
+     * occurred during this process
      */
     private fun observeOneTimeUpdates(owner: LifecycleOwner, func: Location.() -> Unit): BlockExecution {
         val blockExecution = BlockExecution()
 
         runnable = Runnable {
-            locationprovider.locationLiveData.removeObservers(owner)
-            locationprovider.locationLiveData.observeOnce(owner) { result ->
+            locationProvider.locationLiveData.removeObservers(owner)
+            locationProvider.locationLiveData.observeOnce(owner) { result ->
                 when (result) {
                     is LocusResult.Success -> {
                         func(result.location)
@@ -339,14 +457,15 @@ class Locus(func: Configuration.() -> Unit = {}) {
                         logError(result.error)
                     }
                 }
-                locationprovider.stopContinuousLocation()
+                locationProvider.stopContinuousLocation()
             }
         }
         return blockExecution
     }
 
     /**
-     * Initiates permission request by starting [LocusActivity] which is responsible to handle permission model and location settings resolution
+     * Initiates permission request by starting [LocusActivity] which
+     * is responsible to handle permission model and location settings resolution
      * @param context Context is the Android Context used to start the [LocusActivity]
      */
     private fun initPermissionRequest(context: Context) {
@@ -362,7 +481,8 @@ class Locus(func: Configuration.() -> Unit = {}) {
     }
 
     /**
-     * Initiates permission request by starting [LocusActivity] which is responsible to handle permission model and location settings resolution
+     * Initiates permission request by starting [LocusActivity] which
+     * is responsible to handle permission model and location settings resolution
      * @param context Context is the Android Context used to start the [LocusActivity]
      */
     private fun initPermissionRequestForBackgroundUpdates(context: Context) {
@@ -380,6 +500,12 @@ class Locus(func: Configuration.() -> Unit = {}) {
         }
     }
 
+    /**
+     * Displays location permission notification when location permission is not granted and
+     * background location updates is requested.
+     * @param context Context is the Android context
+     * @param pendingIntent PendingIntent will be used to open permission activity
+     */
     private fun showPermissionNotification(context: Context, pendingIntent: PendingIntent) {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -425,21 +551,23 @@ class Locus(func: Configuration.() -> Unit = {}) {
      * @param context Context is the Android Context used to initialize [LocationProvider]
      */
     private fun initLocationProvider(context: Context) {
-        if (!::locationprovider.isInitialized) {
-            locationprovider = LocationProvider(context)
+        if (!::locationProvider.isInitialized) {
+            locationProvider = LocationProvider(context)
         }
     }
 
     /**
      * Stops the ongoing location retrieval process.
      *
-     * Note that this only stops location updates, it cannot stop ongoing permission request.
+     * Note that this only stops location updates, it cannot stop
+     * ongoing permission request.
      *
-     * @param owner LifecycleOwner is the same  Lifecycle owner that is used to start these location updates
+     * @param owner LifecycleOwner is the same  Lifecycle owner that
+     * is used to start these location updates
      */
     fun stopTrackingLocation(owner: LifecycleOwner) {
-        locationprovider.locationLiveData.removeObservers(owner)
-        locationprovider.stopContinuousLocation()
+        locationProvider.locationLiveData.removeObservers(owner)
+        locationProvider.stopContinuousLocation()
     }
 
     /**
@@ -447,7 +575,7 @@ class Locus(func: Configuration.() -> Unit = {}) {
      * Note that this only stops location updates, it cannot stop ongoing permission request.
      */
     fun stopObservingLocation() {
-        locationprovider.stopContinuousLocation()
+        locationProvider.stopContinuousLocation()
     }
 
     /**
@@ -455,7 +583,7 @@ class Locus(func: Configuration.() -> Unit = {}) {
      * Note that this only stops location updates, it cannot stop ongoing permission request.
      */
     fun stopBackgroundLocation() {
-        locationprovider.stopContinuousLocation()
+        locationProvider.stopContinuousLocation()
     }
 
     /**
@@ -481,17 +609,17 @@ class Locus(func: Configuration.() -> Unit = {}) {
                 Constants.GRANTED -> {
                     initLocationProvider(context)
                     if (isBackground) {
-                        locationprovider.startBackgroundLocationUpdates(
+                        locationProvider.startBackgroundLocationUpdates(
                             context.applicationContext,
                             options.locationRequest
                         )
                     } else {
-                        locationprovider.startContinuousLocation(options.locationRequest)
+                        locationProvider.startContinuousLocation(options.locationRequest)
                     }
                     logDebug("Permission granted")
                 }
                 else -> {
-                    locationprovider.locationLiveData.postValue(LocusResult.Failure(Throwable(status)))
+                    locationProvider.locationLiveData.postValue(LocusResult.Failure(Throwable(status)))
                     logDebug(status)
                 }
             }

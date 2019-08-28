@@ -20,7 +20,6 @@ import android.content.Intent
 import android.content.IntentSender
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
-import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
@@ -38,8 +37,10 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
 
     companion object {
         private const val REQUEST_CODE_LOCATION_SETTINGS = 123
-        private const val COARSE_LOCATION_PERMISSION = android.Manifest.permission.ACCESS_COARSE_LOCATION
-        private const val FINE_LOCATION_PERMISSION = android.Manifest.permission.ACCESS_FINE_LOCATION
+        private const val COARSE_LOCATION_PERMISSION =
+            android.Manifest.permission.ACCESS_COARSE_LOCATION
+        private const val FINE_LOCATION_PERMISSION =
+            android.Manifest.permission.ACCESS_FINE_LOCATION
         private const val PERMISSION_REQUEST_CODE = 777
         private const val SETTINGS_ACTIVITY_REQUEST_CODE = 659
         private const val PREF_NAME = "locus_pref"
@@ -121,7 +122,10 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * @return true is the app has location permission, false otherwise.
      * */
     private fun hasPermission(): Boolean =
-        ContextCompat.checkSelfPermission(this, COARSE_LOCATION_PERMISSION) == PackageManager.PERMISSION_GRANTED
+        ContextCompat.checkSelfPermission(
+            this,
+            COARSE_LOCATION_PERMISSION
+        ) == PackageManager.PERMISSION_GRANTED
 
     /**
      * Displays a permission rationale dialog
@@ -150,13 +154,15 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * @receiver Fragment is used to get context.
      * @return Boolean true if the permission is asked for the first time, false otherwise.
      */
-    private fun isPermissionAskedFirstTime(): Boolean = pref.getBoolean(FINE_LOCATION_PERMISSION, true)
+    private fun isPermissionAskedFirstTime(): Boolean =
+        pref.getBoolean(FINE_LOCATION_PERMISSION, true)
 
     /**
      * Writes the false value into shared preferences which indicates that the location permission has been requested previously.
      * @receiver Fragment is used to get context.
      */
-    private fun setPermissionAsked() = pref.edit().putBoolean(FINE_LOCATION_PERMISSION, false).commit()
+    private fun setPermissionAsked() =
+        pref.edit().putBoolean(FINE_LOCATION_PERMISSION, false).commit()
 
     /**
      * Actual request for the permission
@@ -168,7 +174,11 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
             PERMISSION_REQUEST_CODE
         )
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
         if (requestCode == PERMISSION_REQUEST_CODE) {
             if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
                 onPermissionGranted()
@@ -194,7 +204,12 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      */
     private fun onPermissionDenied() {
         logDebug("Sending permission denied")
-        sendResultBroadcast(Intent(packageName).putExtra(Constants.INTENT_EXTRA_PERMISSION_RESULT, Constants.DENIED))
+        sendResultBroadcast(
+            Intent(packageName).putExtra(
+                Constants.INTENT_EXTRA_PERMISSION_RESULT,
+                Constants.DENIED
+            )
+        )
     }
 
     /**
@@ -245,27 +260,23 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * If settings are isLoggingEnabled then retrieves the location, otherwise initiate the process of settings resolution
      * */
     private fun checkIfLocationSettingsAreEnabled() {
-        if (checkIfRequiredLocationSettingsAreEnabled()) {
-            shouldProceedForLocation()
-        } else {
-            val builder = LocationSettingsRequest.Builder()
-            builder.addLocationRequest(configuration.locationRequest)
-            builder.setAlwaysShow(true)
+        val builder = LocationSettingsRequest.Builder()
+        builder.addLocationRequest(configuration.locationRequest)
+        builder.setAlwaysShow(true)
 
-            val client = LocationServices.getSettingsClient(this)
-            val locationSettingsResponseTask = client.checkLocationSettings(builder.build())
-            locationSettingsResponseTask.addOnSuccessListener {
-                // All location settings are satisfied. The client can initialize
-                // location requests here.
-                shouldProceedForLocation()
-            }
-            locationSettingsResponseTask.addOnFailureListener { exception ->
-                if (exception is ResolvableApiException) {
-                    onResolutionNeeded(exception)
-                } else {
-                    // resolution failed somehow
-                    onResolutionDenied()
-                }
+        val client = LocationServices.getSettingsClient(this)
+        val locationSettingsResponseTask = client.checkLocationSettings(builder.build())
+        locationSettingsResponseTask.addOnSuccessListener {
+            // All location settings are satisfied. The client can initialize
+            // location requests here.
+            shouldProceedForLocation()
+        }
+        locationSettingsResponseTask.addOnFailureListener { exception ->
+            if (exception is ResolvableApiException) {
+                onResolutionNeeded(exception)
+            } else {
+                // resolution failed somehow
+                onResolutionDenied()
             }
         }
     }
@@ -274,17 +285,11 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * Sends success broadcast so that location retrieval process can be initiated
      */
     private fun shouldProceedForLocation() {
-        sendResultBroadcast(Intent(packageName).putExtra(Constants.INTENT_EXTRA_PERMISSION_RESULT, Constants.GRANTED))
-    }
-
-    /**
-     * Checks whether the device location settings match with what the user requested
-     * @return true is the current location settings satisfies the requirement, false otherwise.
-     * */
-    private fun checkIfRequiredLocationSettingsAreEnabled(): Boolean {
-        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(
-            LocationManager.NETWORK_PROVIDER
+        sendResultBroadcast(
+            Intent(packageName).putExtra(
+                Constants.INTENT_EXTRA_PERMISSION_RESULT,
+                Constants.GRANTED
+            )
         )
     }
 
