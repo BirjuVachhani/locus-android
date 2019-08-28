@@ -361,7 +361,10 @@ class Locus(func: Configuration.() -> Unit = {}) {
      * @return BlockExecution provides a way to handle errors and exceptions
      * occurred during this process
      */
-    private fun observeForContinuesUpdates(owner: LifecycleOwner, func: Location.() -> Unit): BlockExecution {
+    private fun observeForContinuesUpdates(
+        owner: LifecycleOwner,
+        func: Location.() -> Unit
+    ): BlockExecution {
         val blockExecution = BlockExecution()
         runnable = Runnable {
             locationProvider.locationLiveData.removeObservers(owner)
@@ -442,7 +445,10 @@ class Locus(func: Configuration.() -> Unit = {}) {
      * @return BlockExecution provides a way to handle errors and exceptions
      * occurred during this process
      */
-    private fun observeOneTimeUpdates(owner: LifecycleOwner, func: Location.() -> Unit): BlockExecution {
+    private fun observeOneTimeUpdates(
+        owner: LifecycleOwner,
+        func: Location.() -> Unit
+    ): BlockExecution {
         val blockExecution = BlockExecution()
 
         runnable = Runnable {
@@ -493,7 +499,8 @@ class Locus(func: Configuration.() -> Unit = {}) {
                     putExtra(Constants.INTENT_EXTRA_IS_BACKGROUND, true)
                 }
             }
-            val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            val pendingIntent =
+                PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
             showPermissionNotification(context, pendingIntent)
         } else {
             logDebug("A request is already ongoing")
@@ -507,10 +514,15 @@ class Locus(func: Configuration.() -> Unit = {}) {
      * @param pendingIntent PendingIntent will be used to open permission activity
      */
     private fun showPermissionNotification(context: Context, pendingIntent: PendingIntent) {
-        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
+        val manager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel =
-                NotificationChannel("permission_channel", "Permission Channel", NotificationManager.IMPORTANCE_DEFAULT)
+                NotificationChannel(
+                    "permission_channel",
+                    "Permission Channel",
+                    NotificationManager.IMPORTANCE_DEFAULT
+                )
             manager.createNotificationChannel(channel)
         }
         with(NotificationCompat.Builder(context, "permission_channel")) {
@@ -518,7 +530,9 @@ class Locus(func: Configuration.() -> Unit = {}) {
             setContentText("This feature requires location permission to access device location. Please allow to access device location")
             setSmallIcon(R.drawable.ic_location_on)
             addAction(NotificationCompat.Action.Builder(0, "Grant", pendingIntent).build())
-            setPriority(NotificationManager.IMPORTANCE_HIGH)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                priority = NotificationManager.IMPORTANCE_HIGH
+            }
             setAutoCancel(true)
             manager.notify(865, build())
         }
@@ -623,7 +637,8 @@ class Locus(func: Configuration.() -> Unit = {}) {
                     logDebug(status)
                 }
             }
-            LocalBroadcastManager.getInstance(context).unregisterReceiver(permissionBroadcastReceiver)
+            LocalBroadcastManager.getInstance(context)
+                .unregisterReceiver(permissionBroadcastReceiver)
         }
     }
 }
