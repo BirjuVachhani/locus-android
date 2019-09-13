@@ -37,10 +37,6 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
 
     companion object {
         private const val REQUEST_CODE_LOCATION_SETTINGS = 123
-        private const val COARSE_LOCATION_PERMISSION =
-            android.Manifest.permission.ACCESS_COARSE_LOCATION
-        private const val FINE_LOCATION_PERMISSION =
-            android.Manifest.permission.ACCESS_FINE_LOCATION
         private const val PERMISSION_REQUEST_CODE = 777
         private const val SETTINGS_ACTIVITY_REQUEST_CODE = 659
         private const val PREF_NAME = "locus_pref"
@@ -54,6 +50,20 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     private val pref: SharedPreferences by lazy {
         getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
     }
+
+    private val locationPermissions: Array<String> by lazy {
+        arrayOf(
+            android.Manifest.permission.ACCESS_FINE_LOCATION,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+    }
+
+    private val backgroundPermission: Array<String> by lazy {
+        arrayOf(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+    }
+
+    private val permissions: Array<String>
+        get() = if (isBackground) locationPermissions + backgroundPermission else locationPermissions
 
     private var isBackground = false
 
@@ -82,19 +92,20 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * 5. If not, then the permission is permanently denied.
      */
     private fun initPermissionModel() {
+
         logDebug("Initializing permission model")
-        if (!hasPermission()) {
-            //doesn't have permission, checking if user has been asked for permission earlier
-            if (shouldShowRationale()) {
-                // should show rationale
-                logDebug("should display rationale")
+        if (!hasAllPermissions()) {
+            //doesn't have all the permission, checking if user has been asked for permission earlier
+            if (needToShowRationale()) {
+                // User has been asked for the permission
+                logDebug("should display rationale for location permission")
                 showPermissionRationale()
             } else {
-                if (isPermissionAskedFirstTime()) {
+                if (isAnyPermissionAskedFirstTime()) {
                     logDebug("permission asked first time")
                     // request permission
                     setPermissionAsked()
-                    requestPermission()
+                    requestForPermissions()
                 } else {
                     // permanently denied
                     showPermanentlyDeniedDialog()
@@ -107,25 +118,31 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     }
 
     /**
-     * Determines whether the rationale needs to be shown or not
-     * @return Boolean true if needs to be shown, false otherwise
+     * Checks whether the requested permission is asked for the first time or not.
+     *
+     * The value is stored in the shared preferences.
+     * @receiver Fragment is used to get context.
+     * @return Boolean true if the permission is asked for the first time, false otherwise.
      */
-    private fun shouldShowRationale(): Boolean {
-        return ActivityCompat.shouldShowRequestPermissionRationale(
-            this,
-            COARSE_LOCATION_PERMISSION
-        ) || ActivityCompat.shouldShowRequestPermissionRationale(this, FINE_LOCATION_PERMISSION)
-    }
+    private fun isAnyPermissionAskedFirstTime(): Boolean =
+        permissions.any { pref.getBoolean(it, true) }
+
+    private fun requestForPermissions() =
+        ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST_CODE)
+
+    private fun hasAllPermissions(): Boolean = permissions.all(::hasPermission)
+
+    private fun needToShowRationale(): Boolean = permissions.any(::shouldShowRationale)
+
+    private fun shouldShowRationale(permission: String) =
+        ActivityCompat.shouldShowRequestPermissionRationale(this, permission)
 
     /**
      * Checks whether the app has location permission or not
      * @return true is the app has location permission, false otherwise.
      * */
-    private fun hasPermission(): Boolean =
-        ContextCompat.checkSelfPermission(
-            this,
-            COARSE_LOCATION_PERMISSION
-        ) == PackageManager.PERMISSION_GRANTED
+    private fun hasPermission(permission: String) =
+        ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
 
     /**
      * Displays a permission rationale dialog
@@ -135,7 +152,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
             .setTitle(configuration.rationaleTitle)
             .setMessage(configuration.rationaleText)
             .setPositiveButton(R.string.grant) { dialog, _ ->
-                requestPermission()
+                requestForPermissions()
                 dialog.dismiss()
             }
             .setNegativeButton(R.string.deny) { dialog, _ ->
@@ -148,42 +165,30 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     }
 
     /**
-     * Checks whether the requested permission is asked for the first time or not.
-     *
-     * The value is stored in the shared preferences.
-     * @receiver Fragment is used to get context.
-     * @return Boolean true if the permission is asked for the first time, false otherwise.
-     */
-    private fun isPermissionAskedFirstTime(): Boolean =
-        pref.getBoolean(FINE_LOCATION_PERMISSION, true)
-
-    /**
      * Writes the false value into shared preferences which indicates that the location permission has been requested previously.
      * @receiver Fragment is used to get context.
      */
-    private fun setPermissionAsked() =
-        pref.edit().putBoolean(FINE_LOCATION_PERMISSION, false).commit()
-
-    /**
-     * Actual request for the permission
-     * */
-    private fun requestPermission() =
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(FINE_LOCATION_PERMISSION, COARSE_LOCATION_PERMISSION),
-            PERMISSION_REQUEST_CODE
-        )
+    private fun setPermissionAsked() {
+        with(pref.edit()) {
+            permissions.forEach { permission -> putBoolean(permission, false) }
+            commit()
+        }
+    }
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
-        permissions: Array<String>,
+        permissions: Array<out String>,
         grantResults: IntArray
     ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == PERMISSION_REQUEST_CODE) {
-            if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
-                onPermissionGranted()
-            } else {
-                onPermissionDenied()
+            when {
+                grantResults.isEmpty() ->
+                    // If user interaction was interrupted, the permission request is cancelled and you
+                    // receive empty arrays.
+                    logDebug("User interaction was cancelled.")
+                grantResults.all { it == PackageManager.PERMISSION_GRANTED } -> onPermissionGranted()
+                else -> onPermissionDenied()
             }
         }
     }
@@ -366,7 +371,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
                 )
             }
         } else if (requestCode == SETTINGS_ACTIVITY_REQUEST_CODE) {
-            if (hasPermission()) {
+            if (hasAllPermissions()) {
                 onPermissionGranted()
             } else {
                 onPermissionPermanentlyDenied()

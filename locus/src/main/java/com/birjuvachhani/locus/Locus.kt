@@ -610,7 +610,7 @@ class Locus(func: Configuration.() -> Unit = {}) {
     /**
      * Receives local broadcasts related to permission model
      */
-    inner class PermissionBroadcastReceiver : BroadcastReceiver() {
+    private inner class PermissionBroadcastReceiver : BroadcastReceiver() {
 
         override fun onReceive(context: Context, intent: Intent?) {
             logDebug("Received Permission broadcast")
