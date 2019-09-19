@@ -42,6 +42,9 @@ internal val isRequestingPermission = AtomicBoolean().apply {
     set(false)
 }
 
+/**
+ * Holds Location updates
+ */
 internal var locationLiveData = MutableLiveData<LocusResult>()
 
 /**
@@ -93,7 +96,7 @@ object Locus {
     }
 
     /**
-     * Starts location updates that be used while the app is in background.
+     * Starts location updates by verifying permissions and location settings
      *
      * The problem with the FusedLocationProviderClient is that when we provide
      * a LocationCallback instance to receive location updates, it stops receiving
@@ -219,9 +222,6 @@ object Locus {
      * change location settings. Please note that these success and failure callbacks
      * are lifecycle aware so no updates will be dispatched if the Activity
      * is not in right state.
-     *
-     * @param activity FragmentActivity is the Activity instance from where
-     * the location request is triggered
      *
      * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> provides
      * a success block which will grant access to retrieved location

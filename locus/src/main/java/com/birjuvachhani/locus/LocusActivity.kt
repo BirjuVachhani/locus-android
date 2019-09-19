@@ -15,6 +15,7 @@
 
 package com.birjuvachhani.locus
 
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
@@ -294,12 +295,19 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * Sends success broadcast so that location retrieval process can be initiated
      */
     private fun shouldProceedForLocation() {
+        clearPermissionNotificationIfAny()
         sendResultBroadcast(
             Intent(packageName).putExtra(
                 Constants.INTENT_EXTRA_PERMISSION_RESULT,
                 Constants.GRANTED
             )
         )
+    }
+
+    private fun clearPermissionNotificationIfAny() {
+        val manager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
+        manager.cancel(Constants.PERMISSION_NOTIFICATION_ID)
     }
 
     /**
