@@ -68,7 +68,7 @@ internal class LocationProvider(context: Context) {
             }
     }
 
-    fun getSingleUpdate(
+    internal fun getSingleUpdate(
         request: LocationRequest,
         onUpdate: (LocusResult) -> Unit
     ) {

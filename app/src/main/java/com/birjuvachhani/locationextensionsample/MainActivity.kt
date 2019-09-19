@@ -41,22 +41,6 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
             putExtra("request", request)
         }
         Locus.setLogging(true)
-
-        btnBackground.setOnCheckedChangeListener { _, isChecked ->
-            Locus.configure {
-                enableBackgroundUpdates = isChecked
-            }
-        }
-
-        btnForce.setOnCheckedChangeListener { _, isChecked ->
-            Locus.configure {
-                forceBackgroundUpdates = isChecked
-            }
-        }
-    }
-
-    fun stopTracking(v: View) {
-        Locus.stopLocationUpdates()
     }
 
     fun getSingleUpdate(v: View) {
@@ -65,29 +49,25 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         }
     }
 
-    /**
-     * Initiates location tracking process on button click
-     * */
-    fun startTracking(v: View) {
-        Locus.startLocationUpdates(this).observe(this) { result ->
-            result.location?.let(::onLocationUpdate) ?: onError(result.error)
-        }
-//        startService(Intent(this, TempService::class.java))
-    }
-
     private fun onLocationUpdate(location: Location) {
-        locationContainer.visibility = View.VISIBLE
+        btnStart.isEnabled = false
+        btnStop.isEnabled = true
+        llLocationData.visibility = View.VISIBLE
+        tvNoLocation.visibility = View.GONE
         tvLatitude.text = location.latitude.toString()
         tvLongitude.text = location.longitude.toString()
-        tvError.text = ""
         tvTime.text = getCurrentTimeString()
+        tvNoLocation.text = "No Updates Available"
         Log.e(TAG, "Latitude: ${location.latitude}\tLongitude: ${location.longitude}")
     }
 
     private fun onError(error: Throwable?) {
+        btnStart.isEnabled = true
+        btnStop.isEnabled = false
         tvLatitude.text = ""
         tvLongitude.text = ""
-        tvError.text = error?.message
+        tvNoLocation.text = error?.message
+        llLocationData.visibility = View.INVISIBLE
         Log.e(TAG, "Error: ${error?.message}")
     }
 
@@ -101,9 +81,23 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         )}"
     }
 
-    override fun onPause() {
-        super.onPause()
-        //stop receiving location when app is not in foreground.
-//        locus.stopTrackingLocation(this)
+    fun startUpdates(v: View) {
+        Locus.configure {
+            enableBackgroundUpdates = scBackground.isChecked
+            forceBackgroundUpdates = scForceBackground.isChecked
+            shouldResolveRequest = scResolveSettings.isChecked
+        }
+        Locus.startLocationUpdates(this).observe(this) { result ->
+            result.location?.let(::onLocationUpdate) ?: onError(result.error)
+        }
+    }
+
+    fun stopUpdates(v: View) {
+        Locus.stopLocationUpdates()
+        btnStop.isEnabled = false
+        btnStart.isEnabled = true
+        llLocationData.visibility = View.INVISIBLE
+        tvNoLocation.visibility = View.VISIBLE
+        tvNoLocation.text = "No Updates Available"
     }
 }
