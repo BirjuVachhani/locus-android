@@ -20,10 +20,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.os.Looper
 import androidx.lifecycle.MutableLiveData
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
-import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 /*
@@ -35,8 +32,6 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Responsible for starting and stopping location updates=
  * @property isRequestOngoing AtomicBoolean which indicates that whether a location request is ongoing or not
  * @property mFusedLocationProviderClient (com.google.android.gms.location.FusedLocationProviderClient..com.google.android.gms.location.FusedLocationProviderClient?) used to request location
- * @property locationLiveData MutableLiveData<LocusResult> contains location results
- * @property mLocationCallback <no name provided>
  * @constructor
  */
 internal class LocationProvider(context: Context) {
@@ -45,20 +40,8 @@ internal class LocationProvider(context: Context) {
         LocationBroadcastReceiver.getPendingIntent(context)
     }
     private val isRequestOngoing = AtomicBoolean().apply { set(false) }
-
-    private var mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
-    internal var locationLiveData = MutableLiveData<LocusResult>()
-
-    private val mLocationCallback = object : LocationCallback() {
-        override fun onLocationResult(locationResult: LocationResult?) {
-            super.onLocationResult(locationResult)
-            locationResult?.let { result ->
-                if (result.locations.isNotEmpty()) {
-                    logDebug("Received location ${result.locations.first()}")
-                    sendResult(LocusResult.Success(result.locations.first()))
-                }
-            }
-        }
+    private val mFusedLocationProviderClient: FusedLocationProviderClient by lazy {
+        LocationServices.getFusedLocationProviderClient(context)
     }
 
     /**
@@ -67,73 +50,64 @@ internal class LocationProvider(context: Context) {
      * If somehow continuous location retrieval fails then it tries to retrieve last known location.
      * */
     @SuppressLint("MissingPermission")
-    internal fun startContinuousLocation(request: LocationRequest) {
-        if (isRequestOngoing.getAndSet(true)) return
-        mFusedLocationProviderClient?.requestLocationUpdates(
-            request,
-            mLocationCallback,
-            Looper.getMainLooper()
-        )?.addOnFailureListener {
-            mFusedLocationProviderClient?.lastLocation?.addOnCompleteListener {
-                if (!it.isSuccessful) return@addOnCompleteListener
-                it.result?.let { location ->
-                    sendResult(LocusResult.Success(location))
-                }
-            }?.addOnFailureListener {
-                sendResult(LocusResult.Failure(it))
-            }
-        }
-    }
-
-    /**
-     * Starts continuous location tracking using FusedLocationProviderClient
-     *
-     * If somehow continuous location retrieval fails then it tries to retrieve last known location.
-     * */
-    @SuppressLint("MissingPermission")
-    internal fun startBackgroundLocationUpdates(context: Context, request: LocationRequest) {
+    internal fun startUpdates(request: LocationRequest) {
         if (isRequestOngoing.getAndSet(true)) return
         logDebug("Starting location updates")
-        mFusedLocationProviderClient?.requestLocationUpdates(
-            request,
-            pendingIntent
-        )?.addOnFailureListener {
-            mFusedLocationProviderClient?.lastLocation?.addOnCompleteListener {
-                if (!it.isSuccessful) return@addOnCompleteListener
-                it.result?.let { location ->
-                    backgroundLocationLiveData.postValue(LocusResult.Success(location))
+        mFusedLocationProviderClient.requestLocationUpdates(request, pendingIntent)
+            ?.addOnFailureListener { e ->
+                logError(e)
+                logDebug("Continuous location updates failed, retrieving last known location")
+                mFusedLocationProviderClient.lastLocation?.addOnCompleteListener {
+                    if (!it.isSuccessful) return@addOnCompleteListener
+                    it.result?.let { location ->
+                        locationLiveData.postValue(LocusResult(location))
+                    }
+                }?.addOnFailureListener {
+                    locationLiveData.postValue(LocusResult(error = it))
                 }
-            }?.addOnFailureListener {
-                backgroundLocationLiveData.postValue(LocusResult.Failure(it))
             }
+    }
+
+    fun getSingleUpdate(
+        request: LocationRequest,
+        onUpdate: (LocusResult) -> Unit
+    ) {
+        fun startUpdates() {
+            val callback = object : LocationCallback() {
+                override fun onLocationResult(result: LocationResult?) {
+                    result?.lastLocation?.let { location ->
+                        onUpdate(LocusResult(location))
+                        mFusedLocationProviderClient.removeLocationUpdates(this)
+                    }
+                }
+            }
+            mFusedLocationProviderClient.requestLocationUpdates(
+                request.apply { numUpdates = 1 },
+                callback,
+                Looper.getMainLooper()
+            ).addOnFailureListener { error ->
+                logError(error)
+                onUpdate(LocusResult(error = error))
+            }
+        }
+        mFusedLocationProviderClient.lastLocation?.addOnSuccessListener { result ->
+            result?.let { location ->
+                onUpdate(LocusResult(location))
+            } ?: startUpdates()
+        }?.addOnFailureListener {
+            logError(it)
+            logDebug("Looks like last known location is not available, requesting a new location update")
+            startUpdates()
         }
     }
 
     /**
-     * Sets result into live data synchronously
-     * */
-    private fun sendResult(result: LocusResult) {
-        locationLiveData.postValue(result)
-    }
-
-    /**
      * Stops location tracking by removing location callback from FusedLocationProviderClient
      * */
-    internal fun stopContinuousLocation() {
-        logDebug("Stopping location updates")
-        isRequestOngoing.set(false)
-        locationLiveData.postValue(null)
-        locationLiveData = MutableLiveData()
-        mFusedLocationProviderClient?.removeLocationUpdates(mLocationCallback)
-    }
-
-    /**
-     * Stops location tracking by removing location callback from FusedLocationProviderClient
-     * */
-    internal fun stopBackgroundLocation() {
+    internal fun stopUpdates() {
         logDebug("Stopping background location updates")
         isRequestOngoing.set(false)
-        backgroundLocationLiveData = MutableLiveData()
-        mFusedLocationProviderClient?.removeLocationUpdates(pendingIntent)
+        locationLiveData = MutableLiveData()
+        mFusedLocationProviderClient.removeLocationUpdates(pendingIntent)
     }
 }

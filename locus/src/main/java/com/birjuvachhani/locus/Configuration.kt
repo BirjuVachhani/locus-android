@@ -40,7 +40,9 @@ data class Configuration(
     var resolutionTitle: String = "Location is currently disabled",
     var resolutionText: String = "Please enable access to device location to proceed further.",
     internal var locationRequest: LocationRequest = getDefaultRequest(),
-    var shouldResolveRequest: Boolean = true
+    var shouldResolveRequest: Boolean = true,
+    var enableBackgroundUpdates: Boolean = false,
+    var forceBackgroundUpdates: Boolean = false
 ) : Parcelable {
 
     companion object {
@@ -63,7 +65,7 @@ data class Configuration(
  * Creates [LocationRequest] instance with default settings
  * @return LocationRequest
  */
-private fun getDefaultRequest(): LocationRequest {
+internal fun getDefaultRequest(): LocationRequest {
     return LocationRequest().apply {
         priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         interval = Configuration.INTERVAL_IN_MS

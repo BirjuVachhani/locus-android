@@ -26,7 +26,6 @@ import android.provider.Settings
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.common.api.ResolvableApiException
@@ -45,38 +44,25 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     private val localBroadcastManager: LocalBroadcastManager by lazy {
         LocalBroadcastManager.getInstance(this)
     }
-    private var configuration: Configuration = Configuration()
-    private var isResolutionEnabled: Boolean = false
+    private var config: Configuration = Configuration()
     private val pref: SharedPreferences by lazy {
         getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
     }
 
-    private val locationPermissions: Array<String> by lazy {
-        arrayOf(
-            android.Manifest.permission.ACCESS_FINE_LOCATION,
-            android.Manifest.permission.ACCESS_COARSE_LOCATION
-        )
-    }
-
-    private val backgroundPermission: Array<String> by lazy {
-        arrayOf(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-    }
-
-    private val permissions: Array<String>
-        get() = if (isBackground) locationPermissions + backgroundPermission else locationPermissions
-
-    private var isBackground = false
+    private var permissions: Array<String> = arrayOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_location_permission)
 
-        isResolutionEnabled =
-            intent?.getParcelableExtra<Configuration>(Constants.INTENT_EXTRA_CONFIGURATION)?.let {
-                configuration = it
-                configuration.shouldResolveRequest
-            } ?: false
-        isBackground = intent?.getBooleanExtra(Constants.INTENT_EXTRA_IS_BACKGROUND, false) ?: false
+
+        intent?.getParcelableExtra<Configuration>(Constants.INTENT_EXTRA_CONFIGURATION)?.let {
+            config = it
+        } ?: logError("No config is sent to the permission activity")
+        val isSingleUpdate =
+            intent?.getBooleanExtra(Constants.INTENT_EXTRA_IS_SINGLE_UPDATE, false) ?: false
+        permissions =
+            if (config.enableBackgroundUpdates && !isSingleUpdate) locationPermissions + backgroundPermission else locationPermissions
         initPermissionModel()
     }
 
@@ -134,23 +120,13 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
 
     private fun needToShowRationale(): Boolean = permissions.any(::shouldShowRationale)
 
-    private fun shouldShowRationale(permission: String) =
-        ActivityCompat.shouldShowRequestPermissionRationale(this, permission)
-
-    /**
-     * Checks whether the app has location permission or not
-     * @return true is the app has location permission, false otherwise.
-     * */
-    private fun hasPermission(permission: String) =
-        ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
-
     /**
      * Displays a permission rationale dialog
      */
     private fun showPermissionRationale() {
         AlertDialog.Builder(this)
-            .setTitle(configuration.rationaleTitle)
-            .setMessage(configuration.rationaleText)
+            .setTitle(config.rationaleTitle)
+            .setMessage(config.rationaleText)
             .setPositiveButton(R.string.grant) { dialog, _ ->
                 requestForPermissions()
                 dialog.dismiss()
@@ -181,6 +157,11 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        val perms = if (config.enableBackgroundUpdates && config.forceBackgroundUpdates) {
+            locationPermissions + backgroundPermission
+        } else {
+            locationPermissions
+        }
         if (requestCode == PERMISSION_REQUEST_CODE) {
             when {
                 grantResults.isEmpty() ->
@@ -188,6 +169,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
                     // receive empty arrays.
                     logDebug("User interaction was cancelled.")
                 grantResults.all { it == PackageManager.PERMISSION_GRANTED } -> onPermissionGranted()
+                perms.all { grantResults[permissions.indexOf(it)] == PackageManager.PERMISSION_GRANTED } -> onPermissionGranted()
                 else -> onPermissionDenied()
             }
         }
@@ -197,7 +179,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * handles the flow when the permission is granted successfully. It either sends success broadcast if the permission is granted and location setting resolution is disabled or proceeds for checking location settings
      */
     private fun onPermissionGranted() {
-        if (isResolutionEnabled) {
+        if (config.shouldResolveRequest) {
             checkIfLocationSettingsAreEnabled()
         } else {
             shouldProceedForLocation()
@@ -222,8 +204,8 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      */
     private fun showPermanentlyDeniedDialog() {
         AlertDialog.Builder(this)
-            .setTitle(configuration.blockedTitle)
-            .setMessage(configuration.blockedText)
+            .setTitle(config.blockedTitle)
+            .setMessage(config.blockedText)
             .setPositiveButton(R.string.open_settings) { dialog, _ ->
                 openSettings()
                 dialog.dismiss()
@@ -266,7 +248,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * */
     private fun checkIfLocationSettingsAreEnabled() {
         val builder = LocationSettingsRequest.Builder()
-        builder.addLocationRequest(configuration.locationRequest)
+        builder.addLocationRequest(config.locationRequest)
         builder.setAlwaysShow(true)
 
         val client = LocationServices.getSettingsClient(this)
@@ -307,22 +289,20 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     private fun onResolutionNeeded(exception: ResolvableApiException) {
         exception.printStackTrace()
         if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) return
-        if (!isFinishing) {
-            AlertDialog.Builder(this)
-                .setTitle(configuration.resolutionTitle)
-                .setMessage(configuration.resolutionText)
-                .setPositiveButton(R.string.enable) { dialog, _ ->
-                    resolveLocationSettings(exception)
-                    dialog.dismiss()
-                }
-                .setNegativeButton(R.string.cancel) { dialog, _ ->
-                    dialog.dismiss()
-                    onResolutionDenied()
-                }
-                .setCancelable(false)
-                .create()
-                .takeIf { !isFinishing }?.show()
-        }
+        AlertDialog.Builder(this)
+            .setTitle(config.resolutionTitle)
+            .setMessage(config.resolutionText)
+            .setPositiveButton(R.string.enable) { dialog, _ ->
+                resolveLocationSettings(exception)
+                dialog.dismiss()
+            }
+            .setNegativeButton(R.string.cancel) { dialog, _ ->
+                dialog.dismiss()
+                onResolutionDenied()
+            }
+            .setCancelable(false)
+            .create()
+            .show()
     }
 
     /**
@@ -386,7 +366,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     private fun sendResultBroadcast(intent: Intent) {
         intent.action = packageName
         logDebug("Sending permission broadcast: $intent")
-        intent.putExtra(Constants.INTENT_EXTRA_IS_BACKGROUND, isBackground)
+        intent.putExtra(Constants.INTENT_EXTRA_IS_BACKGROUND, config.enableBackgroundUpdates)
         localBroadcastManager.sendBroadcast(intent)
         isRequestingPermission.set(false)
         finish()

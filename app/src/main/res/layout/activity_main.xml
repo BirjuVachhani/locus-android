@@ -134,4 +134,41 @@
         app:layout_constraintStart_toStartOf="parent"
         tools:text="count" />
 
+    <ToggleButton
+        android:id="@+id/btnBackground"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textOff="Background Off"
+        android:textOn="Background On"
+        app:layout_constraintBottom_toTopOf="@+id/tvError"
+        app:layout_constraintEnd_toStartOf="@+id/btnForce"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="spread"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button" />
+
+    <ToggleButton
+        android:id="@+id/btnForce"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Force Background"
+        android:textOff="Strict Mode Off"
+        android:textOn="Strict Mode On"
+        app:layout_constraintBottom_toTopOf="@+id/tvError"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/btnBackground"
+        app:layout_constraintTop_toBottomOf="@+id/button" />
+
+    <Button
+        android:id="@+id/btnSingleUpdate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:onClick="getSingleUpdate"
+        android:text="Single Update"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

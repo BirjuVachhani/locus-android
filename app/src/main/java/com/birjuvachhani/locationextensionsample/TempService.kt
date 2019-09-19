@@ -17,6 +17,7 @@ package com.birjuvachhani.locationextensionsample
 
 import android.app.Service
 import android.content.Intent
+import android.os.Handler
 import android.os.IBinder
 import android.util.Log
 import com.birjuvachhani.locus.Locus
@@ -35,10 +36,23 @@ class TempService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         Log.e("BIRJU", "Temp Service started")
-        Locus().startBackgroundLocationUpdates(this) {
-            Log.e("BIRJU", "Received Background location in service: $latitude, $longitude")
-        }
-
+        Handler().postDelayed({
+            start()
+        }, 5000)
         return START_STICKY
+    }
+
+    fun start() {
+        Locus.configure {
+            enableBackgroundUpdates = true
+        }
+        Locus.startLocationUpdates(this).observeForever { result ->
+            result?.location?.let {
+                Log.e(
+                    "BIRJU Service",
+                    "Received Background location in service: ${it.latitude}, ${it.longitude}"
+                )
+            } ?: Log.e("BIRJU Service", "Error: ${result?.error}")
+        }
     }
 }
