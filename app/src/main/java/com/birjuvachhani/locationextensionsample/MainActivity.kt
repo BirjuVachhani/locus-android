@@ -23,7 +23,6 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.lifecycle.observe
 import com.birjuvachhani.locus.Locus
 import com.google.android.gms.location.LocationRequest
 import kotlinx.android.synthetic.main.activity_main.*
@@ -69,10 +68,10 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
      * Initiates location tracking process on button click
      * */
     fun startTracking(v: View) {
-        Locus.startLocationUpdates(this).observe(this) { result ->
-            result.location?.let(::onLocationUpdate) ?: onError(result.error)
-        }
-//        startService(Intent(this, TempService::class.java))
+//        Locus.startLocationUpdates(this).observe(this) { result ->
+//            result.location?.let(::onLocationUpdate) ?: onError(result.error)
+//        }
+        startService(Intent(this, TempService::class.java))
     }
 
     private fun onLocationUpdate(location: Location) {

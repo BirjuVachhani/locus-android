@@ -28,14 +28,17 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Lifecycle
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.LocationSettingsRequest
+import com.google.android.gms.location.LocationSettingsResponse
+import com.google.android.gms.location.LocationSettingsStatusCodes
 
 class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsResultCallback {
 
     companion object {
-        private const val REQUEST_CODE_LOCATION_SETTINGS = 123
+        private const val REQUEST_CODE_LOCATION_SETTINGS = 545
         private const val PERMISSION_REQUEST_CODE = 777
         private const val SETTINGS_ACTIVITY_REQUEST_CODE = 659
         private const val PREF_NAME = "locus_pref"
@@ -247,6 +250,31 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * If settings are isLoggingEnabled then retrieves the location, otherwise initiate the process of settings resolution
      * */
     private fun checkIfLocationSettingsAreEnabled() {
+        checkSettings(success = { shouldProceedForLocation() }) { exception ->
+            if (exception is ApiException) {
+                when (exception.statusCode) {
+                    LocationSettingsStatusCodes.RESOLUTION_REQUIRED -> {
+                        logDebug("Location settings resolution is required")
+                        onResolutionNeeded(exception)
+                    }
+                    LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE -> {
+                        logDebug("cannot change settings, continue with current settings")
+                        shouldProceedForLocation()
+                    }
+                    else -> logDebug("something went wrong while processing location settings resolution request: $exception")
+                }
+            } else {
+                logDebug("Location settings resolution denied")
+                // resolution failed somehow
+                onResolutionDenied()
+            }
+        }
+    }
+
+    private fun checkSettings(
+        success: (LocationSettingsResponse) -> Unit,
+        failure: (Exception) -> Unit
+    ) {
         val builder = LocationSettingsRequest.Builder()
         builder.addLocationRequest(config.locationRequest)
         builder.setAlwaysShow(true)
@@ -256,15 +284,9 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         locationSettingsResponseTask.addOnSuccessListener {
             // All location settings are satisfied. The client can initialize
             // location requests here.
-            shouldProceedForLocation()
-        }
-        locationSettingsResponseTask.addOnFailureListener { exception ->
-            if (exception is ResolvableApiException) {
-                onResolutionNeeded(exception)
-            } else {
-                // resolution failed somehow
-                onResolutionDenied()
-            }
+            success(it)
+        }.addOnFailureListener { exception ->
+            failure(exception)
         }
     }
 
@@ -286,7 +308,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * @param exception is an instance of ResolvableApiException which determines whether the resolution
      * is possible or not
      * */
-    private fun onResolutionNeeded(exception: ResolvableApiException) {
+    private fun onResolutionNeeded(exception: Exception) {
         exception.printStackTrace()
         if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) return
         AlertDialog.Builder(this)
@@ -322,17 +344,9 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * @param exception is used to resolve location settings
      * */
     private fun resolveLocationSettings(exception: Exception) {
-        val resolvable = exception as ResolvableApiException
+        val resolvable = exception as? ResolvableApiException ?: return
         try {
-            startIntentSenderForResult(
-                resolvable.resolution.intentSender,
-                REQUEST_CODE_LOCATION_SETTINGS,
-                null,
-                0,
-                0,
-                0,
-                null
-            )
+            resolvable.startResolutionForResult(this, REQUEST_CODE_LOCATION_SETTINGS)
         } catch (e1: IntentSender.SendIntentException) {
             e1.printStackTrace()
         }
@@ -340,9 +354,24 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == REQUEST_CODE_LOCATION_SETTINGS) {
-            if (resultCode == RESULT_OK) {
+            /*if (resultCode == RESULT_OK) {
                 shouldProceedForLocation()
             } else {
+                sendResultBroadcast(
+                    Intent(packageName).putExtra(
+                        Constants.INTENT_EXTRA_PERMISSION_RESULT,
+                        Constants.LOCATION_SETTINGS_DENIED
+                    )
+                )
+            }*/
+
+            // Note: This is a workaround for Android Q as in Android Q,
+            // when location settings resolution dialog is displayed, No matter whether user
+            // chooses "ok" or "cancel", the returned result is always cancelled. This might be
+            // issue of google api. So to overcome this issue, we're checking again if
+            // location settings are enabled or not.
+
+            checkSettings(success = { shouldProceedForLocation() }) {
                 sendResultBroadcast(
                     Intent(packageName).putExtra(
                         Constants.INTENT_EXTRA_PERMISSION_RESULT,
