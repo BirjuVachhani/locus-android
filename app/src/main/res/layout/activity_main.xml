@@ -220,6 +220,7 @@
         android:backgroundTint="@android:color/white"
         android:onClick="stopUpdates"
         android:text="@string/stop"
+        android:textColor="@color/colorAccent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/btnStart"
         app:layout_constraintHorizontal_bias="0.5"

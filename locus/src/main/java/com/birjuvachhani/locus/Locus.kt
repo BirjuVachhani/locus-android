@@ -285,7 +285,9 @@ object Locus {
      * Note that this only stops location updates, it cannot stop ongoing permission request.
      */
     fun stopLocationUpdates() {
-        locationProvider.stopUpdates()
+        if (::locationProvider.isInitialized) {
+            locationProvider.stopUpdates()
+        }
         // TODO check if any objects need to reset
     }
 

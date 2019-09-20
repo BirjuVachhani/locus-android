@@ -63,7 +63,6 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
 
     private fun onError(error: Throwable?) {
         btnStart.isEnabled = true
-        btnStop.isEnabled = false
         tvLatitude.text = ""
         tvLongitude.text = ""
         tvNoLocation.text = error?.message
@@ -94,7 +93,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
 
     fun stopUpdates(v: View) {
         Locus.stopLocationUpdates()
-        btnStop.isEnabled = false
+        btnStop.isEnabled = true
         btnStart.isEnabled = true
         llLocationData.visibility = View.INVISIBLE
         tvNoLocation.visibility = View.VISIBLE
