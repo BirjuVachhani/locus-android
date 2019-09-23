@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Birju Vachhani (https://github.com/BirjuVachhani)
+ * Copyright © 2019 Birju Vachhani (https://github.com/BirjuVachhani)
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,49 +15,66 @@
 
 package com.birjuvachhani.locationextensionsample
 
+import android.content.Intent
+import android.location.Location
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
-import com.birjuvachhani.locationextension.Locus
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import com.birjuvachhani.locus.Locus
+import com.google.android.gms.location.LocationRequest
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 
-
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsResultCallback {
 
     private val TAG = this::class.java.simpleName
-
-    // create an instance of Locus class to use it later to retrieve location on the go.
-    private val locus = Locus(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-    }
-
-    fun stopTracking(v: View) {
-        locus.stopTrackingLocation()
-    }
-
-    /**
-     * Initiates location tracking process on button click
-     * */
-    fun startTracking(v: View) {
-
-        locus.listenForLocation(this) {
-            locationContainer.visibility = View.VISIBLE
-            tvLatitude.text = latitude.toString()
-            tvLongitude.text = longitude.toString()
-            tvError.text = ""
-            tvTime.text = getCurrentTimeString()
-            Log.e(TAG, "Latitude: $latitude\tLongitude: $longitude")
-        } failure {
-            tvLatitude.text = ""
-            tvLongitude.text = ""
-            tvError.text = message
-            Log.e(TAG, "Error: $message")
+        val request = LocationRequest.create()
+        Intent(this, MainActivity::class.java).apply {
+            putExtra("request", request)
         }
+        Locus.setLogging(true)
+    }
+
+    fun getSingleUpdate(v: View) {
+        Locus.getCurrentLocation(this) { result ->
+            result.location?.let {
+                tvSingleUpdate.text = "${it.latitude}, ${it.longitude}"
+                tvSingleUpdate.visibility = View.VISIBLE
+                tvErrors.visibility = View.INVISIBLE
+            } ?: run {
+                tvSingleUpdate.visibility = View.INVISIBLE
+                tvErrors.text = result.error?.message
+                tvErrors.visibility = View.VISIBLE
+            }
+        }
+    }
+
+    private fun onLocationUpdate(location: Location) {
+        btnStart.isEnabled = false
+        btnStop.isEnabled = true
+        llLocationData.visibility = View.VISIBLE
+        tvNoLocation.visibility = View.GONE
+        tvLatitude.text = location.latitude.toString()
+        tvLongitude.text = location.longitude.toString()
+        tvTime.text = getCurrentTimeString()
+        tvErrors.visibility = View.INVISIBLE
+        Log.e(TAG, "Latitude: ${location.latitude}\tLongitude: ${location.longitude}")
+    }
+
+    private fun onError(error: Throwable?) {
+        btnStart.isEnabled = true
+        tvLatitude.text = ""
+        tvLongitude.text = ""
+        llLocationData.visibility = View.INVISIBLE
+        Log.e(TAG, "Error: ${error?.message}")
+        tvErrors.text = error?.message
+        tvErrors.visibility = View.VISIBLE
     }
 
     /**
@@ -65,12 +82,34 @@ class MainActivity : AppCompatActivity() {
      * */
     private fun getCurrentTimeString(): String {
         val calendar = Calendar.getInstance()
-        return "${calendar.get(Calendar.HOUR_OF_DAY)} : ${calendar.get(Calendar.MINUTE)} : ${calendar.get(Calendar.SECOND)}"
+        return "${calendar.get(Calendar.HOUR_OF_DAY)} : ${calendar.get(Calendar.MINUTE)} : ${calendar.get(
+            Calendar.SECOND
+        )}"
     }
 
-    override fun onPause() {
-        super.onPause()
-        //stop receiving location when app is not in foreground.
-        locus.stopTrackingLocation()
+    fun startUpdates(v: View) {
+        Locus.configure {
+            enableBackgroundUpdates = scBackground.isChecked
+            forceBackgroundUpdates = scForceBackground.isChecked
+            shouldResolveRequest = scResolveSettings.isChecked
+        }
+        Locus.startLocationUpdates(this) { result ->
+            result.location?.let(::onLocationUpdate)
+            result.error?.let(::onError)
+        }
+    }
+
+    fun stopUpdates(v: View) {
+        Locus.stopLocationUpdates()
+        btnStop.isEnabled = true
+        btnStart.isEnabled = true
+        llLocationData.visibility = View.INVISIBLE
+        tvNoLocation.visibility = View.VISIBLE
+        tvSingleUpdate.visibility = View.INVISIBLE
+    }
+
+    fun startLocationService(v: View) {
+        startService(Intent(this, LocationService::class.java))
+        finish()
     }
 }

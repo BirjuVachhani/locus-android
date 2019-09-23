@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Birju Vachhani (https://github.com/BirjuVachhani)
+ * Copyright © 2019 Birju Vachhani (https://github.com/BirjuVachhani)
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,27 +13,24 @@
  * limitations under the License.
  */
 
-package com.birjuvachhani.locationextension
+package com.birjuvachhani.locus
 
 import android.location.Location
 
-/**
- * Created by Birju Vachhani on 05/02/19.
+/*
+ * Created by Birju Vachhani on 05 February 2019
+ * Copyright © 2019 locus-android. All rights reserved.
  */
 
 /**
  * Represents states of LocusResult library
  * */
-sealed class LocusResult {
-
-    /**
-     * Represents success state for retrieving location
-     * */
-    data class Success internal constructor(val location: Location) : LocusResult()
-
-    /**
-     * Represents failure state for location process
-     * */
-    data class Failure internal constructor(val error: Throwable) : LocusResult()
-
+class LocusResult private constructor(
+    val location: Location? = null,
+    val error: Throwable? = null
+) {
+    companion object {
+        internal fun error(error: Throwable) = LocusResult(error = error)
+        internal fun success(location: Location) = LocusResult(location = location)
+    }
 }
