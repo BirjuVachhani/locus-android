@@ -20,10 +20,8 @@ import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.lifecycle.observe
 import com.birjuvachhani.locus.Locus
 import com.google.android.gms.location.LocationRequest
 import kotlinx.android.synthetic.main.activity_main.*
@@ -44,8 +42,16 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
     }
 
     fun getSingleUpdate(v: View) {
-        Locus.getCurrentLocation(this) {
-            Toast.makeText(this, "loc: ${it.location} error: ${it.error}", Toast.LENGTH_LONG).show()
+        Locus.getCurrentLocation(this) { result ->
+            result.location?.let {
+                tvSingleUpdate.text = "${it.latitude}, ${it.longitude}"
+                tvSingleUpdate.visibility = View.VISIBLE
+                tvErrors.visibility = View.INVISIBLE
+            } ?: run {
+                tvSingleUpdate.visibility = View.INVISIBLE
+                tvErrors.text = result.error?.message
+                tvErrors.visibility = View.VISIBLE
+            }
         }
     }
 
@@ -57,7 +63,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         tvLatitude.text = location.latitude.toString()
         tvLongitude.text = location.longitude.toString()
         tvTime.text = getCurrentTimeString()
-        tvNoLocation.text = "No Updates Available"
+        tvErrors.visibility = View.INVISIBLE
         Log.e(TAG, "Latitude: ${location.latitude}\tLongitude: ${location.longitude}")
     }
 
@@ -65,9 +71,10 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         btnStart.isEnabled = true
         tvLatitude.text = ""
         tvLongitude.text = ""
-        tvNoLocation.text = error?.message
         llLocationData.visibility = View.INVISIBLE
         Log.e(TAG, "Error: ${error?.message}")
+        tvErrors.text = error?.message
+        tvErrors.visibility = View.VISIBLE
     }
 
     /**
@@ -86,8 +93,9 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
             forceBackgroundUpdates = scForceBackground.isChecked
             shouldResolveRequest = scResolveSettings.isChecked
         }
-        Locus.startLocationUpdates(this).observe(this) { result ->
-            result.location?.let(::onLocationUpdate) ?: onError(result.error)
+        Locus.startLocationUpdates(this) { result ->
+            result.location?.let(::onLocationUpdate)
+            result.error?.let(::onError)
         }
     }
 
@@ -97,6 +105,10 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         btnStart.isEnabled = true
         llLocationData.visibility = View.INVISIBLE
         tvNoLocation.visibility = View.VISIBLE
-        tvNoLocation.text = "No Updates Available"
+    }
+
+    fun startLocationService(v: View) {
+        startService(Intent(this, LocationService::class.java))
+        finish()
     }
 }

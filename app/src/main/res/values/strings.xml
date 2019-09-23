@@ -15,4 +15,6 @@
     <string name="background_location_updates">Background Location Updates</string>
     <string name="no_updates_available">No updates available</string>
     <string name="try_out_the_sample_app_of">Try out the sample app of</string>
+    <string name="request_single_update">Single Update</string>
+    <string name="location_service">Location Service</string>
 </resources>

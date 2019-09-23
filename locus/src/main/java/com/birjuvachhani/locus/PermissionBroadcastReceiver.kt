@@ -43,7 +43,7 @@ class PermissionBroadcastReceiver(private val onResult: (Throwable?) -> Unit) :
             }
             else -> {
                 logDebug(status)
-                locationLiveData.postValue(LocusResult(error = Throwable(status)))
+                locationLiveData.postValue(LocusResult.error(Throwable(status)))
                 onResult(Throwable(status))
             }
         }

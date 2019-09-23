@@ -32,5 +32,6 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.1.0"
     implementation 'com.intuit.sdp:sdp-android:1.0.6'
     implementation 'com.intuit.ssp:ssp-android:1.0.6'
+    implementation "android.arch.lifecycle:extensions:1.1.1"
     implementation project(':locus')
 }

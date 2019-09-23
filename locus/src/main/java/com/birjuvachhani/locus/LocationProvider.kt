@@ -60,10 +60,10 @@ internal class LocationProvider(context: Context) {
                 mFusedLocationProviderClient.lastLocation?.addOnCompleteListener {
                     if (!it.isSuccessful) return@addOnCompleteListener
                     it.result?.let { location ->
-                        locationLiveData.postValue(LocusResult(location))
+                        locationLiveData.postValue(LocusResult.success(location))
                     }
                 }?.addOnFailureListener {
-                    locationLiveData.postValue(LocusResult(error = it))
+                    locationLiveData.postValue(LocusResult.error(error = it))
                 }
             }
     }
@@ -76,7 +76,7 @@ internal class LocationProvider(context: Context) {
             val callback = object : LocationCallback() {
                 override fun onLocationResult(result: LocationResult?) {
                     result?.lastLocation?.let { location ->
-                        onUpdate(LocusResult(location))
+                        onUpdate(LocusResult.success(location))
                         mFusedLocationProviderClient.removeLocationUpdates(this)
                     }
                 }
@@ -87,12 +87,12 @@ internal class LocationProvider(context: Context) {
                 Looper.getMainLooper()
             ).addOnFailureListener { error ->
                 logError(error)
-                onUpdate(LocusResult(error = error))
+                onUpdate(LocusResult.error(error = error))
             }
         }
         mFusedLocationProviderClient.lastLocation?.addOnSuccessListener { result ->
             result?.let { location ->
-                onUpdate(LocusResult(location))
+                onUpdate(LocusResult.success(location))
             } ?: startUpdates()
         }?.addOnFailureListener {
             logError(it)

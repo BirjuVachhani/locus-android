@@ -24,8 +24,10 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.birjuvachhani.locus.Locus.config
 import com.birjuvachhani.locus.Locus.locationProvider
@@ -117,6 +119,14 @@ object Locus {
         return locationLiveData
     }
 
+    fun <T> startLocationUpdates(
+        lifecycleOwnerContext: T,
+        onResult: (LocusResult) -> Unit
+    ) where T : Context, T : LifecycleOwner {
+        locationLiveData.observe(lifecycleOwnerContext, Observer(onResult))
+        checkAndStartLocationUpdates(lifecycleOwnerContext.applicationContext)
+    }
+
     private fun checkAndStartLocationUpdates(
         context: Context,
         singleUpdate: ((LocusResult) -> Unit)? = null
@@ -124,8 +134,8 @@ object Locus {
         val receiver = PermissionBroadcastReceiver {
             it?.let { error ->
                 singleUpdate?.let {
-                    it(LocusResult(error = error))
-                } ?: locationLiveData.postValue(LocusResult(error = it))
+                    it(LocusResult.error(error))
+                } ?: locationLiveData.postValue(LocusResult.error(it))
             } ?: startUpdates(context, singleUpdate)
         }
         if (!getAllPermissions(config.enableBackgroundUpdates).all(context::hasPermission)) {

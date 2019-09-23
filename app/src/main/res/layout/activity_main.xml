@@ -11,7 +11,7 @@
     <androidx.appcompat.widget.LinearLayoutCompat
         android:id="@+id/linearLayout"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/_180sdp"
+        android:layout_height="@dimen/_130sdp"
         android:gravity="center"
         android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
@@ -25,7 +25,7 @@
             android:text="@string/try_out_the_sample_app_of"
             android:textAlignment="center"
             android:textColor="@color/txt_light"
-            android:textSize="@dimen/_20sdp" />
+            android:textSize="@dimen/_16sdp" />
 
         <TextView
             android:id="@+id/tvAppName"
@@ -34,7 +34,7 @@
             android:text="@string/locus"
             android:textAlignment="center"
             android:textColor="@android:color/white"
-            android:textSize="@dimen/_48sdp"
+            android:textSize="@dimen/_40sdp"
             android:textStyle="bold" />
     </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -54,89 +54,83 @@
             android:gravity="center"
             android:text="@string/no_updates_available"
             android:textAlignment="center"
-            android:visibility="visible" />
+            android:visibility="visible"
+            tools:visibility="invisible" />
 
-        <androidx.appcompat.widget.LinearLayoutCompat
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/llLocationData"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:visibility="invisible">
-
-            <androidx.appcompat.widget.LinearLayoutCompat
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <androidx.appcompat.widget.LinearLayoutCompat
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <androidx.appcompat.widget.AppCompatTextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/latitude"
-                        android:textAlignment="center"
-                        android:textColor="@color/colorAccent"
-                        android:textStyle="bold" />
-
-                    <androidx.appcompat.widget.AppCompatTextView
-                        android:id="@+id/tvLatitude"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textAlignment="center"
-                        android:textSize="@dimen/_14ssp"
-                        tools:text="127.149" />
-
-                </androidx.appcompat.widget.LinearLayoutCompat>
-
-                <androidx.appcompat.widget.LinearLayoutCompat
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <androidx.appcompat.widget.AppCompatTextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/longitude"
-                        android:textAlignment="center"
-                        android:textColor="@color/colorAccent"
-                        android:textStyle="bold" />
-
-                    <androidx.appcompat.widget.AppCompatTextView
-                        android:id="@+id/tvLongitude"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textAlignment="center"
-                        android:textSize="@dimen/_14ssp"
-                        tools:text="127.149" />
-
-                </androidx.appcompat.widget.LinearLayoutCompat>
-
-            </androidx.appcompat.widget.LinearLayoutCompat>
+            android:paddingStart="@dimen/_16sdp"
+            android:paddingEnd="@dimen/_16sdp"
+            android:visibility="invisible"
+            tools:visibility="visible">
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:layout_width="match_parent"
+                android:id="@+id/tvLatitudeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/latitude"
+                android:textColor="@color/colorAccent"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvLatitude"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/_14ssp"
+                app:layout_constraintBottom_toBottomOf="@id/tvLatitudeLabel"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/tvLatitudeLabel"
+                tools:text="127.149" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvLongitudeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_8sdp"
+                android:text="@string/longitude"
+                android:textColor="@color/colorAccent"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvLatitudeLabel" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvLongitude"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/_14ssp"
+                app:layout_constraintBottom_toBottomOf="@id/tvLongitudeLabel"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/tvLongitudeLabel"
+                tools:text="127.149" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvLastUpdatedTimeLabel"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/_8sdp"
                 android:text="@string/time"
-                android:textAlignment="center"
                 android:textColor="@color/colorAccent"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvLongitudeLabel" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvTime"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAlignment="center"
                 android:textSize="@dimen/_14ssp"
-                tools:text="127.149" />
+                app:layout_constraintBottom_toBottomOf="@id/tvLastUpdatedTimeLabel"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/tvLastUpdatedTimeLabel"
+                tools:text="17:48:51" />
 
-        </androidx.appcompat.widget.LinearLayoutCompat>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </FrameLayout>
 
@@ -179,7 +173,64 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/scForceBackground" />
 
+    <Button
+        android:id="@+id/btnSingleUpdate"
+        style="@style/TextAppearance.AppCompat.Widget.Button.Borderless.Colored"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_8sdp"
+        android:onClick="getSingleUpdate"
+        android:text="@string/request_single_update"
+        android:textColor="@android:color/white"
+        app:layout_constraintEnd_toStartOf="@+id/btnService"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/scResolveSettings" />
+
+    <Button
+        android:id="@+id/btnService"
+        style="@style/TextAppearance.AppCompat.Widget.Button.Borderless.Colored"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_8sdp"
+        android:onClick="startLocationService"
+        android:text="@string/location_service"
+        android:textColor="@android:color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/btnSingleUpdate"
+        app:layout_constraintTop_toBottomOf="@+id/scResolveSettings" />
+
+    <TextView
+        android:id="@+id/tvSingleUpdate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/_24sdp"
+        android:layout_marginTop="@dimen/_8sdp"
+        android:layout_marginEnd="@dimen/_24sdp"
+        android:textAlignment="center"
+        android:textColor="@android:color/white"
+        android:visibility="invisible"
+        app:layout_constraintTop_toBottomOf="@+id/btnSingleUpdate"
+        tools:layout_editor_absoluteX="0dp"
+        tools:text="single update" />
+
+    <TextView
+        android:id="@+id/tvErrors"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/_24sdp"
+        android:layout_marginEnd="@dimen/_24sdp"
+        android:textAlignment="center"
+        android:textColor="@color/colorAccent"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/appCompatTextView"
+        app:layout_constraintTop_toBottomOf="@+id/tvSingleUpdate"
+        tools:layout_editor_absoluteX="0dp"
+        tools:text="No errors" />
+
     <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/appCompatTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="@dimen/_16sdp"
@@ -188,8 +239,7 @@
         android:textColor="@color/txt_light"
         app:layout_constraintBottom_toTopOf="@+id/btnStop"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/scResolveSettings" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnStart"
@@ -226,5 +276,6 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         tools:ignore="RtlCompat" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

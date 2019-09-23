@@ -3,8 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.birjuvachhani.locationextensionsample">
 
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:allowBackup="false"
@@ -21,7 +20,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".TempService" />
+        <service
+            android:name=".LocationService"
+            android:foregroundServiceType="location" />
+
+        <receiver
+            android:name=".ServiceStopBroadcastReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.birjuvachhani.locationextensionsample.ServiceStopBroadcastReceiver" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
