@@ -26,9 +26,12 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation 'androidx.appcompat:appcompat:1.0.2'
+    implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     implementation 'com.google.android.gms:play-services-location:17.0.0'
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.1.0"
+    implementation 'com.intuit.sdp:sdp-android:1.0.6'
+    implementation 'com.intuit.ssp:ssp-android:1.0.6'
+    implementation "android.arch.lifecycle:extensions:1.1.1"
     implementation project(':locus')
-    testImplementation 'junit:junit:4.12'
 }

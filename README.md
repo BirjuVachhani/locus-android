@@ -1,3 +1,6 @@
+
+![banner](https://github.com/BirjuVachhani/locus-android/blob/master/banner.svg)
+
 # Locus-Android
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-2196F3.svg?style=for-the-badge)](https://opensource.org/licenses/Apache-2.0)
@@ -5,9 +8,7 @@
 [![Platform](https://img.shields.io/badge/Platform-Android-green.svg?style=for-the-badge)](https://www.android.com/)
 [![API](https://img.shields.io/badge/API-16%2B-F44336.svg?style=for-the-badge)](https://android-arsenal.com/api?level=16)
 
-Locus is a kotlin library for android which makes it very easy to retrieve location with just few lines of code. Everything including permission model and Location settings is handled internally which removes a lot of boilerplate code any developer have to write everytime. 
-
-Please note that this library is still under development. Stable version of the library will be released soon. Stay tuned!
+Locus is a tiny kotlin library for android which makes it super very easy to retrieve location with just few lines of code. Everything including permission model and Location settings resolution is handled internally which removes a lot of boilerplate code any developer have to write every time.
 
 | Current Version 	| 3.0.0-alpha02 	|
 |-----------------	|---------------	|
@@ -15,12 +16,13 @@ Please note that this library is still under development. Stable version of the 
 | Language        	| Kotlin        	|
 | SDK Level       	| 16+           	|
 | License         	| Apache 2.0    	|
-| Size            	| 49 KB            	|
+| Size            	| 38 KB            	|
 
 See [Wiki](https://github.com/BirjuVachhani/locus-android/wiki) for more information and configuration!
 
 ## Features
 
+* Android Q support
 * Completely written in Kotlin
 * Easy Initialization
 * Handles Permission Model
@@ -51,7 +53,7 @@ allprojects {
 
 ```
 dependencies {
-    implementation 'com.github.BirjuVachhani:locus-android:3.0.0-alpha02'
+    implementation 'com.github.BirjuVachhani:locus-android:3.0.0'
 }
 ```
 

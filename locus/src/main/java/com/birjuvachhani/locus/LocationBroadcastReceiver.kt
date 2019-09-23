@@ -19,7 +19,6 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import androidx.lifecycle.MutableLiveData
 import com.google.android.gms.location.LocationResult
 
 /*
@@ -27,9 +26,10 @@ import com.google.android.gms.location.LocationResult
  * Copyright © 2019 locus-android. All rights reserved.
  */
 
-internal var backgroundLocationLiveData = MutableLiveData<LocusResult>()
-
-class LocationBroadcastReceiver : BroadcastReceiver() {
+/**
+ * Receives location broadcasts
+ */
+internal class LocationBroadcastReceiver : BroadcastReceiver() {
 
     companion object {
         const val ACTION_PROCESS_UPDATES =
@@ -49,7 +49,7 @@ class LocationBroadcastReceiver : BroadcastReceiver() {
             LocationResult.extractResult(intent)?.let { result ->
                 if (result.locations.isNotEmpty()) {
                     logDebug("Received location ${result.lastLocation}")
-                    backgroundLocationLiveData.postValue(LocusResult.Success(result.lastLocation))
+                    locationLiveData.postValue(LocusResult.success(result.lastLocation))
                 }
             }
         }

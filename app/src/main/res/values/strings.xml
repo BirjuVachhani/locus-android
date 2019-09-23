@@ -1,8 +1,20 @@
 <resources>
-    <string name="app_name">Location Extension Sample</string>
+    <string name="app_name">Locus Sample</string>
     <string name="get_location">GET LOCATION</string>
     <string name="stop_location">STOP LOCATION</string>
     <string name="last_updated">Last Updated</string>
     <string name="longitude">Longitude</string>
+    <string name="locus">Locus</string>
     <string name="latitude">Latitude</string>
+    <string name="note">Please note that any change into settings requires location updates to be restarted to take effect. Consider stopping location updates and starting again after modifying settings</string>
+    <string name="time">Last Updated Time</string>
+    <string name="resolve_location_settings">Resolve Location Settings</string>
+    <string name="force_background_updates">Force Background Updates</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="background_location_updates">Background Location Updates</string>
+    <string name="no_updates_available">No updates available</string>
+    <string name="try_out_the_sample_app_of">Try out the sample app of</string>
+    <string name="request_single_update">Single Update</string>
+    <string name="location_service">Location Service</string>
 </resources>

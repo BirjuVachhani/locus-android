@@ -5,133 +5,277 @@
     android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/locationContainer"
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/linearLayout"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_130sdp"
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvWelcome"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/try_out_the_sample_app_of"
+            android:textAlignment="center"
+            android:textColor="@color/txt_light"
+            android:textSize="@dimen/_16sdp" />
+
+        <TextView
+            android:id="@+id/tvAppName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/locus"
+            android:textAlignment="center"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/_40sdp"
+            android:textStyle="bold" />
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+    <FrameLayout
+        android:id="@+id/frameLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="invisible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:visibility="visible">
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout">
 
-        <TextView
-            android:id="@+id/tvLatitudeLabel"
-            android:layout_width="wrap_content"
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvNoLocation"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginTop="32dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp"
-            android:text="@string/latitude"
-            android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="@string/no_updates_available"
+            android:textAlignment="center"
+            android:visibility="visible"
+            tools:visibility="invisible" />
 
-        <TextView
-            android:id="@+id/tvLatitude"
-            android:layout_width="wrap_content"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/llLocationData"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp"
-            android:textSize="24sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvLatitudeLabel"
-            tools:text="Latitude" />
+            android:orientation="vertical"
+            android:paddingStart="@dimen/_16sdp"
+            android:paddingEnd="@dimen/_16sdp"
+            android:visibility="invisible"
+            tools:visibility="visible">
 
-        <TextView
-            android:id="@+id/tvLongitudeLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="@string/longitude"
-            android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvLatitude" />
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvLatitudeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/latitude"
+                android:textColor="@color/colorAccent"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/tvLongitude"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="24sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvLongitudeLabel"
-            tools:text="Longitude" />
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvLatitude"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/_14ssp"
+                app:layout_constraintBottom_toBottomOf="@id/tvLatitudeLabel"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/tvLatitudeLabel"
+                tools:text="127.149" />
 
-        <TextView
-            android:id="@+id/tvUpdateLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="@string/last_updated"
-            android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvLongitude" />
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvLongitudeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_8sdp"
+                android:text="@string/longitude"
+                android:textColor="@color/colorAccent"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvLatitudeLabel" />
 
-        <TextView
-            android:id="@+id/tvTime"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textColor="@android:color/holo_red_light"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvUpdateLabel"
-            tools:text="count" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvLongitude"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/_14ssp"
+                app:layout_constraintBottom_toBottomOf="@id/tvLongitudeLabel"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/tvLongitudeLabel"
+                tools:text="127.149" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvLastUpdatedTimeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_8sdp"
+                android:text="@string/time"
+                android:textColor="@color/colorAccent"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvLongitudeLabel" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/_14ssp"
+                app:layout_constraintBottom_toBottomOf="@id/tvLastUpdatedTimeLabel"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/tvLastUpdatedTimeLabel"
+                tools:text="17:48:51" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </FrameLayout>
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/scBackground"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="@dimen/_16sdp"
+        android:layout_marginTop="@dimen/_16sdp"
+        android:layout_marginEnd="@dimen/_16sdp"
+        android:text="@string/background_location_updates"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/frameLayout" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/scForceBackground"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="@dimen/_16sdp"
+        android:layout_marginTop="@dimen/_16sdp"
+        android:layout_marginEnd="@dimen/_16sdp"
+        android:text="@string/force_background_updates"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/scBackground" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/scResolveSettings"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="@dimen/_16sdp"
+        android:layout_marginTop="@dimen/_16sdp"
+        android:layout_marginEnd="@dimen/_16sdp"
+        android:text="@string/resolve_location_settings"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/scForceBackground" />
 
     <Button
-        android:id="@+id/btnGetLoc"
-        style="@style/Widget.AppCompat.Button.Colored"
+        android:id="@+id/btnSingleUpdate"
+        style="@style/TextAppearance.AppCompat.Widget.Button.Borderless.Colored"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:onClick="startTracking"
-        android:padding="18dp"
-        android:text="@string/get_location"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="@dimen/_8sdp"
+        android:onClick="getSingleUpdate"
+        android:text="@string/request_single_update"
+        android:textColor="@android:color/white"
+        app:layout_constraintEnd_toStartOf="@+id/btnService"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/locationContainer" />
+        app:layout_constraintTop_toBottomOf="@+id/scResolveSettings" />
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/btnService"
+        style="@style/TextAppearance.AppCompat.Widget.Button.Borderless.Colored"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:onClick="stopTracking"
-        android:padding="18dp"
-        android:text="@string/stop_location"
+        android:layout_marginTop="@dimen/_8sdp"
+        android:onClick="startLocationService"
+        android:text="@string/location_service"
+        android:textColor="@android:color/white"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnGetLoc" />
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/btnSingleUpdate"
+        app:layout_constraintTop_toBottomOf="@+id/scResolveSettings" />
 
     <TextView
-        android:id="@+id/tvError"
+        android:id="@+id/tvSingleUpdate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/_24sdp"
+        android:layout_marginTop="@dimen/_8sdp"
+        android:layout_marginEnd="@dimen/_24sdp"
+        android:textAlignment="center"
+        android:textColor="@android:color/white"
+        android:visibility="invisible"
+        app:layout_constraintTop_toBottomOf="@+id/btnSingleUpdate"
+        tools:layout_editor_absoluteX="0dp"
+        tools:text="single update" />
+
+    <TextView
+        android:id="@+id/tvErrors"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/_24sdp"
+        android:layout_marginEnd="@dimen/_24sdp"
+        android:textAlignment="center"
+        android:textColor="@color/colorAccent"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/appCompatTextView"
+        app:layout_constraintTop_toBottomOf="@+id/tvSingleUpdate"
+        tools:layout_editor_absoluteX="0dp"
+        tools:text="No errors" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/appCompatTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/_16sdp"
+        android:text="@string/note"
+        android:textAlignment="center"
+        android:textColor="@color/txt_light"
+        app:layout_constraintBottom_toTopOf="@+id/btnStop"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnStart"
+        style="@style/TextAppearance.AppCompat.Widget.Button.Colored"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginRight="8dp"
-        android:layout_marginBottom="32dp"
-        android:textAlignment="center"
-        android:textColor="@android:color/holo_red_light"
-        android:textSize="16sp"
+        android:layout_marginStart="@dimen/_8sdp"
+        android:layout_marginEnd="@dimen/_16sdp"
+        android:layout_marginBottom="@dimen/_16sdp"
+        android:backgroundTint="@color/colorAccent"
+        android:onClick="startUpdates"
+        android:text="@string/start"
+        android:textColor="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/btnStop"
+        tools:ignore="RtlCompat" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnStop"
+        style="@style/TextAppearance.AppCompat.Widget.Button.Borderless.Colored"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/_16sdp"
+        android:layout_marginEnd="@dimen/_8sdp"
+        android:layout_marginBottom="@dimen/_16sdp"
+        android:backgroundTint="@android:color/white"
+        android:onClick="stopUpdates"
+        android:text="@string/stop"
+        android:textColor="@color/colorAccent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btnStart"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        tools:text="count" />
+        tools:ignore="RtlCompat" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -11,12 +11,11 @@ android {
         minSdkVersion 16
         targetSdkVersion 29
         versionCode 3
-        versionName "1.0.3"
+        versionName "3.0.0"
     }
-
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -26,13 +25,12 @@ android {
     }
 }
 
-androidExtensions{
+androidExtensions {
     experimental = true
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.0.2'
-    compileOnly 'androidx.appcompat:appcompat:1.0.2'
+    compileOnly 'androidx.appcompat:appcompat:1.1.0'
     compileOnly "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation 'com.google.android.gms:play-services-location:17.0.0'
+    compileOnly 'com.google.android.gms:play-services-location:17.0.0'
 }

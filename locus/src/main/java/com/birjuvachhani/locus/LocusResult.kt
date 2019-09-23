@@ -25,16 +25,12 @@ import android.location.Location
 /**
  * Represents states of LocusResult library
  * */
-sealed class LocusResult {
-
-    /**
-     * Represents success state for retrieving location
-     * */
-    data class Success internal constructor(val location: Location) : LocusResult()
-
-    /**
-     * Represents failure state for location process
-     * */
-    data class Failure internal constructor(val error: Throwable) : LocusResult()
-
+class LocusResult private constructor(
+    val location: Location? = null,
+    val error: Throwable? = null
+) {
+    companion object {
+        internal fun error(error: Throwable) = LocusResult(error = error)
+        internal fun success(location: Location) = LocusResult(location = location)
+    }
 }
