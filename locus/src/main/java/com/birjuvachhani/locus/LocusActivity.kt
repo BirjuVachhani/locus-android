@@ -36,6 +36,13 @@ import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.location.LocationSettingsResponse
 import com.google.android.gms.location.LocationSettingsStatusCodes
 
+/**
+ * Activity that handles permission model as well as location settings resolution process
+ * @property localBroadcastManager Used to send permission related broadcasts
+ * @property config Current configuration to be used for the library
+ * @property pref SharedPreferences instance to managed permission model
+ * @property permissions Permissions that needs to be requested based on the [config]
+ */
 class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsResultCallback {
 
     companion object {

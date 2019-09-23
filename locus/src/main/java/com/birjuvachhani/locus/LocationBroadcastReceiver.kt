@@ -26,6 +26,9 @@ import com.google.android.gms.location.LocationResult
  * Copyright © 2019 locus-android. All rights reserved.
  */
 
+/**
+ * Receives location broadcasts
+ */
 internal class LocationBroadcastReceiver : BroadcastReceiver() {
 
     companion object {

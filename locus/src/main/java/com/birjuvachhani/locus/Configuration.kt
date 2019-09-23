@@ -25,8 +25,7 @@ import kotlinx.android.parcel.Parcelize
  */
 
 /**
- * Data class to store location related configurations which includes dialog messages and instance of LocationRequest
- * class.
+ * Data class to store location related configurations which includes dialog messages and instance of LocationRequest class.
  * */
 @LocusMarker
 @Parcelize

@@ -68,6 +68,11 @@ internal class LocationProvider(context: Context) {
             }
     }
 
+    /**
+     * Initiates process to retrieve single location update
+     * @param request LocationRequest instance that will be used to get location
+     * @param onUpdate Called on success/failure result of the single update retrieval process
+     */
     internal fun getSingleUpdate(
         request: LocationRequest,
         onUpdate: (LocusResult) -> Unit

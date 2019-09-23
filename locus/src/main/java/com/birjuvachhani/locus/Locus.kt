@@ -23,7 +23,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
+import android.os.Looper
 import androidx.core.app.NotificationCompat
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -58,18 +60,20 @@ internal annotation class LocusMarker
 
 /**
  * A helper class for location extension which provides
- * dsl extensions for getting location
+ * dsl extensions for getting location.
  *
- * @property config Configuration holds the configuration of the library
+ * The problem with the FusedLocationProviderClient is that when we provide
+ * a LocationCallback instance to receive location updates, it stops receiving
+ * updates after some time when app goes in background. This use case prevents
+ * from getting location updates in services and while the app is in background.
  *
- * @property locationProvider LocationProvider is used to retrieve location
+ * The preferable workaround is to use PendingIntent instead of using LocationCallback
+ * to receive location updates. This way works perfectly even when the app is in background.
+ * Therefore, We are not using LocationCallback approach to avoid any uncertain behaviour.
  *
- * @property permissionBroadcastReceiver PermissionBroadcastReceiver
- * receives all the permission broadcast from the [LocusActivity]
+ * @property config Holds the configuration of for the library
+ * @property locationProvider Used to retrieve location
  *
- * @property runnable Runnable? holds references to the LiveData observers
- * that needs to be executed after starting the location updates in order
- * to not miss the location updates.
  */
 @LocusMarker
 object Locus {
@@ -90,41 +94,92 @@ object Locus {
     /**
      * creates Configuration object from user configuration
      *
-     * @param func is a lambda receiver for Configuration which is used
-     * to build Configuration object
+     * @param func Lambda receiver for Configuration which is used to build Configuration object
      * */
     fun configure(func: Configuration.() -> Unit) {
         func(config)
     }
 
     /**
-     * Starts location updates by verifying permissions and location settings
+     * Starts location updates by verifying permissions and location settings.
+     * This method can be used anywhere but it is intended to be used where you don't have access to [Context] reference which implements [LifecycleOwner]. e.g. Service, IntentService, BroadcastReceiver. It also can be used for Fragments.
+     * It returns [LiveData] instance which can be used to observe for location updates. Also, any errors will be passed to this [LiveData] instance.
      *
-     * The problem with the FusedLocationProviderClient is that when we provide
-     * a LocationCallback instance to receive location updates, it stops receiving
-     * updates after some time when app goes in background. This use case prevents
-     * from getting location updates in services and while the app is in background.
-     *
-     * The preferable workaround is to use PendingIntent instead of using LocationCallback
-     * to receive location updates. This way works perfectly even when the app is in background.
-     * Therefore, this method is expected to be used in services and in cases where background
-     * location updates are needed.
+     * This method internally handles runtime location permission which is needed
+     * for Android M and above. It also handles rationale dialogs and permission
+     * blocked dialogs also. These dialogs can be configured using [configure] method.
+     * It also handles location resolution process for requested location settings.
+     * It shows setting resolution dialog if needed and ask for user's permission to
+     * change location settings.
      *
      * @param context Context is the Android context
-     *
      * @return LiveData<LocusResult> which can be used to observe location updates
      */
+    @Throws(IllegalStateException::class)
     fun startLocationUpdates(context: Context): LiveData<LocusResult> {
+        assertMainThread("startLocationUpdates")
         checkAndStartLocationUpdates(context.applicationContext)
         return locationLiveData
     }
 
+    /**
+     * Starts location updates by verifying permissions and location settings.
+     * This overloaded method is intended to be called from fragments and they have access to [Context] and they are [LifecycleOwner].
+     * Instead of returning a [LiveData] instance, it takes in a lambda block which will be invoked on [LiveData] events.
+     *
+     * This method internally handles runtime location permission which is needed
+     * for Android M and above. It also handles rationale dialogs and permission
+     * blocked dialogs also. These dialogs can be configured using [configure] method.
+     * It also handles location resolution process for requested location settings.
+     * It shows setting resolution dialog if needed and ask for user's permission to
+     * change location settings.
+     *
+     * @param fragment Fragment from which this method is called
+     * @param onResult Lambda block which is called upon receiving updates on [LiveData]
+     */
+    @Throws(IllegalStateException::class)
+    fun startLocationUpdates(
+        fragment: Fragment,
+        onResult: (LocusResult) -> Unit
+    ) {
+        assertMainThread("startLocationUpdates")
+        locationLiveData.observe(fragment, Observer(onResult))
+        startLocationUpdates(fragment.requireContext().applicationContext)
+    }
+
+    /**
+     * Starts location updates by verifying permissions and location settings.
+     * This overloaded method is intended to be called from the components which is ContextWrapper and also implements [LifecycleOwner] interface. e.g. Activities, LifecycleService, Application
+     * Instead of returning a [LiveData] instance, it takes in a lambda block which will be invoked on [LiveData] events.
+     *
+     * This method internally handles runtime location permission which is needed
+     * for Android M and above. It also handles rationale dialogs and permission
+     * blocked dialogs also. These dialogs can be configured using [configure] method.
+     * It also handles location resolution process for requested location settings.
+     * It shows setting resolution dialog if needed and ask for user's permission to
+     * change location settings.
+     *
+     * @param lifecycleOwnerContext Instance of a class which itself is [Context] and implements [LifecycleOwner]
+     * @param onResult Lambda block which is called upon receiving updates on [LiveData]
+     */
+    @Throws(IllegalStateException::class)
     fun <T> startLocationUpdates(
         lifecycleOwnerContext: T,
         onResult: (LocusResult) -> Unit
     ) where T : Context, T : LifecycleOwner {
+        assertMainThread("startLocationUpdates")
         locationLiveData.observe(lifecycleOwnerContext, Observer(onResult))
-        checkAndStartLocationUpdates(lifecycleOwnerContext.applicationContext)
+        startLocationUpdates(lifecycleOwnerContext.applicationContext)
+    }
+
+    /**
+     * Checks if the method call is performed on main thread or not. throws exception if not on main thread
+     * @param methodName Name of the method for which this check will be performed
+     */
+    private fun assertMainThread(methodName: String) {
+        check(Looper.getMainLooper() == Looper.myLooper()) {
+            "Cannot invoke $methodName on a background thread"
+        }
     }
 
     private fun checkAndStartLocationUpdates(
@@ -138,26 +193,32 @@ object Locus {
                 } ?: locationLiveData.postValue(LocusResult.error(it))
             } ?: startUpdates(context, singleUpdate)
         }
-        if (!getAllPermissions(config.enableBackgroundUpdates).all(context::hasPermission)) {
-            // Doesn't have permission, start permission resolution
-            startPermissionAndResolutionProcess(context, receiver, singleUpdate != null)
-        } else if (config.shouldResolveRequest) {
-            // has permissions, need to check for location settings
-            checkLocationSettings(context) { isSatisfied ->
-                if (isSatisfied) {
-                    logDebug("Location settings are satisfied")
-                    startUpdates(context, singleUpdate)
-                } else {
-                    logDebug("Location settings are not satisfied")
-                    startPermissionAndResolutionProcess(context, receiver, singleUpdate != null)
+        when {
+            !getAllPermissions(config.enableBackgroundUpdates).all(context::hasPermission) ->
+                // Doesn't have permission, start permission resolution
+                startPermissionAndResolutionProcess(context, receiver, singleUpdate != null)
+            config.shouldResolveRequest ->
+                // has permissions, need to check for location settings
+                checkLocationSettings(context) { isSatisfied ->
+                    if (isSatisfied) {
+                        logDebug("Location settings are satisfied")
+                        startUpdates(context, singleUpdate)
+                    } else {
+                        logDebug("Location settings are not satisfied")
+                        startPermissionAndResolutionProcess(context, receiver, singleUpdate != null)
+                    }
                 }
-            }
-        } else {
-            // has permission but location settings resolution is disabled so start updates directly
-            startUpdates(context, singleUpdate)
+            else ->
+                // has permission but location settings resolution is disabled so start updates directly
+                startUpdates(context, singleUpdate)
         }
     }
 
+    /**
+     * Determines whether the requested location settings are satisfied or not
+     * @param context Context
+     * @param onResult Function1<Boolean, Unit>
+     */
     private fun checkLocationSettings(context: Context, onResult: (Boolean) -> Unit) {
         val builder = LocationSettingsRequest.Builder()
         builder.addLocationRequest(config.locationRequest)
@@ -165,7 +226,6 @@ object Locus {
         val client = LocationServices.getSettingsClient(context)
         val locationSettingsResponseTask = client.checkLocationSettings(builder.build())
         locationSettingsResponseTask.addOnSuccessListener {
-            it?.locationSettingsStates
             onResult(true)
         }.addOnFailureListener { exception ->
             logError(exception)
@@ -173,6 +233,11 @@ object Locus {
         }
     }
 
+    /**
+     * Responsible for starting location updates. Called after performing all the necessary checks and requests.
+     * @param context Android Context
+     * @param singleUpdate Callback to be invoked if this request is for single update only
+     */
     private fun startUpdates(context: Context, singleUpdate: ((LocusResult) -> Unit)? = null) {
         initLocationProvider(context.applicationContext)
         if (singleUpdate == null) {
@@ -182,6 +247,12 @@ object Locus {
         }
     }
 
+    /**
+     * Responsible to handle initialization and execution of location permission retrieval process
+     * @param context Android Context
+     * @param receiver Broadcast receiver instance that receives location permission results
+     * @param isOneTime Determines whether this request is for single location updates or continuous updates
+     */
     private fun startPermissionAndResolutionProcess(
         context: Context,
         receiver: PermissionBroadcastReceiver,
@@ -204,6 +275,12 @@ object Locus {
         }
     }
 
+    /**
+     * Provides intent configured to open location activity
+     * @param context Android Context used to create Intent
+     * @param isOneTime Boolean
+     * @return Intent
+     */
     private fun getLocationActivityIntent(context: Context, isOneTime: Boolean) =
         Intent(context, LocusActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -213,6 +290,11 @@ object Locus {
             }
         }
 
+    /**
+     * Utility function to check whether the app is in foreground or not
+     * @param context Android Context used to get system services
+     * @return Boolean True if the app is in foreground, false otherwise
+     */
     private fun appIsInForeground(context: Context): Boolean {
         return (context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager)?.runningAppProcesses?.filter {
             it.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
@@ -222,36 +304,33 @@ object Locus {
     }
 
     /**
-     * Initiates location retrieval process to receive only one location result.
+     * Initiates location retrieval process to receive only one location update.
      *
      * This method internally handles runtime location permission which is needed
      * for Android M and above. It also handles rationale dialogs and permission
      * blocked dialogs also. These dialogs can be configured using [configure] method.
      * It also handles location resolution process for requested location settings.
      * It shows setting resolution dialog if needed and ask for user's permission to
-     * change location settings. Please note that these success and failure callbacks
-     * are lifecycle aware so no updates will be dispatched if the Activity
-     * is not in right state.
+     * change location settings.
      *
-     * @param func [@kotlin.ExtensionFunctionType] Function1<Location, Unit> provides
-     * a success block which will grant access to retrieved location
+     * Note that this method doesn't handle any lifecycle events which means that the [onResult] lambda block will be called being unaware of the component lifecycle. This method is also able to deliver result while the app is in background so all the requirements of the user's current location can be satisfied with this method call
      *
-     * @return BlockExecution that can be used to handle exceptions and failures
-     * during location retrieval process
+     * @param context Android context object
+     * @param onResult provides a success block which will grant access to retrieved location
      */
     fun getCurrentLocation(
         context: Context,
-        func: (LocusResult) -> Unit
+        onResult: (LocusResult) -> Unit
     ) {
         initLocationProvider(context.applicationContext)
-        checkAndStartLocationUpdates(context.applicationContext, func)
+        checkAndStartLocationUpdates(context.applicationContext, onResult)
     }
 
     /**
      * Displays location permission notification when location permission is not granted and
      * background location updates is requested.
-     * @param context Context is the Android context
-     * @param pendingIntent PendingIntent will be used to open permission activity
+     * @param context The Android context
+     * @param pendingIntent Used to open permission activity
      */
     private fun showPermissionNotification(context: Context, pendingIntent: PendingIntent) {
         val manager =
@@ -282,7 +361,7 @@ object Locus {
 
     /**
      * Initializes [LocationProvider] which is responsible to start and stop location updates
-     * @param context Context is the Android Context used to initialize [LocationProvider]
+     * @param context The Android Context used to initialize [LocationProvider]
      */
     private fun initLocationProvider(context: Context) {
         if (!::locationProvider.isInitialized) {
