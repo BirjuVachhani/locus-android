@@ -1,3 +1,6 @@
+
+![banner](https://github.com/BirjuVachhani/locus-android/blob/master/banner.svg)
+
 # Locus-Android
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-2196F3.svg?style=for-the-badge)](https://opensource.org/licenses/Apache-2.0)
