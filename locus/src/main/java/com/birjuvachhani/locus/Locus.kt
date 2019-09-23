@@ -21,7 +21,6 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.os.Build
 import android.os.Looper
 import androidx.core.app.NotificationCompat
@@ -30,7 +29,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.birjuvachhani.locus.Locus.config
 import com.birjuvachhani.locus.Locus.locationProvider
 import com.google.android.gms.location.LocationServices
@@ -50,6 +48,11 @@ internal val isRequestingPermission = AtomicBoolean().apply {
  * Holds Location updates
  */
 internal var locationLiveData = MutableLiveData<LocusResult>()
+
+/**
+ * Holds permission results
+ */
+internal var permissionLiveData = MutableLiveData<String>()
 
 /**
  * Marker class for Locus Extensions
@@ -77,6 +80,7 @@ internal annotation class LocusMarker
  */
 @LocusMarker
 object Locus {
+
     private var config = Configuration()
     private lateinit var locationProvider: LocationProvider
 
@@ -186,7 +190,7 @@ object Locus {
         context: Context,
         singleUpdate: ((LocusResult) -> Unit)? = null
     ) {
-        val receiver = PermissionBroadcastReceiver {
+        val observer = PermissionObserver {
             it?.let { error ->
                 singleUpdate?.let {
                     it(LocusResult.error(error))
@@ -196,7 +200,7 @@ object Locus {
         when {
             !getAllPermissions(config.enableBackgroundUpdates).all(context::hasPermission) ->
                 // Doesn't have permission, start permission resolution
-                startPermissionAndResolutionProcess(context, receiver, singleUpdate != null)
+                startPermissionAndResolutionProcess(context, observer, singleUpdate != null)
             config.shouldResolveRequest ->
                 // has permissions, need to check for location settings
                 checkLocationSettings(context) { isSatisfied ->
@@ -205,7 +209,7 @@ object Locus {
                         startUpdates(context, singleUpdate)
                     } else {
                         logDebug("Location settings are not satisfied")
-                        startPermissionAndResolutionProcess(context, receiver, singleUpdate != null)
+                        startPermissionAndResolutionProcess(context, observer, singleUpdate != null)
                     }
                 }
             else ->
@@ -255,7 +259,7 @@ object Locus {
      */
     private fun startPermissionAndResolutionProcess(
         context: Context,
-        receiver: PermissionBroadcastReceiver,
+        permissionObserver: Observer<String>,
         isOneTime: Boolean = false
     ) {
         if (isRequestingPermission.getAndSet(true)) {
@@ -263,9 +267,7 @@ object Locus {
             return
         }
         val intent = getLocationActivityIntent(context, isOneTime)
-        LocalBroadcastManager
-            .getInstance(context)
-            .registerReceiver(receiver, IntentFilter(context.packageName))
+        permissionLiveData.observeForever(permissionObserver)
         if (appIsInForeground(context)) {
             context.applicationContext.startActivity(intent)
         } else {
@@ -336,7 +338,6 @@ object Locus {
         val manager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
                 ?: return
-        // TODO move channel creation to content provider
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel =
                 NotificationChannel(
@@ -377,7 +378,6 @@ object Locus {
         if (::locationProvider.isInitialized) {
             locationProvider.stopUpdates()
         }
-        // TODO check if any objects need to reset
     }
 
     /**

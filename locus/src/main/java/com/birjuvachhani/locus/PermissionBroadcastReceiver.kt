@@ -15,10 +15,7 @@
 
 package com.birjuvachhani.locus
 
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.lifecycle.Observer
 
 /*
  * Created by Birju Vachhani on 16 September 2019
@@ -26,15 +23,13 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
  */
 
 /**
- * Receives local broadcasts related to permission model
+ * Receives results related to permission model
  */
-class PermissionBroadcastReceiver(private val onResult: (Throwable?) -> Unit) :
-    BroadcastReceiver() {
+class PermissionObserver(private val onResult: (Throwable?) -> Unit) : Observer<String> {
 
-    override fun onReceive(context: Context, intent: Intent) {
+    override fun onChanged(status: String?) {
         logDebug("Received Permission broadcast")
-        val status = intent.getStringExtra(Constants.INTENT_EXTRA_PERMISSION_RESULT)
-            ?: return
+        status ?: return
         isRequestingPermission.set(false)
         when (status) {
             Constants.GRANTED -> {
@@ -43,10 +38,11 @@ class PermissionBroadcastReceiver(private val onResult: (Throwable?) -> Unit) :
             }
             else -> {
                 logDebug(status)
-                locationLiveData.postValue(LocusResult.error(Throwable(status)))
                 onResult(Throwable(status))
             }
         }
-        LocalBroadcastManager.getInstance(context).unregisterReceiver(this)
+        permissionLiveData.removeObserver(this)
+        permissionLiveData.postValue(null)
     }
+
 }

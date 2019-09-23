@@ -28,7 +28,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Lifecycle
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.LocationServices
@@ -52,9 +51,6 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         private const val PREF_NAME = "locus_pref"
     }
 
-    private val localBroadcastManager: LocalBroadcastManager by lazy {
-        LocalBroadcastManager.getInstance(this)
-    }
     private var config: Configuration = Configuration()
     private val pref: SharedPreferences by lazy {
         getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
@@ -202,12 +198,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      */
     private fun onPermissionDenied() {
         logDebug("Sending permission denied")
-        sendResultBroadcast(
-            Intent(packageName).putExtra(
-                Constants.INTENT_EXTRA_PERMISSION_RESULT,
-                Constants.DENIED
-            )
-        )
+        postResult(Constants.DENIED)
     }
 
     /**
@@ -234,12 +225,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * Sends broadcast indicating permanent denial of location permission
      */
     private fun onPermissionPermanentlyDenied() {
-        sendResultBroadcast(
-            Intent(packageName).putExtra(
-                Constants.INTENT_EXTRA_PERMISSION_RESULT,
-                Constants.PERMANENTLY_DENIED
-            )
-        )
+        postResult(Constants.PERMANENTLY_DENIED)
     }
 
     /**
@@ -303,12 +289,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      */
     private fun shouldProceedForLocation() {
         clearPermissionNotificationIfAny()
-        sendResultBroadcast(
-            Intent(packageName).putExtra(
-                Constants.INTENT_EXTRA_PERMISSION_RESULT,
-                Constants.GRANTED
-            )
-        )
+        postResult(Constants.GRANTED)
     }
 
     private fun clearPermissionNotificationIfAny() {
@@ -346,12 +327,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * Sends broadcast indicating the denial of user for resolving location settings
      */
     private fun onResolutionDenied() {
-        sendResultBroadcast(
-            Intent(packageName).putExtra(
-                Constants.INTENT_EXTRA_PERMISSION_RESULT,
-                Constants.RESOLUTION_FAILED
-            )
-        )
+        postResult(Constants.RESOLUTION_FAILED)
     }
 
     /**
@@ -368,11 +344,12 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CODE_LOCATION_SETTINGS) {
             /*if (resultCode == RESULT_OK) {
                 shouldProceedForLocation()
             } else {
-                sendResultBroadcast(
+                postResult(
                     Intent(packageName).putExtra(
                         Constants.INTENT_EXTRA_PERMISSION_RESULT,
                         Constants.LOCATION_SETTINGS_DENIED
@@ -387,12 +364,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
             // location settings are enabled or not.
 
             checkSettings(success = { shouldProceedForLocation() }) {
-                sendResultBroadcast(
-                    Intent(packageName).putExtra(
-                        Constants.INTENT_EXTRA_PERMISSION_RESULT,
-                        Constants.LOCATION_SETTINGS_DENIED
-                    )
-                )
+                postResult(Constants.LOCATION_SETTINGS_DENIED)
             }
         } else if (requestCode == SETTINGS_ACTIVITY_REQUEST_CODE) {
             if (hasAllPermissions()) {
@@ -404,14 +376,12 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     }
 
     /**
-     * Sends local broadcast with provided [intent]
-     * @param intent Intent contains data that needs to be sent into the broadcast
+     * Posts results on [permissionLiveData]
+     * @param status Status of the permission model and location resolution process
      */
-    private fun sendResultBroadcast(intent: Intent) {
-        intent.action = packageName
-        logDebug("Sending permission broadcast: $intent")
-        intent.putExtra(Constants.INTENT_EXTRA_IS_BACKGROUND, config.enableBackgroundUpdates)
-        localBroadcastManager.sendBroadcast(intent)
+    private fun postResult(status: String) {
+        logDebug("Posting permission result: $intent")
+        permissionLiveData.postValue(status)
         isRequestingPermission.set(false)
         finish()
     }

@@ -105,6 +105,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         btnStart.isEnabled = true
         llLocationData.visibility = View.INVISIBLE
         tvNoLocation.visibility = View.VISIBLE
+        tvSingleUpdate.visibility = View.INVISIBLE
     }
 
     fun startLocationService(v: View) {
