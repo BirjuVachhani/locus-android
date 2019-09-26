@@ -30,6 +30,8 @@ Here are the guidelines we'd like you to follow:
     * :arrow_up: `:arrow_up:` when upgrading dependencies
     * :arrow_down: `:arrow_down:` when downgrading dependencies
     * :shirt: `:shirt:` when removing lint/checkstyle warnings
+    
+    Find all the available emojis [here](https://gitmoji.carloscuesta.me/). 
 
 ## <a name="question"></a> Got a Question or Problem?
 
