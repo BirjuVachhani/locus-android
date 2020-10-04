@@ -7,6 +7,7 @@
 [![language](https://img.shields.io/github/languages/top/BirjuVachhani/location-extension-android.svg?style=for-the-badge&colorB=f18e33)](https://kotlinlang.org/)
 [![Platform](https://img.shields.io/badge/Platform-Android-green.svg?style=for-the-badge)](https://www.android.com/)
 [![API](https://img.shields.io/badge/API-16%2B-F44336.svg?style=for-the-badge)](https://android-arsenal.com/api?level=16)
+[![Release](https://jitpack.io/v/BirjuVachhani/locus-android.svg?style=flat-square)](https://jitpack.io/BirjuVachhani/locus-android)
 
 Locus is a tiny kotlin library for android which makes it super very easy to retrieve location with just few lines of code. Everything including permission model and Location settings resolution is handled internally which removes a lot of boilerplate code any developer have to write every time.
 
@@ -14,7 +15,7 @@ See [Wiki](https://github.com/BirjuVachhani/locus-android/wiki) for more informa
 
 ## Features
 
-* Android Q support
+* Android R support (Report if any issue is found)
 * Completely written in Kotlin
 * Easy Initialization
 * Handles Permission Model
@@ -45,7 +46,8 @@ allprojects {
 
 ```
 dependencies {
-    implementation 'com.github.BirjuVachhani:locus-android:3.0.1'
+    implementation 'com.github.BirjuVachhani:locus-android:latest-version'
+    implementation 'com.google.android.gms:play-services-location:latest-version'
 }
 ```
 
@@ -69,10 +71,12 @@ You are most welcome to contribute to this project!
 
 Please have a look at [Contributing Guidelines](https://github.com/BirjuVachhani/locus-android/blob/master/CONTRIBUTING.md), before contributing and proposing a change.
 
+<a href="https://www.buymeacoffee.com/birjuvachhani" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-blue.png" alt="Buy Me A Coffee" style="height: 51px !important;width: 217px !important;" ></a>
+
 # License
 
 ```
-   Copyright © 2019 BirjuVachhani
+   Copyright © 2020 BirjuVachhani
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.

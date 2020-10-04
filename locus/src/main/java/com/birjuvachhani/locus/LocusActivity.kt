@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 Birju Vachhani (https://github.com/BirjuVachhani)
+ * Copyright © 2020 Birju Vachhani (https://github.com/BirjuVachhani)
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,9 +35,13 @@ import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.location.LocationSettingsResponse
 import com.google.android.gms.location.LocationSettingsStatusCodes
 
+/*
+ * Created by Birju Vachhani on 17 July 2019
+ * Copyright © 2020 locus-android. All rights reserved.
+ */
+
 /**
  * Activity that handles permission model as well as location settings resolution process
- * @property localBroadcastManager Used to send permission related broadcasts
  * @property config Current configuration to be used for the library
  * @property pref SharedPreferences instance to managed permission model
  * @property permissions Permissions that needs to be requested based on the [config]
