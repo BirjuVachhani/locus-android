@@ -6,12 +6,12 @@ apply plugin: 'kotlin-android-extensions'
 group = 'com.github.BirjuVachhani'
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 29
-        versionCode 3
-        versionName "3.0.0"
+        targetSdkVersion 30
+        versionCode 4
+        versionName "3.1.0"
     }
     buildTypes {
         release {
@@ -22,6 +22,9 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8.toString()
+    }
 }
 
 androidExtensions {
@@ -29,7 +32,7 @@ androidExtensions {
 }
 
 dependencies {
-    compileOnly 'androidx.appcompat:appcompat:1.1.0'
+    compileOnly 'androidx.appcompat:appcompat:1.2.0'
     compileOnly "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compileOnly 'com.google.android.gms:play-services-location:17.0.0'
+    compileOnly 'com.google.android.gms:play-services-location:17.1.0'
 }
