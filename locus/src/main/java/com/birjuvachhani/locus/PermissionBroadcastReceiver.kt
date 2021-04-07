@@ -1,5 +1,5 @@
 /*
- * Copyright © 2020 Birju Vachhani (https://github.com/BirjuVachhani)
+ * Copyright © 2019 Birju Vachhani (https://github.com/BirjuVachhani)
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,7 +19,7 @@ import androidx.lifecycle.Observer
 
 /*
  * Created by Birju Vachhani on 16 September 2019
- * Copyright © 2020 locus-android. All rights reserved.
+ * Copyright © 2019 locus-android. All rights reserved.
  */
 
 /**
