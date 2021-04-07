@@ -1,5 +1,5 @@
 
-![banner](https://github.com/BirjuVachhani/locus-android/blob/master/banner.png)
+![banner](https://github.com/BirjuVachhani/locus-android/blob/master/new_banner.png)
 
 # Locus-Android
 
@@ -28,6 +28,43 @@ See [Wiki](https://github.com/BirjuVachhani/locus-android/wiki) for more informa
 * Custom Location Options Configuration
 * Custom Relation Dialog configuration
 * Custom Permission Blocked Dialog configuration
+
+
+
+## IMPORTANT: Deprecation from v3.2.0
+
+Text Customizations using `Locus.configure{}` block is deprecated in `v3.2.0`. That means `rationaleText`, `rationaleTitle`, `blockedTitle`, `blockedText`, `resolutionTitle`, and `resolutionText` are deprecated. Migration would be to customize/override them from `strings.xml`.
+
+> It is deprecated in v3.2.0 and will be removed completely in next release.
+
+#### Before
+
+```kotlin
+Locus.configure {
+    rationaleTitle = "Rationale Title"
+    rationaleTitle = "This is a rationale message."
+    blockedTitle = "Permission Blocked Title"
+    blockedText = "This is a permission blocked message."
+    resolutionTitle = "Permission Resolution Title"
+    resolutionText = "This is a permission resolution message."
+}
+```
+
+#### Now
+
+*strings.xml*
+
+```xml
+<string name="locus_rationale_title">Rationale Title</string>
+<string name="locus_rationale_message">This is a rationale message.</string>
+<string name="locus_permission_blocked_title">Permission Blocked Title</string>
+<string name="locus_permission_blocked_message">This is a permission blocked message.</string>
+<string name="locus_location_resolution_title">Permission Resolution Title</string>
+<string name="locus_location_resolution_message">This is a permission resolution message.</string>
+```
+
+checkout [strings.xml](https://github.com/BirjuVachhani/locus-android/blob/master/app/src/main/res/values/strings.xml).
+
 
 ## Gradle Dependency
 
