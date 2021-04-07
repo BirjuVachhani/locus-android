@@ -8,7 +8,7 @@ on:
       - '**.gradle'
       - '**.properties'
     branches:
-      - main
+      - master
     tags-ignore:
       - '**'
   pull_request:
