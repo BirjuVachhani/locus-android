@@ -34,5 +34,5 @@ androidExtensions {
 dependencies {
     compileOnly 'androidx.appcompat:appcompat:1.2.0'
     compileOnly "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compileOnly 'com.google.android.gms:play-services-location:17.1.0'
+    compileOnly 'com.google.android.gms:play-services-location:18.0.0'
 }
