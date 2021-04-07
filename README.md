@@ -15,7 +15,7 @@ See [Wiki](https://github.com/BirjuVachhani/locus-android/wiki) for more informa
 
 ## Features
 
-* Android R support (Report if any issue is found)
+* Android R support (Please report if any issue is found)
 * Completely written in Kotlin
 * Easy Initialization
 * Handles Permission Model
@@ -76,7 +76,7 @@ Please have a look at [Contributing Guidelines](https://github.com/BirjuVachhani
 # License
 
 ```
-   Copyright © 2020 BirjuVachhani
+   Copyright © 2019 BirjuVachhani
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
