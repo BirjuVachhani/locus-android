@@ -1,5 +1,5 @@
 
-![banner](https://github.com/BirjuVachhani/locus-android/blob/master/banner.svg)
+![banner](https://github.com/BirjuVachhani/locus-android/blob/master/banner.png)
 
 # Locus-Android
 
