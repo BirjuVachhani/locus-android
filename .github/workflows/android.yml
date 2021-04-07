@@ -7,6 +7,8 @@ on:
       - '**.xml'
       - '**.gradle'
       - '**.properties'
+      - '**.yml'
+      - '**.yaml'
     branches:
       - master
     tags-ignore:
