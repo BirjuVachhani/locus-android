@@ -4,4 +4,10 @@
     <string name="grant">Grant</string>
     <string name="deny">Deny</string>
     <string name="open_settings">Open Settings</string>
+    <string name="locus_rationale_message">Location permission is required in order to use this feature properly.Please grant the permission.</string>
+    <string name="locus_rationale_title">Location permission required!</string>
+    <string name="locus_permission_blocked_title">Location Permission Blocked</string>
+    <string name="locus_permission_blocked_message">Location permission is blocked. Please allow permission from settings screen to use this feature.</string>
+    <string name="locus_location_resolution_title">Location is currently disabled</string>
+    <string name="locus_location_resolution_message">Please enable access to device location to proceed further.</string>
 </resources>

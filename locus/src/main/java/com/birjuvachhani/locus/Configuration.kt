@@ -30,13 +30,19 @@ import kotlinx.android.parcel.Parcelize
 @LocusMarker
 @Parcelize
 data class Configuration(
+    @Deprecated("Override R.string.locus_rationale_message in strings.xml instead.")
     var rationaleText: String =
         "Location permission is required in order to use this feature properly.Please grant the permission.",
+    @Deprecated("Override R.string.locus_rationale_title strings.xml instead.")
     var rationaleTitle: String = "Location permission required!",
+    @Deprecated("Override R.string.locus_permission_blocked_title strings.xml instead.")
     var blockedTitle: String = "Location Permission Blocked",
+    @Deprecated("Override R.string.locus_permission_blocked_message strings.xml instead.")
     var blockedText: String =
         "Location permission is blocked. Please allow permission from settings screen to use this feature",
+    @Deprecated("Override R.string.locus_location_resolution_title strings.xml instead.")
     var resolutionTitle: String = "Location is currently disabled",
+    @Deprecated("Override R.string.locus_location_resolution_message strings.xml instead.")
     var resolutionText: String = "Please enable access to device location to proceed further.",
     internal var locationRequest: LocationRequest = getDefaultRequest(),
     var shouldResolveRequest: Boolean = true,

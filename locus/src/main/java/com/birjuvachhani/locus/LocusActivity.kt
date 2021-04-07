@@ -35,6 +35,7 @@ import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.location.LocationSettingsResponse
 import com.google.android.gms.location.LocationSettingsStatusCodes
 
+
 /*
  * Created by Birju Vachhani on 17 July 2019
  * Copyright © 2020 locus-android. All rights reserved.
@@ -61,6 +62,8 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     }
 
     private var permissions: Array<String> = arrayOf()
+
+    private val defaultConfig: Configuration = Configuration()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -135,9 +138,16 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * Displays a permission rationale dialog
      */
     private fun showPermissionRationale() {
+        /// TODO: Remove usage of deprecated properties after a month
+        val title = if (config.rationaleTitle != defaultConfig.rationaleTitle)
+            config.rationaleTitle
+        else getString(R.string.locus_rationale_title)
+        val message = if (config.rationaleText != defaultConfig.rationaleText)
+            config.rationaleText
+        else getString(R.string.locus_rationale_message)
         AlertDialog.Builder(this)
-            .setTitle(config.rationaleTitle)
-            .setMessage(config.rationaleText)
+            .setTitle(title)
+            .setMessage(message)
             .setPositiveButton(R.string.grant) { dialog, _ ->
                 requestForPermissions()
                 dialog.dismiss()
@@ -209,9 +219,16 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * Shows permission permanently blocked dialog
      */
     private fun showPermanentlyDeniedDialog() {
+        /// TODO: Remove usage of deprecated properties after a month
+        val title = if (config.blockedTitle != defaultConfig.blockedTitle)
+            config.blockedTitle
+        else getString(R.string.locus_permission_blocked_title)
+        val message = if (config.blockedText != defaultConfig.blockedText)
+            config.blockedText
+        else getString(R.string.locus_permission_blocked_message)
         AlertDialog.Builder(this)
-            .setTitle(config.blockedTitle)
-            .setMessage(config.blockedText)
+            .setTitle(title)
+            .setMessage(message)
             .setPositiveButton(R.string.open_settings) { dialog, _ ->
                 openSettings()
                 dialog.dismiss()
@@ -311,9 +328,16 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     private fun onResolutionNeeded(exception: Exception) {
         exception.printStackTrace()
         if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) return
+        /// TODO: Remove usage of deprecated properties after a month
+        val title = if (config.resolutionTitle != defaultConfig.resolutionTitle)
+            config.resolutionTitle
+        else getString(R.string.locus_location_resolution_title)
+        val message = if (config.resolutionText != defaultConfig.resolutionText)
+            config.resolutionText
+        else getString(R.string.locus_location_resolution_message)
         AlertDialog.Builder(this)
-            .setTitle(config.resolutionTitle)
-            .setMessage(config.resolutionText)
+            .setTitle(title)
+            .setMessage(message)
             .setPositiveButton(R.string.enable) { dialog, _ ->
                 resolveLocationSettings(exception)
                 dialog.dismiss()

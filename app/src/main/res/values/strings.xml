@@ -17,4 +17,11 @@
     <string name="try_out_the_sample_app_of">Try out the sample app of</string>
     <string name="request_single_update">Single Update</string>
     <string name="location_service">Location Service</string>
+    <!--    This allows to customize dialog texts for locus.-->
+    <!--    <string name="locus_rationale_title">Rationale Title String</string>-->
+    <!--    <string name="locus_rationale_message">Rationale Message String</string>-->
+    <!--    <string name="locus_permission_blocked_title">Blocked Title String</string>-->
+    <!--    <string name="locus_permission_blocked_message">Blocked Message String</string>-->
+    <!--    <string name="locus_location_resolution_title">Resolution Title String</string>-->
+    <!--    <string name="locus_location_resolution_message">Resolution Message String</string>-->
 </resources>

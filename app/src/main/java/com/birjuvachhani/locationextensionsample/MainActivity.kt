@@ -87,9 +87,11 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
      * */
     private fun getCurrentTimeString(): String {
         val calendar = Calendar.getInstance()
-        return "${calendar.get(Calendar.HOUR_OF_DAY)} : ${calendar.get(Calendar.MINUTE)} : ${calendar.get(
-            Calendar.SECOND
-        )}"
+        return "${calendar.get(Calendar.HOUR_OF_DAY)} : ${calendar.get(Calendar.MINUTE)} : ${
+            calendar.get(
+                Calendar.SECOND
+            )
+        }"
     }
 
     fun startUpdates(v: View) {
