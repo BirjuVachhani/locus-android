@@ -13,6 +13,8 @@ Locus is a tiny kotlin library for android which makes it super very easy to ret
 
 See [Wiki](https://github.com/BirjuVachhani/locus-android/wiki) for more information and configuration!
 
+Read blog here: [The Legendary Task of Retrieving Location in Just 3 lines of code.](https://birju.dev/posts/retrieve-location-in-just-3-lines-android/)
+
 ## Features
 
 * Android R support (Please report if any issue is found)
