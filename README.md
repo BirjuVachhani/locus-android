@@ -28,7 +28,7 @@ Read blog here: [The Legendary Task of Retrieving Location in Just 3 lines of co
 * Location Settings Check
 * Location Settings Request
 * Custom Location Options Configuration
-* Custom Relation Dialog configuration
+* Custom Rationale Dialog configuration
 * Custom Permission Blocked Dialog configuration
 
 
