@@ -63,6 +63,8 @@ Locus.configure {
 <string name="locus_permission_blocked_message">This is a permission blocked message.</string>
 <string name="locus_location_resolution_title">Permission Resolution Title</string>
 <string name="locus_location_resolution_message">This is a permission resolution message.</string>
+<string name="grant">Grant</string>
+<string name="deny">Deny</string>
 ```
 
 checkout [strings.xml](https://github.com/BirjuVachhani/locus-android/blob/master/app/src/main/res/values/strings.xml).
