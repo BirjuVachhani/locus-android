@@ -1,4 +1,4 @@
-## 3.2.1 - Unreleased
+## 3.2.1
 
 - Fixed permission permanently denial - on Android Q+, denying permission 2 times results into permanently denied permission. 
 - Upgraded dependencies
