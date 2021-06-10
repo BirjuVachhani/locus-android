@@ -22,9 +22,9 @@ import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import com.birjuvachhani.locationextensionsample.databinding.ActivityMainBinding
 import com.birjuvachhani.locus.Locus
 import com.google.android.gms.location.LocationRequest
-import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 
 /*
@@ -36,9 +36,13 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
 
     private val TAG = this::class.java.simpleName
 
+    private lateinit var binding: ActivityMainBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
         val request = LocationRequest.create()
         Intent(this, MainActivity::class.java).apply {
             putExtra("request", request)
@@ -49,37 +53,37 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
     fun getSingleUpdate(v: View) {
         Locus.getCurrentLocation(this) { result ->
             result.location?.let {
-                tvSingleUpdate.text = "${it.latitude}, ${it.longitude}"
-                tvSingleUpdate.visibility = View.VISIBLE
-                tvErrors.visibility = View.INVISIBLE
+                binding.tvSingleUpdate.text = "${it.latitude}, ${it.longitude}"
+                binding.tvSingleUpdate.visibility = View.VISIBLE
+                binding.tvErrors.visibility = View.INVISIBLE
             } ?: run {
-                tvSingleUpdate.visibility = View.INVISIBLE
-                tvErrors.text = result.error?.message
-                tvErrors.visibility = View.VISIBLE
+                binding.tvSingleUpdate.visibility = View.INVISIBLE
+                binding.tvErrors.text = result.error?.message
+                binding.tvErrors.visibility = View.VISIBLE
             }
         }
     }
 
     private fun onLocationUpdate(location: Location) {
-        btnStart.isEnabled = false
-        btnStop.isEnabled = true
-        llLocationData.visibility = View.VISIBLE
-        tvNoLocation.visibility = View.GONE
-        tvLatitude.text = location.latitude.toString()
-        tvLongitude.text = location.longitude.toString()
-        tvTime.text = getCurrentTimeString()
-        tvErrors.visibility = View.INVISIBLE
+        binding.btnStart.isEnabled = false
+        binding.btnStop.isEnabled = true
+        binding.llLocationData.visibility = View.VISIBLE
+        binding.tvNoLocation.visibility = View.GONE
+        binding.tvLatitude.text = location.latitude.toString()
+        binding.tvLongitude.text = location.longitude.toString()
+        binding.tvTime.text = getCurrentTimeString()
+        binding.tvErrors.visibility = View.INVISIBLE
         Log.e(TAG, "Latitude: ${location.latitude}\tLongitude: ${location.longitude}")
     }
 
     private fun onError(error: Throwable?) {
-        btnStart.isEnabled = true
-        tvLatitude.text = ""
-        tvLongitude.text = ""
-        llLocationData.visibility = View.INVISIBLE
+        binding.btnStart.isEnabled = true
+        binding.tvLatitude.text = ""
+        binding.tvLongitude.text = ""
+        binding.llLocationData.visibility = View.INVISIBLE
         Log.e(TAG, "Error: ${error?.message}")
-        tvErrors.text = error?.message
-        tvErrors.visibility = View.VISIBLE
+        binding.tvErrors.text = error?.message
+        binding.tvErrors.visibility = View.VISIBLE
     }
 
     /**
@@ -96,9 +100,9 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
 
     fun startUpdates(v: View) {
         Locus.configure {
-            enableBackgroundUpdates = scBackground.isChecked
-            forceBackgroundUpdates = scForceBackground.isChecked
-            shouldResolveRequest = scResolveSettings.isChecked
+            enableBackgroundUpdates = binding.scBackground.isChecked
+            forceBackgroundUpdates = binding.scForceBackground.isChecked
+            shouldResolveRequest = binding.scResolveSettings.isChecked
         }
         Locus.startLocationUpdates(this) { result ->
             result.location?.let(::onLocationUpdate)
@@ -108,11 +112,11 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
 
     fun stopUpdates(v: View) {
         Locus.stopLocationUpdates()
-        btnStop.isEnabled = true
-        btnStart.isEnabled = true
-        llLocationData.visibility = View.INVISIBLE
-        tvNoLocation.visibility = View.VISIBLE
-        tvSingleUpdate.visibility = View.INVISIBLE
+        binding.btnStop.isEnabled = true
+        binding.btnStart.isEnabled = true
+        binding.llLocationData.visibility = View.INVISIBLE
+        binding.tvNoLocation.visibility = View.VISIBLE
+        binding.tvSingleUpdate.visibility = View.INVISIBLE
     }
 
     fun startLocationService(v: View) {

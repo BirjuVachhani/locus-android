@@ -27,10 +27,6 @@ android {
     }
 }
 
-androidExtensions {
-    experimental = true
-}
-
 dependencies {
     compileOnly 'androidx.appcompat:appcompat:1.4.0-alpha02'
     compileOnly "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

@@ -61,7 +61,7 @@ data class Configuration(
      * @param func is a LocationRequest's lambda receiver which provide a block to configure LocationRequest
      * */
     fun request(func: (@LocusMarker LocationRequest).() -> Unit) {
-        locationRequest = LocationRequest().apply(func)
+        locationRequest = LocationRequest.create().apply(func)
     }
 
 }
@@ -71,7 +71,7 @@ data class Configuration(
  * @return LocationRequest
  */
 internal fun getDefaultRequest(): LocationRequest {
-    return LocationRequest().apply {
+    return LocationRequest.create().apply {
         priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         interval = Configuration.INTERVAL_IN_MS
         fastestInterval = Configuration.FASTEST_INTERVAL_IN_MS

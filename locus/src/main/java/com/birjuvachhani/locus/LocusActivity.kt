@@ -101,31 +101,22 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
                 logDebug("should display rationale for location permission")
                 showPermissionRationale()
             } else {
-                if (isAnyPermissionAskedFirstTime()) {
-                    logDebug("permission asked first time")
-                    // request permission
-                    setPermissionAsked()
-                    requestForPermissions()
-                } else {
-                    // permanently denied
-                    showPermanentlyDeniedDialog()
-                }
+                requestForPermissions()
+//                if (isAnyPermissionAskedFirstTime()) {
+//                    logDebug("permission asked first time")
+//                    // request permission
+//                    setPermissionAsked()
+//                    requestForPermissions()
+//                } else {
+//                    // permanently denied
+//                    showPermanentlyDeniedDialog()
+//                }
             }
         } else {
             // permission is already granted
             onPermissionGranted()
         }
     }
-
-    /**
-     * Checks whether the requested permission is asked for the first time or not.
-     *
-     * The value is stored in the shared preferences.
-     * @receiver Fragment is used to get context.
-     * @return Boolean true if the permission is asked for the first time, false otherwise.
-     */
-    private fun isAnyPermissionAskedFirstTime(): Boolean =
-        permissions.any { pref.getBoolean(it, true) }
 
     private fun requestForPermissions() =
         ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST_CODE)
@@ -159,17 +150,6 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
             .setCancelable(false)
             .create()
             .takeIf { !isFinishing }?.show()
-    }
-
-    /**
-     * Writes the false value into shared preferences which indicates that the location permission has been requested previously.
-     * @receiver Fragment is used to get context.
-     */
-    private fun setPermissionAsked() {
-        with(pref.edit()) {
-            permissions.forEach { permission -> putBoolean(permission, false) }
-            commit()
-        }
     }
 
     override fun onRequestPermissionsResult(
@@ -211,8 +191,12 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * Sends denied broadcast when user denies to grant location permission
      */
     private fun onPermissionDenied() {
-        logDebug("Sending permission denied")
-        postResult(Constants.DENIED)
+        if (!needToShowRationale()) {
+            showPermanentlyDeniedDialog()
+        } else {
+            logDebug("Sending permission denied")
+            postResult(Constants.DENIED)
+        }
     }
 
     /**
