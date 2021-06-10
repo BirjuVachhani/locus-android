@@ -24,6 +24,7 @@ android {
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8.toString()
     }
+    buildToolsVersion '31.0.0 rc2'
 }
 
 dependencies {
