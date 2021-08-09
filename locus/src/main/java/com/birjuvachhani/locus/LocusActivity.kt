@@ -358,25 +358,27 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CODE_LOCATION_SETTINGS) {
-            /*if (resultCode == RESULT_OK) {
+            if (resultCode == RESULT_OK) {
                 shouldProceedForLocation()
-            } else {
-                postResult(
-                    Intent(packageName).putExtra(
-                        Constants.INTENT_EXTRA_PERMISSION_RESULT,
-                        Constants.LOCATION_SETTINGS_DENIED
-                    )
-                )
-            }*/
+            }
+//            else {
+//                postResult(
+//                    Intent(packageName).putExtra(
+//                        Constants.INTENT_EXTRA_PERMISSION_RESULT,
+//                        Constants.LOCATION_SETTINGS_DENIED
+//                    )
+//                )
+//            }
 
             // Note: This is a workaround for Android Q as in Android Q,
             // when location settings resolution dialog is displayed, No matter whether user
             // chooses "ok" or "cancel", the returned result is always cancelled. This might be
             // issue of google api. So to overcome this issue, we're checking again if
             // location settings are enabled or not.
-
-            checkSettings(success = { shouldProceedForLocation() }) {
-                postResult(Constants.LOCATION_SETTINGS_DENIED)
+            else {
+                checkSettings(success = { shouldProceedForLocation() }) {
+                    postResult(Constants.LOCATION_SETTINGS_DENIED)
+                }
             }
         } else if (requestCode == SETTINGS_ACTIVITY_REQUEST_CODE) {
             if (hasAllPermissions()) {
