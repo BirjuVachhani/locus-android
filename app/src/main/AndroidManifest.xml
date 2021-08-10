@@ -1,35 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.birjuvachhani.locationextensionsample">
+          xmlns:tools="http://schemas.android.com/tools"
+          package="com.birjuvachhani.locationextensionsample">
 
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
 
     <application
-        android:allowBackup="false"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
-        android:theme="@style/AppTheme"
-        tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".MainActivity">
+            android:allowBackup="false"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:supportsRtl="true"
+            android:theme="@style/AppTheme"
+            tools:ignore="GoogleAppIndexingWarning">
+        <activity
+                android:name=".MainActivity"
+                android:exported="false">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.MAIN"/>
 
-                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
         <service
-            android:name=".LocationService"
-            android:foregroundServiceType="location" />
+                android:name=".LocationService"
+                android:exported="false"
+                android:foregroundServiceType="location"/>
 
         <receiver
-            android:name=".ServiceStopBroadcastReceiver"
-            android:enabled="true"
-            android:exported="false">
+                android:name=".ServiceStopBroadcastReceiver"
+                android:enabled="true"
+                android:exported="false">
             <intent-filter>
-                <action android:name="com.birjuvachhani.locationextensionsample.ServiceStopBroadcastReceiver" />
+                <action android:name="com.birjuvachhani.locationextensionsample.ServiceStopBroadcastReceiver"/>
             </intent-filter>
         </receiver>
     </application>
