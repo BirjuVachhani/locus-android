@@ -11,9 +11,11 @@
 
 Locus is a tiny kotlin library for android which makes it super very easy to retrieve location with just few lines of code. Everything including permission model and Location settings resolution is handled internally which removes a lot of boilerplate code any developer have to write every time.
 
+### Documentation:
 See [Wiki](https://github.com/BirjuVachhani/locus-android/wiki) for more information and configuration!
 
-Read blog here: [The Legendary Task of Retrieving Location in Just 3 lines of code.](https://birju.dev/posts/retrieve-location-in-just-3-lines-android/)
+### Read blog here: 
+#### [The Legendary Task of Retrieving Location in Just 3 lines of code.](https://birju.dev/posts/retrieve-location-in-just-3-lines-android/)
 
 ## Features
 
@@ -30,7 +32,6 @@ Read blog here: [The Legendary Task of Retrieving Location in Just 3 lines of co
 * Custom Location Options Configuration
 * Custom Rationale Dialog configuration
 * Custom Permission Blocked Dialog configuration
-
 
 
 ## IMPORTANT: Deprecation from v3.2.0
