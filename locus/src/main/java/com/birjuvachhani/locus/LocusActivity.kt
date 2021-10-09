@@ -63,8 +63,6 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
 
     private var permissions: Array<String> = arrayOf()
 
-    private val defaultConfig: Configuration = Configuration()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_location_permission)
@@ -129,13 +127,8 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * Displays a permission rationale dialog
      */
     private fun showPermissionRationale() {
-        /// TODO: Remove usage of deprecated properties after a month
-        val title = if (config.rationaleTitle != defaultConfig.rationaleTitle)
-            config.rationaleTitle
-        else getString(R.string.locus_rationale_title)
-        val message = if (config.rationaleText != defaultConfig.rationaleText)
-            config.rationaleText
-        else getString(R.string.locus_rationale_message)
+        val title = getString(R.string.locus_rationale_title)
+        val message = getString(R.string.locus_rationale_message)
         AlertDialog.Builder(this)
             .setTitle(title)
             .setMessage(message)
@@ -204,12 +197,8 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      */
     private fun showPermanentlyDeniedDialog() {
         /// TODO: Remove usage of deprecated properties after a month
-        val title = if (config.blockedTitle != defaultConfig.blockedTitle)
-            config.blockedTitle
-        else getString(R.string.locus_permission_blocked_title)
-        val message = if (config.blockedText != defaultConfig.blockedText)
-            config.blockedText
-        else getString(R.string.locus_permission_blocked_message)
+        val title = getString(R.string.locus_permission_blocked_title)
+        val message = getString(R.string.locus_permission_blocked_message)
         AlertDialog.Builder(this)
             .setTitle(title)
             .setMessage(message)
@@ -312,13 +301,8 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     private fun onResolutionNeeded(exception: Exception) {
         exception.printStackTrace()
         if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) return
-        /// TODO: Remove usage of deprecated properties after a month
-        val title = if (config.resolutionTitle != defaultConfig.resolutionTitle)
-            config.resolutionTitle
-        else getString(R.string.locus_location_resolution_title)
-        val message = if (config.resolutionText != defaultConfig.resolutionText)
-            config.resolutionText
-        else getString(R.string.locus_location_resolution_message)
+        val title = getString(R.string.locus_location_resolution_title)
+        val message = getString(R.string.locus_location_resolution_message)
         AlertDialog.Builder(this)
             .setTitle(title)
             .setMessage(message)
@@ -360,22 +344,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         if (requestCode == REQUEST_CODE_LOCATION_SETTINGS) {
             if (resultCode == RESULT_OK) {
                 shouldProceedForLocation()
-            }
-//            else {
-//                postResult(
-//                    Intent(packageName).putExtra(
-//                        Constants.INTENT_EXTRA_PERMISSION_RESULT,
-//                        Constants.LOCATION_SETTINGS_DENIED
-//                    )
-//                )
-//            }
-
-            // Note: This is a workaround for Android Q as in Android Q,
-            // when location settings resolution dialog is displayed, No matter whether user
-            // chooses "ok" or "cancel", the returned result is always cancelled. This might be
-            // issue of google api. So to overcome this issue, we're checking again if
-            // location settings are enabled or not.
-            else {
+            } else {
                 checkSettings(success = { shouldProceedForLocation() }) {
                     postResult(Constants.LOCATION_SETTINGS_DENIED)
                 }
