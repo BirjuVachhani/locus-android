@@ -73,6 +73,17 @@ Locus.configure {
 
 checkout [strings.xml](https://github.com/BirjuVachhani/locus-android/blob/master/app/src/main/res/values/strings.xml).
 
+### How to disable background location permission if you don't use it.
+
+It has been brought to my attention recently that this library includes background location permission in its `AndroidManifest.xml` file. This could cause a problem when publishing app on Google Play Store in a case where your does not actually request or use background location. If that happens then this is what you need to do.
+
+Just add this line in your app's `AndroidManifest.xml` file and you should be good to go.
+```xml
+<uses-permission tools:node="remove" android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+```
+
+Feel free to re-open [#53](https://github.com/BirjuVachhani/locus-android/issues/53) issue or file a new one if this does not work for you.
+
 ## Gradle Dependency
 
 * Add the JitPack repository to your project's build.gradle file
