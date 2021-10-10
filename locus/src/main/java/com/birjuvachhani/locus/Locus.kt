@@ -286,10 +286,8 @@ object Locus {
     private fun getLocationActivityIntent(context: Context, isOneTime: Boolean) =
         Intent(context, LocusActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            if (config.shouldResolveRequest) {
-                putExtra(Constants.INTENT_EXTRA_CONFIGURATION, config)
-                putExtra(Constants.INTENT_EXTRA_IS_SINGLE_UPDATE, isOneTime)
-            }
+            putExtra(Constants.INTENT_EXTRA_CONFIGURATION, config)
+            putExtra(Constants.INTENT_EXTRA_IS_SINGLE_UPDATE, isOneTime)
         }
 
     /**

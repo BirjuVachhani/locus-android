@@ -60,7 +60,6 @@ Locus.configure {
 *strings.xml*
 
 ```xml
-
 <string name="locus_rationale_title">Rationale Title</string>
 <string name="locus_rationale_message">This is a rationale message.</string>
 <string name="locus_permission_blocked_title">Permission Blocked Title</string>

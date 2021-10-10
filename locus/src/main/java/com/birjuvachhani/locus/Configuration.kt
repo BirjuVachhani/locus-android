@@ -15,9 +15,13 @@
 
 package com.birjuvachhani.locus
 
+import android.os.Parcel
 import android.os.Parcelable
 import com.google.android.gms.location.LocationRequest
-import kotlinx.android.parcel.Parcelize
+import kotlinx.parcelize.Parceler
+import kotlinx.parcelize.Parcelize
+import kotlinx.parcelize.TypeParceler
+import kotlinx.parcelize.WriteWith
 
 /*
  * Created by Birju Vachhani on 07 February 2019
@@ -29,6 +33,7 @@ import kotlinx.android.parcel.Parcelize
  * */
 @LocusMarker
 @Parcelize
+//@TypeParceler<LocationRequest, LocationRequestParceler>()
 data class Configuration(
     internal var locationRequest: LocationRequest = getDefaultRequest(),
     var shouldResolveRequest: Boolean = true,
@@ -64,3 +69,13 @@ internal fun getDefaultRequest(): LocationRequest {
         maxWaitTime = Configuration.MAX_WAIT_TIME_IN_MS
     }
 }
+
+//object LocationRequestParceler : Parceler<LocationRequest> {
+//    override fun create(parcel: Parcel): LocationRequest {
+//        return LocationRequest.CREATOR.createFromParcel(parcel)
+//    }
+//
+//    override fun LocationRequest.write(parcel: Parcel, flags: Int) {
+//        this.writeToParcel(parcel, flags)
+//    }
+//}

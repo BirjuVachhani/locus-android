@@ -45,7 +45,7 @@ internal fun Activity.shouldShowRationale(permission: String) =
  */
 internal val locationPermissions: Array<String> by lazy {
     arrayOf(
-        android.Manifest.permission.ACCESS_FINE_LOCATION,
+//        android.Manifest.permission.ACCESS_FINE_LOCATION,
         android.Manifest.permission.ACCESS_COARSE_LOCATION
     )
 }

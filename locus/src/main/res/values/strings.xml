@@ -10,4 +10,8 @@
     <string name="locus_permission_blocked_message">Location permission is blocked. Please allow permission from settings screen to use this feature.</string>
     <string name="locus_location_resolution_title">Location is currently disabled</string>
     <string name="locus_location_resolution_message">Please enable access to device location to proceed further.</string>
+    <string name="locus_background_location_title">Required Location in Background</string>
+    <string name="locus_background_location_message">Permission to access location in background is required for this feature to work properly. Please select "Allow all the time" option.</string>
+    <string name="locus_background_location_blocked_title">Background Location Blocked</string>
+    <string name="locus_background_location_blocked_message">Permission to access location in background is blocked. Please allow to access location in background by selecting "Allow all the time" option from settings screen to use this feature.</string>
 </resources>
