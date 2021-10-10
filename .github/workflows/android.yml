@@ -23,9 +23,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - name: set up JDK 1.8
+      - name: setup JDK
         uses: actions/setup-java@v1
         with:
-          java-version: 1.8
+          java-version: 11
       - name: Build with Gradle
         run: chmod 777 gradlew | ./gradlew assembleDebug
