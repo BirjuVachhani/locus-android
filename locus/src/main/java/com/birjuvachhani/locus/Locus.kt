@@ -15,6 +15,7 @@
 
 package com.birjuvachhani.locus
 
+import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -254,9 +255,9 @@ object Locus {
     /**
      * Responsible to handle initialization and execution of location permission retrieval process
      * @param context Android Context
-     * @param receiver Broadcast receiver instance that receives location permission results
      * @param isOneTime Determines whether this request is for single location updates or continuous updates
      */
+    @SuppressLint("UnspecifiedImmutableFlag")
     private fun startPermissionAndResolutionProcess(
         context: Context,
         permissionObserver: Observer<String>,
@@ -272,7 +273,16 @@ object Locus {
             context.applicationContext.startActivity(intent)
         } else {
             val pendingIntent =
-                PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    PendingIntent.getActivity(
+                        context,
+                        0,
+                        intent,
+                        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                    )
+                } else {
+                    PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+                }
             showPermissionNotification(context, pendingIntent)
         }
     }
@@ -286,10 +296,8 @@ object Locus {
     private fun getLocationActivityIntent(context: Context, isOneTime: Boolean) =
         Intent(context, LocusActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            if (config.shouldResolveRequest) {
-                putExtra(Constants.INTENT_EXTRA_CONFIGURATION, config)
-                putExtra(Constants.INTENT_EXTRA_IS_SINGLE_UPDATE, isOneTime)
-            }
+            putExtra(Constants.INTENT_EXTRA_CONFIGURATION, config)
+            putExtra(Constants.INTENT_EXTRA_IS_SINGLE_UPDATE, isOneTime)
         }
 
     /**
