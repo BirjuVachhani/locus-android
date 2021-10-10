@@ -34,7 +34,9 @@ import java.util.*
 
 class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsResultCallback {
 
-    private val TAG = this::class.java.simpleName
+    companion object {
+        private val TAG = this::class.java.simpleName
+    }
 
     private lateinit var binding: ActivityMainBinding
 

@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    compileSdkVersion(31)
+    compileSdk = 31
     defaultConfig {
         applicationId = "com.birjuvachhani.locationextensionsample"
-        minSdkVersion(16)
-        targetSdkVersion(31)
+        minSdk =16
+        targetSdk =31
         versionCode = 1
         versionName = "1.0"
     }
@@ -36,7 +36,7 @@ android {
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.5.31")
-    implementation("androidx.appcompat:appcompat:1.3.1")
+    implementation("androidx.appcompat:appcompat:1.4.0-beta01")
     implementation("androidx.constraintlayout:constraintlayout:2.1.1")
     implementation("com.google.android.gms:play-services-location:18.0.0")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.3.1")

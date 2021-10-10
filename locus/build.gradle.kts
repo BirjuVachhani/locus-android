@@ -1,19 +1,17 @@
 plugins {
     id("com.android.library")
     kotlin("android")
-    id("com.github.dcendents.android-maven")
-    kotlin("android.extensions")
+    id("maven-publish")
+    id("kotlin-parcelize")
 }
 
 var group = "com.github.BirjuVachhani"
 
 android {
-    compileSdkVersion(31)
+    compileSdk = 31
     defaultConfig {
-        minSdkVersion(16)
-        targetSdkVersion(31)
-        versionCode = 4
-        versionName = "4.0.0"
+        minSdk = 16
+        targetSdk = 31
     }
     buildTypes {
         getByName("release") {
@@ -34,7 +32,7 @@ android {
 }
 
 dependencies {
-    compileOnly("androidx.appcompat:appcompat:1.4.0-alpha03")
+    compileOnly("androidx.appcompat:appcompat:1.4.0-beta01")
     compileOnly("org.jetbrains.kotlin:kotlin-stdlib:1.5.31")
     compileOnly("com.google.android.gms:play-services-location:18.0.0")
     implementation("androidx.activity:activity-ktx:1.3.1")
