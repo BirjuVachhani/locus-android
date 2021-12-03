@@ -107,8 +107,11 @@ object Locus {
 
     /**
      * Starts location updates by verifying permissions and location settings.
-     * This method can be used anywhere but it is intended to be used where you don't have access to [Context] reference which implements [LifecycleOwner]. e.g. Service, IntentService, BroadcastReceiver. It also can be used for Fragments.
-     * It returns [LiveData] instance which can be used to observe for location updates. Also, any errors will be passed to this [LiveData] instance.
+     * This method can be used anywhere, but it is intended to be used where you don't have
+     * access to [Context] reference which implements [LifecycleOwner].
+     * e.g. Service, IntentService, BroadcastReceiver. It also can be used for Fragments.
+     * It returns [LiveData] instance which can be used to observe for location updates.
+     * Also, any errors will be passed to this [LiveData] instance.
      *
      * This method internally handles runtime location permission which is needed
      * for Android M and above. It also handles rationale dialogs and permission
@@ -129,8 +132,9 @@ object Locus {
 
     /**
      * Starts location updates by verifying permissions and location settings.
-     * This overloaded method is intended to be called from fragments and they have access to [Context] and they are [LifecycleOwner].
-     * Instead of returning a [LiveData] instance, it takes in a lambda block which will be invoked on [LiveData] events.
+     * This overloaded method is intended to be called from fragments, and they have access
+     * to [Context] and they are [LifecycleOwner]. Instead of returning a [LiveData] instance,
+     * it takes in a lambda block which will be invoked on [LiveData] events.
      *
      * This method internally handles runtime location permission which is needed
      * for Android M and above. It also handles rationale dialogs and permission
@@ -154,8 +158,11 @@ object Locus {
 
     /**
      * Starts location updates by verifying permissions and location settings.
-     * This overloaded method is intended to be called from the components which is ContextWrapper and also implements [LifecycleOwner] interface. e.g. Activities, LifecycleService, Application
-     * Instead of returning a [LiveData] instance, it takes in a lambda block which will be invoked on [LiveData] events.
+     * This overloaded method is intended to be called from the components which is ContextWrapper
+     * and also implements [LifecycleOwner] interface.
+     * e.g. Activities, LifecycleService, Application
+     * Instead of returning a [LiveData] instance, it takes in a lambda block which will be
+     * invoked on [LiveData] events.
      *
      * This method internally handles runtime location permission which is needed
      * for Android M and above. It also handles rationale dialogs and permission
@@ -255,6 +262,7 @@ object Locus {
     /**
      * Responsible to handle initialization and execution of location permission retrieval process
      * @param context Android Context
+     * @param permissionObserver Observer instance that receives location permission results
      * @param isOneTime Determines whether this request is for single location updates or continuous updates
      */
     @SuppressLint("UnspecifiedImmutableFlag")
@@ -272,6 +280,10 @@ object Locus {
         if (appIsInForeground(context)) {
             context.applicationContext.startActivity(intent)
         } else {
+            val flags =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+                    PendingIntent.FLAG_UPDATE_CURRENT and PendingIntent.FLAG_MUTABLE
+                else PendingIntent.FLAG_UPDATE_CURRENT
             val pendingIntent =
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     PendingIntent.getActivity(
@@ -281,7 +293,7 @@ object Locus {
                         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                     )
                 } else {
-                    PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+                    PendingIntent.getActivity(context, 0, intent, flags)
                 }
             showPermissionNotification(context, pendingIntent)
         }

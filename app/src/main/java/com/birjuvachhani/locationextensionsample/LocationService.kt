@@ -24,10 +24,10 @@ import android.content.Intent
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
-import androidx.lifecycle.observe
 import com.birjuvachhani.locus.Locus
 import com.birjuvachhani.locus.LocusResult
 
@@ -57,7 +57,7 @@ class LocationService : LifecycleService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         Log.e("BIRJU", "Temp Service started")
-        Handler().postDelayed({
+        Handler(Looper.getMainLooper()).postDelayed({
             start()
         }, 2000)
         return START_STICKY
@@ -96,6 +96,10 @@ class LocationService : LifecycleService() {
             setSmallIcon(R.drawable.ic_location)
             setAutoCancel(false)
             setOnlyAlertOnce(true)
+            val flags =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+                    PendingIntent.FLAG_UPDATE_CURRENT and PendingIntent.FLAG_MUTABLE
+                else PendingIntent.FLAG_UPDATE_CURRENT
             addAction(
                 0,
                 "Stop Updates",
@@ -105,7 +109,7 @@ class LocationService : LifecycleService() {
                     Intent(this@LocationService, ServiceStopBroadcastReceiver::class.java).apply {
                         action = STOP_SERVICE_BROADCAST_ACTON
                     },
-                    PendingIntent.FLAG_UPDATE_CURRENT
+                    flags
                 )
             )
             build()

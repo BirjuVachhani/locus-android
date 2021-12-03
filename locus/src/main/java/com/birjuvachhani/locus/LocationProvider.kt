@@ -54,15 +54,15 @@ internal class LocationProvider(context: Context) {
         if (isRequestOngoing.getAndSet(true)) return
         logDebug("Starting location updates")
         mFusedLocationProviderClient.requestLocationUpdates(request, pendingIntent)
-            ?.addOnFailureListener { e ->
+            .addOnFailureListener { e ->
                 logError(e)
                 logDebug("Continuous location updates failed, retrieving last known location")
-                mFusedLocationProviderClient.lastLocation?.addOnCompleteListener {
+                mFusedLocationProviderClient.lastLocation.addOnCompleteListener {
                     if (!it.isSuccessful) return@addOnCompleteListener
                     it.result?.let { location ->
                         locationLiveData.postValue(LocusResult.success(location))
                     }
-                }?.addOnFailureListener {
+                }.addOnFailureListener {
                     locationLiveData.postValue(LocusResult.error(error = it))
                 }
             }
@@ -73,6 +73,7 @@ internal class LocationProvider(context: Context) {
      * @param request LocationRequest instance that will be used to get location
      * @param onUpdate Called on success/failure result of the single update retrieval process
      */
+    @SuppressLint("MissingPermission")
     internal fun getSingleUpdate(
         request: LocationRequest,
         onUpdate: (LocusResult) -> Unit
@@ -95,11 +96,11 @@ internal class LocationProvider(context: Context) {
                 onUpdate(LocusResult.error(error = error))
             }
         }
-        mFusedLocationProviderClient.lastLocation?.addOnSuccessListener { result ->
+        mFusedLocationProviderClient.lastLocation.addOnSuccessListener { result ->
             result?.let { location ->
                 onUpdate(LocusResult.success(location))
             } ?: startUpdates()
-        }?.addOnFailureListener {
+        }.addOnFailureListener {
             logError(it)
             logDebug("Looks like last known location is not available, requesting a new location update")
             startUpdates()

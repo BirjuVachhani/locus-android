@@ -28,9 +28,7 @@ import androidx.lifecycle.Observer
  * LiveData extension to observer it in a null safe way
  * */
 fun <T : Any> LiveData<T?>.watch(owner: LifecycleOwner, func: (T) -> Unit) {
-    this.observe(owner, Observer { result ->
-        result?.apply(func)
-    })
+    this.observe(owner) { result -> result?.apply(func) }
 }
 
 /**
@@ -75,7 +73,7 @@ val Throwable.isPermanentlyDenied get() = this.message == Constants.PERMANENTLY_
 // Extension property to check if the error caused because the location settings resolution failed or not
 val Throwable.isSettingsResolutionFailed get() = this.message == Constants.RESOLUTION_FAILED
 
-// Extension property to check if the error caused because the user denied to enable location or not
+// Extension property to check if the error caused because the user denied enabling location or not
 val Throwable.isSettingsDenied get() = this.message == Constants.LOCATION_SETTINGS_DENIED
 
 // Extension property to check if the error caused because of some Fatal Exception or not

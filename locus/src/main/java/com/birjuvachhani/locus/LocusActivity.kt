@@ -159,7 +159,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         if (requestCode == PERMISSION_REQUEST_CODE) {
             when {
                 grantResults.isEmpty() ->
-                    // If user interaction was interrupted, the permission request is cancelled and you
+                    // If user interaction was interrupted, the permission request is cancelled, and you
                     // receive empty arrays.
                     logDebug("User interaction was cancelled.")
                 grantResults.all { it == PackageManager.PERMISSION_GRANTED } -> onPermissionGranted()
@@ -170,7 +170,8 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     }
 
     /**
-     * handles the flow when the permission is granted successfully. It either sends success broadcast if the permission is granted and location setting resolution is disabled or proceeds for checking location settings
+     * handles the flow when the permission is granted successfully. It either sends success broadcast if the
+     * permission is granted and location setting resolution is disabled or proceeds for checking location settings.
      */
     private fun onPermissionGranted() {
         if (config.shouldResolveRequest) {
@@ -235,7 +236,8 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
 
     /**
      * Checks whether the current location settings allows retrieval of location or not.
-     * If settings are isLoggingEnabled then retrieves the location, otherwise initiate the process of settings resolution
+     * If settings are isLoggingEnabled then retrieves the location, otherwise initiate the process
+     * of settings resolution.
      * */
     private fun checkIfLocationSettingsAreEnabled() {
         checkSettings(success = { shouldProceedForLocation() }) { exception ->

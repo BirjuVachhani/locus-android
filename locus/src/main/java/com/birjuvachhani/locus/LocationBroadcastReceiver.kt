@@ -19,6 +19,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import com.google.android.gms.location.LocationResult
 
 /*
@@ -38,7 +39,11 @@ internal class LocationBroadcastReceiver : BroadcastReceiver() {
         fun getPendingIntent(context: Context): PendingIntent {
             val intent = Intent(context, LocationBroadcastReceiver::class.java)
             intent.action = ACTION_PROCESS_UPDATES
-            return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            val flags =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+                    PendingIntent.FLAG_UPDATE_CURRENT and PendingIntent.FLAG_MUTABLE
+                else PendingIntent.FLAG_UPDATE_CURRENT
+            return PendingIntent.getBroadcast(context, 0, intent, flags)
         }
     }
 
@@ -46,7 +51,7 @@ internal class LocationBroadcastReceiver : BroadcastReceiver() {
         logDebug("Received location update broadcast")
         intent ?: return
         if (intent.action == ACTION_PROCESS_UPDATES) {
-            LocationResult.extractResult(intent)?.let { result ->
+            LocationResult.extractResult(intent).let { result ->
                 if (result.locations.isNotEmpty()) {
                     logDebug("Received location ${result.lastLocation}")
                     locationLiveData.postValue(LocusResult.success(result.lastLocation))
