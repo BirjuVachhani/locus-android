@@ -80,11 +80,9 @@ internal class LocationProvider(context: Context) {
     ) {
         fun startUpdates() {
             val callback = object : LocationCallback() {
-                override fun onLocationResult(result: LocationResult?) {
-                    result?.lastLocation?.let { location ->
-                        onUpdate(LocusResult.success(location))
-                        mFusedLocationProviderClient.removeLocationUpdates(this)
-                    }
+                override fun onLocationResult(result: LocationResult) {
+                    onUpdate(LocusResult.success(result.lastLocation))
+                    mFusedLocationProviderClient.removeLocationUpdates(this)
                 }
             }
             mFusedLocationProviderClient.requestLocationUpdates(
@@ -96,10 +94,8 @@ internal class LocationProvider(context: Context) {
                 onUpdate(LocusResult.error(error = error))
             }
         }
-        mFusedLocationProviderClient.lastLocation.addOnSuccessListener { result ->
-            result?.let { location ->
-                onUpdate(LocusResult.success(location))
-            } ?: startUpdates()
+        mFusedLocationProviderClient.lastLocation.addOnSuccessListener { location ->
+            onUpdate(LocusResult.success(location))
         }.addOnFailureListener {
             logError(it)
             logDebug("Looks like last known location is not available, requesting a new location update")
