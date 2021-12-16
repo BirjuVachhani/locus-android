@@ -50,7 +50,7 @@ internal class LocationBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         logDebug("Received location update broadcast")
         intent ?: return
-        if (intent.action == ACTION_PROCESS_UPDATES) {
+        if (intent.action == ACTION_PROCESS_UPDATES && LocationResult.hasResult(intent)) {
             LocationResult.extractResult(intent).let { result ->
                 if (result.locations.isNotEmpty()) {
                     logDebug("Received location ${result.lastLocation}")
