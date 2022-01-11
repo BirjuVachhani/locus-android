@@ -1,3 +1,7 @@
+plugins {
+    id("maven-publish")
+}
+
 buildscript {
     repositories {
         google()
