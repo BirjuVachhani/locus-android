@@ -1,3 +1,7 @@
+## 4.0.1
+
+- [#56] Fix PendingIntent flags issue on Android 12+.
+
 ## 4.0.0
 
 - Removed deprecated properties `rationaleText`, `rationaleTitle`, `blockedTitle`, `blockedText`, `resolutionTitle`,
