@@ -39,6 +39,6 @@ dependencies {
     compileOnly("androidx.appcompat:appcompat:1.4.0")
     compileOnly("com.google.android.material:material:1.4.0")
     compileOnly("org.jetbrains.kotlin:kotlin-stdlib:1.5.31")
-    compileOnly("com.google.android.gms:play-services-location:19.0.0")
+    compileOnly("com.google.android.gms:play-services-location:19.0.1")
     implementation("androidx.activity:activity-ktx:1.4.0")
 }

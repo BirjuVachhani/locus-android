@@ -95,7 +95,7 @@ internal class LocationProvider(context: Context) {
             }
         }
         mFusedLocationProviderClient.lastLocation.addOnSuccessListener { location ->
-            onUpdate(LocusResult.success(location))
+            location?.let { onUpdate(LocusResult.success(it)) }
         }.addOnFailureListener {
             logError(it)
             logDebug("Looks like last known location is not available, requesting a new location update")

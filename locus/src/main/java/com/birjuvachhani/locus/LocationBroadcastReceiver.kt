@@ -41,7 +41,7 @@ internal class LocationBroadcastReceiver : BroadcastReceiver() {
             intent.action = ACTION_PROCESS_UPDATES
             val flags =
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-                    PendingIntent.FLAG_UPDATE_CURRENT and PendingIntent.FLAG_MUTABLE
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
                 else PendingIntent.FLAG_UPDATE_CURRENT
             return PendingIntent.getBroadcast(context, 0, intent, flags)
         }

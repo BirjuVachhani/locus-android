@@ -282,7 +282,7 @@ object Locus {
         } else {
             val flags =
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-                    PendingIntent.FLAG_UPDATE_CURRENT and PendingIntent.FLAG_MUTABLE
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
                 else PendingIntent.FLAG_UPDATE_CURRENT
             val pendingIntent =
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -290,7 +290,7 @@ object Locus {
                         context,
                         0,
                         intent,
-                        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                        flags
                     )
                 } else {
                     PendingIntent.getActivity(context, 0, intent, flags)
