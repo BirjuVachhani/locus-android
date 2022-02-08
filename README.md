@@ -86,18 +86,36 @@ Feel free to re-open [#53](https://github.com/BirjuVachhani/locus-android/issues
 
 ## Gradle Dependency
 
-* Add the JitPack repository to your project's build.gradle file
+1. Add the JitPack repository.
+
+**For Classic Android Project:**
+
+Add this in your project's build.gradle file.
 
 ```
 allprojects {
     repositories {
         ...
-        maven { url 'https://jitpack.io' }
+        maven { url 'https://jitpack.io' } // add this line only
     }
 }
 ```
 
-* Add the dependency in your app's build.gradle file
+**For Compose Android Project:**
+
+Add this in your project's settings.gradle file.
+
+```
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        ...
+        maven { url 'https://jitpack.io' } // add this line only
+    }
+}
+```
+
+2. Add the dependency in your app's build.gradle file
 
 ```
 dependencies {
