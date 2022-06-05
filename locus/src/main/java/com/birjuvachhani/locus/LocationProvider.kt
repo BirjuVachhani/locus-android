@@ -21,6 +21,8 @@ import android.content.Context
 import android.os.Looper
 import androidx.lifecycle.MutableLiveData
 import com.google.android.gms.location.*
+import com.google.android.gms.tasks.CancellationToken
+import com.google.android.gms.tasks.OnTokenCanceledListener
 import java.util.concurrent.atomic.AtomicBoolean
 
 /*
@@ -94,7 +96,11 @@ internal class LocationProvider(context: Context) {
                 onUpdate(LocusResult.error(error = error))
             }
         }
-        mFusedLocationProviderClient.lastLocation.addOnSuccessListener { location ->
+
+        mFusedLocationProviderClient.getCurrentLocation(
+            request.priority,
+            EmptyCancellationToken()
+        ).addOnSuccessListener { location ->
             location?.let { onUpdate(LocusResult.success(it)) }
         }.addOnFailureListener {
             logError(it)
@@ -112,4 +118,10 @@ internal class LocationProvider(context: Context) {
         locationLiveData = MutableLiveData()
         mFusedLocationProviderClient.removeLocationUpdates(pendingIntent)
     }
+}
+
+class EmptyCancellationToken : CancellationToken() {
+    override fun onCanceledRequested(p0: OnTokenCanceledListener): CancellationToken = this
+
+    override fun isCancellationRequested(): Boolean = false
 }
