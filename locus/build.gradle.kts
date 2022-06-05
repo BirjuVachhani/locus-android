@@ -50,7 +50,7 @@ publishing {
             groupId = "com.github.BirjuVachhani"
             artifactId = "locus-android"
             version = "4.1.0"
-            artifact("$buildDir/outputs/aar/locus-release.aar")
+            artifact("$projectDir/locus/outputs/aar/locus-release.aar")
         }
     }
 }
