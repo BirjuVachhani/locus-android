@@ -25,7 +25,8 @@
             android:text="@string/try_out_the_sample_app_of"
             android:textAlignment="center"
             android:textColor="@color/txt_light"
-            android:textSize="@dimen/_16sdp" />
+            android:textSize="@dimen/_16sdp"
+            android:gravity="center_horizontal" />
 
         <TextView
             android:id="@+id/tvAppName"
@@ -35,7 +36,8 @@
             android:textAlignment="center"
             android:textColor="@android:color/white"
             android:textSize="@dimen/_40sdp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:gravity="center_horizontal" />
     </androidx.appcompat.widget.LinearLayoutCompat>
 
     <FrameLayout
@@ -213,7 +215,8 @@
         android:visibility="invisible"
         app:layout_constraintTop_toBottomOf="@+id/btnSingleUpdate"
         tools:layout_editor_absoluteX="0dp"
-        tools:text="single update" />
+        tools:text="single update"
+        android:gravity="center_horizontal" />
 
     <TextView
         android:id="@+id/tvErrors"
@@ -227,7 +230,8 @@
         app:layout_constraintBottom_toTopOf="@+id/appCompatTextView"
         app:layout_constraintTop_toBottomOf="@+id/tvSingleUpdate"
         tools:layout_editor_absoluteX="0dp"
-        tools:text="No errors" />
+        tools:text="No errors"
+        android:gravity="center_horizontal" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/appCompatTextView"
@@ -239,7 +243,8 @@
         android:textColor="@color/txt_light"
         app:layout_constraintBottom_toTopOf="@+id/btnStop"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        android:gravity="center_horizontal" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnStart"
