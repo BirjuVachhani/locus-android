@@ -5,9 +5,6 @@ plugins {
     id("kotlin-parcelize")
 }
 
-var group = "com.github.BirjuVachhani"
-var version = "4.1.0"
-
 android {
     compileSdk = 31
     defaultConfig {
