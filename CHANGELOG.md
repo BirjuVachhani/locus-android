@@ -1,3 +1,7 @@
+## 4.1.0 (Unreleased)
+
+- Fixes [#65](https://github.com/BirjuVachhani/locus-android/issues/65)
+
 ## 4.0.1
 
 - [#56] Fix PendingIntent flags issue on Android 12+.
