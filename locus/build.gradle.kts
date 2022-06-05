@@ -42,3 +42,14 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.4.0")
     implementation("androidx.activity:activity-ktx:1.4.0")
 }
+
+publishing {
+    publications {
+        create<MavenPublication>("locus-android") {
+            groupId = "com.github.BirjuVachhani"
+            artifactId = "locus-android"
+            version = "4.0.1"
+            artifact("$buildDir/outputs/aar/locus-release.aar")
+        }
+    }
+}
