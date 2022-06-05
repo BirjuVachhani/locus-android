@@ -1,3 +1,6 @@
+plugins {
+    id("maven-publish")
+}
 buildscript {
     repositories {
         google()
@@ -20,4 +23,14 @@ allprojects {
 
 tasks.register("clean", Delete::class) {
     delete(rootProject.buildDir)
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("locus-android") {
+            groupId = "com.github.BirjuVachhani"
+            artifactId = "locus-android"
+            artifact("locus/build/outputs/aar/locus-release.aar")
+        }
+    }
 }

@@ -6,6 +6,7 @@ plugins {
 }
 
 var group = "com.github.BirjuVachhani"
+var version = "4.1.0"
 
 android {
     compileSdk = 31
@@ -48,7 +49,7 @@ publishing {
         create<MavenPublication>("locus-android") {
             groupId = "com.github.BirjuVachhani"
             artifactId = "locus-android"
-            version = "4.0.1"
+            version = "4.1.0"
             artifact("$buildDir/outputs/aar/locus-release.aar")
         }
     }
