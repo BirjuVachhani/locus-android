@@ -128,6 +128,14 @@ dependencies {
 
 See [Wiki](https://github.com/BirjuVachhani/locus-android/wiki) on how to get started with **Locus**.
 
+## Background Location Permission Removal
+
+This package adds background location permission to the manifest file regardless whether you are using it or not. If you are not requesting background location permission and you are not planning to use it in future, consider adding this line into your manifest file. This is only required when you publish your app to Google Playstore because they might reject your app because of this. See realted issue #53.
+
+```xml
+<uses-permission tools:node="remove" android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+```
+
 ### Pull Request
 
 To generate a pull request, please consider
