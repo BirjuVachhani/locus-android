@@ -12,6 +12,11 @@ Locus is a tiny kotlin library for android which makes it super very easy to ret
 code. Everything including permission model and Location settings resolution is handled internally which removes a lot
 of boilerplate code any developer have to write every time.
 
+# Looking for Maintainers
+
+Its been a long time since I moved away from native Android development so I am finding it hard to keep up with the latest changes with the location
+permissions in newever Android versions and fix issues reported here. I'd love someone to actively maintain this library and look into the issues. If you are interested and up to the task, drop a mail at `brvachhani@gmail.com` or comment on [this issue](https://github.com/BirjuVachhani/locus-android/issues/74). Thanks!
+
 ### Documentation:
 
 See [Wiki](https://github.com/BirjuVachhani/locus-android/wiki) for more information and configuration!
