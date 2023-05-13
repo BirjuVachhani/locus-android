@@ -83,7 +83,7 @@ internal class LocationProvider(context: Context) {
         fun startUpdates() {
             val callback = object : LocationCallback() {
                 override fun onLocationResult(result: LocationResult) {
-                    onUpdate(LocusResult.success(result.lastLocation))
+                    result.lastLocation?.let { LocusResult.success(it) }?.let { onUpdate(it) }
                     mFusedLocationProviderClient.removeLocationUpdates(this)
                 }
             }

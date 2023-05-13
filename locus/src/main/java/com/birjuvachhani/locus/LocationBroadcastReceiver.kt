@@ -52,9 +52,11 @@ internal class LocationBroadcastReceiver : BroadcastReceiver() {
         intent ?: return
         if (intent.action == ACTION_PROCESS_UPDATES && LocationResult.hasResult(intent)) {
             LocationResult.extractResult(intent).let { result ->
-                if (result.locations.isNotEmpty()) {
-                    logDebug("Received location ${result.lastLocation}")
-                    locationLiveData.postValue(LocusResult.success(result.lastLocation))
+                if (result?.locations?.isNotEmpty() == true) {
+                    result.lastLocation?.let {
+                        logDebug("Received location $it")
+                        locationLiveData.postValue(LocusResult.success(it))
+                    }
                 }
             }
         }
