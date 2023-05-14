@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
-        val request = LocationRequest.create()
+        val request = LocationRequest.Builder(1000).build()
         Intent(this, MainActivity::class.java).apply {
             putExtra("request", request)
         }

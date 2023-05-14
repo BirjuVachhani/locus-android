@@ -27,18 +27,17 @@ import androidx.lifecycle.Observer
  */
 class PermissionObserver(private val onResult: (Throwable?) -> Unit) : Observer<String> {
 
-    override fun onChanged(status: String?) {
+    override fun onChanged(value: String) {
         logDebug("Received Permission broadcast")
-        status ?: return
         isRequestingPermission.set(false)
-        when (status) {
+        when (value) {
             Constants.GRANTED -> {
                 logDebug("Permission granted")
                 onResult(null)
             }
             else -> {
-                logDebug(status)
-                onResult(Throwable(status))
+                logDebug(value)
+                onResult(Throwable(value))
             }
         }
         permissionLiveData.removeObserver(this)

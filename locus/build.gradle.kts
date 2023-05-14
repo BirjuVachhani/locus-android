@@ -6,10 +6,9 @@ plugins {
 }
 
 android {
-    compileSdk = 31
+    compileSdk = 33
     defaultConfig {
         minSdk = 16
-        targetSdk = 31
     }
     buildTypes {
         getByName("release") {
@@ -31,14 +30,15 @@ android {
     buildFeatures {
         buildConfig = false
     }
+    namespace = "com.birjuvachhani.locus"
 }
 
 dependencies {
-    compileOnly("com.google.android.material:material:1.4.0")
-    compileOnly("org.jetbrains.kotlin:kotlin-stdlib:1.6.21")
+    compileOnly("com.google.android.material:material:1.9.0")
+    compileOnly("org.jetbrains.kotlin:kotlin-stdlib:1.8.10")
     compileOnly("com.google.android.gms:play-services-location:21.0.1")
-    implementation("androidx.appcompat:appcompat:1.4.0")
-    implementation("androidx.activity:activity-ktx:1.4.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("androidx.activity:activity-ktx:1.7.1")
 }
 
 publishing {

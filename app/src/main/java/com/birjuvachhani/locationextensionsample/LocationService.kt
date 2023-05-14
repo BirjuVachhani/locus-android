@@ -44,7 +44,7 @@ class LocationService : LifecycleService() {
             "com.birjuvachhani.locationextensionsample.ServiceStopBroadcastReceiver"
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
+    override fun onBind(intent: Intent): IBinder? {
         super.onBind(intent)
         return null
     }
