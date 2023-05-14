@@ -49,7 +49,9 @@ afterEvaluate {
                 artifactId = "locus-android"
                 version = "4.1.0"
 
-                from(components["java"])
+                afterEvaluate {
+                    artifact(tasks.getByName("bundleReleaseAar"))
+                }
             }
         }
     }
