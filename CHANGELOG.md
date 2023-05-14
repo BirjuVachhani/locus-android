@@ -1,4 +1,9 @@
-## 4.1.0 (Unreleased)
+## 4.1.1
+
+- Fixes [#77](https://github.com/BirjuVachhani/locus-android/issues/77)
+- Refactor some of the usages of deprecated `LocationRequest.create()` to use new `LocationRequest.Builder` API.
+
+## 4.1.0
 
 - Fixes [#65](https://github.com/BirjuVachhani/locus-android/issues/65)
 
