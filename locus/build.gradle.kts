@@ -48,7 +48,8 @@ afterEvaluate {
                 groupId = "com.github.BirjuVachhani"
                 artifactId = "locus-android"
                 version = "4.1.0"
-                artifact("build/outputs/aar/locus-release.aar")
+
+                from(components["java"])
             }
         }
     }
