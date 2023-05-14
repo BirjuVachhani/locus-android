@@ -77,8 +77,7 @@ internal class LocationProvider(context: Context) {
      */
     @SuppressLint("MissingPermission")
     internal fun getSingleUpdate(
-        request: LocationRequest,
-        onUpdate: (LocusResult) -> Unit
+        request: LocationRequest, onUpdate: (LocusResult) -> Unit
     ) {
         fun startUpdates() {
             val callback = object : LocationCallback() {
@@ -88,7 +87,7 @@ internal class LocationProvider(context: Context) {
                 }
             }
             mFusedLocationProviderClient.requestLocationUpdates(
-                request.apply { numUpdates = 1 },
+                LocationRequest.Builder(request).setMaxUpdates(1).build(),
                 callback,
                 Looper.getMainLooper()
             ).addOnFailureListener { error ->
@@ -98,8 +97,7 @@ internal class LocationProvider(context: Context) {
         }
 
         mFusedLocationProviderClient.getCurrentLocation(
-            request.priority,
-            EmptyCancellationToken()
+            request.priority, EmptyCancellationToken()
         ).addOnSuccessListener { location ->
             location?.let { onUpdate(LocusResult.success(it)) }
         }.addOnFailureListener {

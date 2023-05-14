@@ -39,9 +39,9 @@ fun <T : Any> LiveData<T?>.watch(owner: LifecycleOwner, func: (T) -> Unit) {
  */
 fun <T : Any> LiveData<T?>.observeOnce(lifecycleOwner: LifecycleOwner, func: (T) -> Unit) {
     observe(lifecycleOwner, object : Observer<T?> {
-        override fun onChanged(t: T?) {
-            if (t != null) {
-                func(t)
+        override fun onChanged(value: T?) {
+            if (value != null) {
+                func(value)
                 removeObserver(this)
             }
         }
@@ -55,9 +55,9 @@ fun <T : Any> LiveData<T?>.observeOnce(lifecycleOwner: LifecycleOwner, func: (T)
  */
 fun <T : Any> LiveData<T?>.observeOnce(func: (T) -> Unit) {
     observeForever(object : Observer<T?> {
-        override fun onChanged(t: T?) {
-            if (t != null) {
-                func(t)
+        override fun onChanged(value: T?) {
+            if (value != null) {
+                func(value)
                 removeObserver(this)
             }
         }

@@ -17,6 +17,7 @@ package com.birjuvachhani.locus
 
 import android.os.Parcelable
 import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.Priority
 import kotlinx.parcelize.Parcelize
 
 /*
@@ -57,10 +58,9 @@ data class Configuration(
  * @return LocationRequest
  */
 internal fun getDefaultRequest(): LocationRequest {
-    return LocationRequest.create().apply {
-        priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        interval = Configuration.INTERVAL_IN_MS
-        fastestInterval = Configuration.FASTEST_INTERVAL_IN_MS
-        maxWaitTime = Configuration.MAX_WAIT_TIME_IN_MS
-    }
+    return LocationRequest.Builder(Configuration.INTERVAL_IN_MS)
+        .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+        .setMinUpdateIntervalMillis(Configuration.FASTEST_INTERVAL_IN_MS)
+        .setMaxUpdateDelayMillis(Configuration.MAX_WAIT_TIME_IN_MS)
+        .build()
 }
