@@ -41,7 +41,6 @@ class PermissionObserver(private val onResult: (Throwable?) -> Unit) : Observer<
             }
         }
         permissionLiveData.removeObserver(this)
-        permissionLiveData.postValue(null)
     }
 
 }
