@@ -1,3 +1,7 @@
+## 4.1.2
+
+- Fixes [#83](https://github.com/BirjuVachhani/locus-android/issues/83)
+
 ## 4.1.1
 
 - Fixes [#77](https://github.com/BirjuVachhani/locus-android/issues/77)

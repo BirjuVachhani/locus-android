@@ -122,6 +122,8 @@ dependencyResolutionManagement {
 
 2. Add the dependency in your app's build.gradle file
 
+[![Release](https://jitpack.io/v/BirjuVachhani/locus-android.svg?style=flat-square)](https://jitpack.io/BirjuVachhani/locus-android)
+
 ```
 dependencies {
     implementation 'com.github.BirjuVachhani:locus-android:latest-version'
