@@ -8,7 +8,7 @@ plugins {
 android {
     compileSdk = 33
     defaultConfig {
-        minSdk = 16
+        minSdk = 19
     }
     buildTypes {
         getByName("release") {
@@ -36,6 +36,7 @@ android {
 dependencies {
     compileOnly("com.google.android.material:material:1.9.0")
     compileOnly("org.jetbrains.kotlin:kotlin-stdlib:1.8.10")
+    compileOnly("com.huawei.hms:location:6.11.0.301")
     compileOnly("com.google.android.gms:play-services-location:21.0.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.activity:activity-ktx:1.7.1")
