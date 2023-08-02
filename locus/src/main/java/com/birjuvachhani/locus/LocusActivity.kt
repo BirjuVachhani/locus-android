@@ -28,13 +28,20 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Lifecycle
-import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.common.api.ResolvableApiException
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.LocationSettingsRequest
-import com.google.android.gms.location.LocationSettingsResponse
-import com.google.android.gms.location.LocationSettingsStatusCodes
-
+import com.birjuvachhani.locus.LocusLocationRequest.Companion.checkAvailableService
+import com.birjuvachhani.locus.extensions.getAvailableService
+import com.google.android.gms.common.api.ApiException as GMSApiException
+import com.google.android.gms.common.api.ResolvableApiException as GMSResolvableApiException
+import com.google.android.gms.location.LocationServices as GMSLocationServices
+import com.google.android.gms.location.LocationSettingsRequest as GMSLocationSettingsRequest
+import com.google.android.gms.location.LocationSettingsResponse as GMSLocationSettingsResponse
+import com.google.android.gms.location.LocationSettingsStatusCodes as GMSLocationSettingsStatusCodes
+import com.huawei.hms.common.ApiException as HMSApiException
+import com.huawei.hms.common.ResolvableApiException as HMSResolvableApiException
+import com.huawei.hms.location.LocationServices as HMSLocationServices
+import com.huawei.hms.location.LocationSettingsRequest as HMSLocationSettingsRequest
+import com.huawei.hms.location.LocationSettingsResponse as HMSLocationSettingsResponse
+import com.huawei.hms.location.LocationSettingsStatusCodes as HMSLocationSettingsStatusCodes
 
 /*
  * Created by Birju Vachhani on 17 July 2019
@@ -56,7 +63,8 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         private const val PREF_NAME = "locus_pref"
     }
 
-    private var config: Configuration = Configuration()
+    private lateinit var config: Configuration
+
     private val pref: SharedPreferences by lazy {
         getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
     }
@@ -66,10 +74,10 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_location_permission)
-
+        config = Configuration(getLocusLocationRequest(getAvailableService()))
 
         intent?.getParcelableExtra<Configuration>(Constants.INTENT_EXTRA_CONFIGURATION)?.let {
-            config = it
+            config = it.copy(locationRequest = getLocusLocationRequest(getAvailableService()))
         } ?: logError("No config is sent to the permission activity")
         val isSingleUpdate =
             intent?.getBooleanExtra(Constants.INTENT_EXTRA_IS_SINGLE_UPDATE, false) ?: false
@@ -240,36 +248,94 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * of settings resolution.
      * */
     private fun checkIfLocationSettingsAreEnabled() {
-        checkSettings(success = { shouldProceedForLocation() }) { exception ->
-            if (exception is ApiException) {
-                when (exception.statusCode) {
-                    LocationSettingsStatusCodes.RESOLUTION_REQUIRED -> {
-                        logDebug("Location settings resolution is required")
-                        onResolutionNeeded(exception)
+        fun resolveException() {
+            logDebug("Location settings resolution denied")
+            // resolution failed somehow
+            onResolutionDenied()
+        }
+
+        config.locationRequest.checkAvailableService(
+            onGMSAvailable = {
+                checkSettingsWithGMS(success = { shouldProceedForLocation() }) { exception ->
+                    if (exception is GMSApiException) {
+                        handelGMSApiException(exception)
+                    } else {
+                        resolveException()
                     }
-                    LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE -> {
-                        logDebug("cannot change settings, continue with current settings")
-                        shouldProceedForLocation()
-                    }
-                    else -> logDebug("something went wrong while processing location settings resolution request: $exception")
                 }
-            } else {
-                logDebug("Location settings resolution denied")
-                // resolution failed somehow
-                onResolutionDenied()
+            },
+            onHMSAvailable = {
+                checkSettingsWithHMS(success = { shouldProceedForLocation() }) { exception ->
+                    if (exception is HMSApiException) {
+                        handelHMSApiException(exception)
+                    } else {
+                        resolveException()
+                    }
+                }
+            },
+        )
+    }
+
+    private fun handelHMSApiException(exception: HMSApiException) {
+        when (exception.statusCode) {
+            HMSLocationSettingsStatusCodes.RESOLUTION_REQUIRED -> {
+                logDebug("Location settings resolution is required")
+                onResolutionNeeded(exception)
             }
+
+            HMSLocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE -> {
+                logDebug("cannot change settings, continue with current settings")
+                shouldProceedForLocation()
+            }
+
+            else -> logDebug("something went wrong while processing location settings resolution request: $exception")
         }
     }
 
-    private fun checkSettings(
-        success: (LocationSettingsResponse) -> Unit,
-        failure: (Exception) -> Unit
+    private fun handelGMSApiException(exception: GMSApiException) {
+        when (exception.statusCode) {
+            GMSLocationSettingsStatusCodes.RESOLUTION_REQUIRED -> {
+                logDebug("Location settings resolution is required")
+                onResolutionNeeded(exception)
+            }
+
+            GMSLocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE -> {
+                logDebug("cannot change settings, continue with current settings")
+                shouldProceedForLocation()
+            }
+
+            else -> logDebug("something went wrong while processing location settings resolution request: $exception")
+        }
+    }
+
+    private fun checkSettingsWithGMS(
+        success: (GMSLocationSettingsResponse) -> Unit,
+        failure: (Exception) -> Unit,
     ) {
-        val builder = LocationSettingsRequest.Builder()
-        builder.addLocationRequest(config.locationRequest)
+        val builder = GMSLocationSettingsRequest.Builder()
+        builder.addLocationRequest((config.locationRequest as LocusLocationRequest.LocusGMSLocationRequest).locationRequest)
         builder.setAlwaysShow(true)
 
-        val client = LocationServices.getSettingsClient(this)
+        val client = GMSLocationServices.getSettingsClient(this)
+        val locationSettingsResponseTask = client.checkLocationSettings(builder.build())
+        locationSettingsResponseTask.addOnSuccessListener {
+            // All location settings are satisfied. The client can initialize
+            // location requests here.
+            success(it)
+        }.addOnFailureListener { exception ->
+            failure(exception)
+        }
+    }
+
+    private fun checkSettingsWithHMS(
+        success: (HMSLocationSettingsResponse) -> Unit,
+        failure: (Exception) -> Unit,
+    ) {
+        val builder = HMSLocationSettingsRequest.Builder()
+        builder.addLocationRequest((config.locationRequest as LocusLocationRequest.LocusHMSLocationRequest).locationRequest)
+        builder.setAlwaysShow(true)
+
+        val client = HMSLocationServices.getSettingsClient(this)
         val locationSettingsResponseTask = client.checkLocationSettings(builder.build())
         locationSettingsResponseTask.addOnSuccessListener {
             // All location settings are satisfied. The client can initialize
@@ -333,12 +399,26 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
      * @param exception is used to resolve location settings
      * */
     private fun resolveLocationSettings(exception: Exception) {
-        val resolvable = exception as? ResolvableApiException ?: return
-        try {
-            resolvable.startResolutionForResult(this, REQUEST_CODE_LOCATION_SETTINGS)
-        } catch (e1: IntentSender.SendIntentException) {
-            e1.printStackTrace()
-        }
+        config.locationRequest.checkAvailableService(
+            onGMSAvailable = {
+                (exception as? GMSResolvableApiException)?.let {
+                    try {
+                        it.startResolutionForResult(this, REQUEST_CODE_LOCATION_SETTINGS)
+                    } catch (e1: IntentSender.SendIntentException) {
+                        e1.printStackTrace()
+                    }
+                }
+            },
+            onHMSAvailable = {
+                (exception as? HMSResolvableApiException)?.let {
+                    try {
+                        it.startResolutionForResult(this, REQUEST_CODE_LOCATION_SETTINGS)
+                    } catch (e1: IntentSender.SendIntentException) {
+                        e1.printStackTrace()
+                    }
+                }
+            },
+        )
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -347,9 +427,18 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
             if (resultCode == RESULT_OK) {
                 shouldProceedForLocation()
             } else {
-                checkSettings(success = { shouldProceedForLocation() }) {
-                    postResult(Constants.LOCATION_SETTINGS_DENIED)
-                }
+                config.locationRequest.checkAvailableService(
+                    onGMSAvailable = {
+                        checkSettingsWithGMS(success = { shouldProceedForLocation() }) {
+                            postResult(Constants.LOCATION_SETTINGS_DENIED)
+                        }
+                    },
+                    onHMSAvailable = {
+                        checkSettingsWithHMS(success = { shouldProceedForLocation() }) {
+                            postResult(Constants.LOCATION_SETTINGS_DENIED)
+                        }
+                    }
+                )
             }
         } else if (requestCode == SETTINGS_ACTIVITY_REQUEST_CODE) {
             if (hasAllPermissions()) {

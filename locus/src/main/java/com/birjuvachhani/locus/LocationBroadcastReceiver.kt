@@ -20,7 +20,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import com.google.android.gms.location.LocationResult
+import com.birjuvachhani.locus.extensions.getAvailableService
+import com.google.android.gms.location.LocationResult as GMSLocationResult
+import com.huawei.hms.location.LocationResult as HMSLocationResult
 
 /*
  * Created by Birju Vachhani on 12 August 2019
@@ -50,11 +52,37 @@ internal class LocationBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         logDebug("Received location update broadcast")
         intent ?: return
-        if (intent.action == ACTION_PROCESS_UPDATES && LocationResult.hasResult(intent)) {
-            LocationResult.extractResult(intent).let { result ->
+        when (context?.getAvailableService()) {
+            AvailableService.HMS -> extractDataFromHMS(intent)
+            else -> extractDataFromGMS(intent)
+        }
+    }
+
+    /**
+     * With the help of this method we will extract data With Huawei mobile service LocationResult.
+     */
+    private fun extractDataFromHMS(intent: Intent) {
+        if (intent.action == ACTION_PROCESS_UPDATES && HMSLocationResult.hasResult(intent)) {
+            HMSLocationResult.extractResult(intent).let { result ->
                 if (result?.locations?.isNotEmpty() == true) {
                     result.lastLocation?.let {
-                        logDebug("Received location $it")
+                        logDebug("Huawei mobile service Received location $it")
+                        locationLiveData.postValue(LocusResult.success(it))
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * With the help of this method we will extract data With Google mobile service LocationResult.
+     */
+    private fun extractDataFromGMS(intent: Intent) {
+        if (intent.action == ACTION_PROCESS_UPDATES && GMSLocationResult.hasResult(intent)) {
+            GMSLocationResult.extractResult(intent).let { result ->
+                if (result?.locations?.isNotEmpty() == true) {
+                    result.lastLocation?.let {
+                        logDebug("Google mobile service Received location $it")
                         locationLiveData.postValue(LocusResult.success(it))
                     }
                 }

@@ -23,10 +23,12 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.birjuvachhani.locationextensionsample.databinding.ActivityMainBinding
+import com.birjuvachhani.locus.AvailableService
 import com.birjuvachhani.locus.Locus
-import com.google.android.gms.location.LocationRequest
-import java.util.*
-
+import com.birjuvachhani.locus.extensions.getAvailableService
+import java.util.Calendar
+import com.google.android.gms.location.LocationRequest as GSMLocationRequest
+import com.huawei.hms.location.LocationRequest as HSMLocationRequest
 /*
  * Created by Birju Vachhani on 18 September 2019
  * Copyright © 2019 locus-android. All rights reserved.
@@ -45,10 +47,21 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
-        val request = LocationRequest.Builder(1000).build()
-        Intent(this, MainActivity::class.java).apply {
-            putExtra("request", request)
+
+        when (getAvailableService()) {
+            AvailableService.HMS -> {
+                Intent(this, MainActivity::class.java).apply {
+                    putExtra("request", HSMLocationRequest().setInterval(1000))
+                }
+            }
+
+            else -> {
+                Intent(this, MainActivity::class.java).apply {
+                    putExtra("request", GSMLocationRequest.Builder(1000).build())
+                }
+            }
         }
+
         Locus.setLogging(true)
     }
 
