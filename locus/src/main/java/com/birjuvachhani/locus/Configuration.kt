@@ -16,8 +16,9 @@
 package com.birjuvachhani.locus
 
 import android.os.Parcelable
-import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.Priority
+import com.google.android.gms.location.LocationRequest as GMSLocationRequest
+import com.huawei.hms.location.LocationRequest as HMSLocationRequest
 import kotlinx.parcelize.Parcelize
 
 /*
@@ -27,14 +28,14 @@ import kotlinx.parcelize.Parcelize
 
 /**
  * Data class to store location related configurations which includes dialog messages and instance of LocationRequest class.
- * */
+ */
 @LocusMarker
 @Parcelize
 data class Configuration(
-    internal var locationRequest: LocationRequest = getDefaultRequest(),
+    internal var locationRequest: LocusLocationRequest = getLocusLocationRequest(AvailableService.GMS),
     var shouldResolveRequest: Boolean = true,
     var enableBackgroundUpdates: Boolean = false,
-    var forceBackgroundUpdates: Boolean = false
+    var forceBackgroundUpdates: Boolean = false,
 ) : Parcelable {
 
     companion object {
@@ -46,21 +47,41 @@ data class Configuration(
     /**
      * Create an instance of LocationRequest class
      * @param func is a LocationRequest's lambda receiver which provide a block to configure LocationRequest
-     * */
-    fun request(func: (@LocusMarker LocationRequest).() -> Unit) {
-        locationRequest = LocationRequest.create().apply(func)
+     */
+    fun request(func: (@LocusMarker GMSLocationRequest).() -> Unit) {
+        locationRequest =
+            LocusLocationRequest.LocusGMSLocationRequest(GMSLocationRequest.create().apply(func))
     }
 
 }
 
 /**
- * Creates [LocationRequest] instance with default settings
- * @return LocationRequest
+ * Gets back an instance of [LocusLocationRequest].
+ *
+ * @param availableService is an instance of [AvailableService].
+ *
+ * @return [LocusLocationRequest].
  */
-internal fun getDefaultRequest(): LocationRequest {
-    return LocationRequest.Builder(Configuration.INTERVAL_IN_MS)
+internal fun getLocusLocationRequest(availableService: AvailableService): LocusLocationRequest =
+    when (availableService) {
+        AvailableService.HMS -> LocusLocationRequest.LocusHMSLocationRequest(getHMSLocationRequest())
+        else -> LocusLocationRequest.LocusGMSLocationRequest(getGMSLocationRequest())
+    }
+
+/**
+ * Gets the Google play service location request.
+ */
+internal fun getGMSLocationRequest(): GMSLocationRequest =
+    GMSLocationRequest.Builder(Configuration.INTERVAL_IN_MS)
         .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
         .setMinUpdateIntervalMillis(Configuration.FASTEST_INTERVAL_IN_MS)
-        .setMaxUpdateDelayMillis(Configuration.MAX_WAIT_TIME_IN_MS)
-        .build()
-}
+        .setMaxUpdateDelayMillis(Configuration.MAX_WAIT_TIME_IN_MS).build()
+
+/**
+ * Gets the Huawei mobile service location request.
+ */
+internal fun getHMSLocationRequest(): HMSLocationRequest =
+    HMSLocationRequest().setInterval(Configuration.INTERVAL_IN_MS)
+        .setPriority(HMSLocationRequest.PRIORITY_HIGH_ACCURACY)
+        .setFastestInterval(Configuration.FASTEST_INTERVAL_IN_MS)
+        .setMaxWaitTime(Configuration.MAX_WAIT_TIME_IN_MS)

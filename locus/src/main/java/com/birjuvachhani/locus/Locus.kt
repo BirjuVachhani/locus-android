@@ -32,8 +32,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import com.birjuvachhani.locus.Locus.config
 import com.birjuvachhani.locus.Locus.locationProvider
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.LocationSettingsRequest
+import com.birjuvachhani.locus.extensions.getAvailableService
+import com.huawei.hms.location.LocationServices as HMSLocationServices
+import com.huawei.hms.location.LocationSettingsRequest as HMSLocationSettingsRequest
+import com.google.android.gms.location.LocationServices as GMSLocationServices
+import com.google.android.gms.location.LocationSettingsRequest as GMSLocationSettingsRequest
 import java.util.concurrent.atomic.AtomicBoolean
 
 /*
@@ -75,7 +78,7 @@ internal annotation class LocusMarker
  * to receive location updates. This way works perfectly even when the app is in background.
  * Therefore, We are not using LocationCallback approach to avoid any uncertain behaviour.
  *
- * @property config Holds the configuration of for the library
+ * @property config Holds the configuration of the library
  * @property locationProvider Used to retrieve location
  *
  */
@@ -125,6 +128,7 @@ object Locus {
      */
     @Throws(IllegalStateException::class)
     fun startLocationUpdates(context: Context): LiveData<LocusResult> {
+        config.locationRequest = getLocusLocationRequest(context.getAvailableService())
         assertMainThread("startLocationUpdates")
         checkAndStartLocationUpdates(context.applicationContext)
         return locationLiveData
@@ -149,7 +153,7 @@ object Locus {
     @Throws(IllegalStateException::class)
     fun startLocationUpdates(
         fragment: Fragment,
-        onResult: (LocusResult) -> Unit
+        onResult: (LocusResult) -> Unit,
     ) {
         assertMainThread("startLocationUpdates")
         locationLiveData.observe(fragment, Observer(onResult))
@@ -177,7 +181,7 @@ object Locus {
     @Throws(IllegalStateException::class)
     fun <T> startLocationUpdates(
         lifecycleOwnerContext: T,
-        onResult: (LocusResult) -> Unit
+        onResult: (LocusResult) -> Unit,
     ) where T : Context, T : LifecycleOwner {
         assertMainThread("startLocationUpdates")
         locationLiveData.observe(lifecycleOwnerContext, Observer(onResult))
@@ -196,7 +200,7 @@ object Locus {
 
     private fun checkAndStartLocationUpdates(
         context: Context,
-        singleUpdate: ((LocusResult) -> Unit)? = null
+        singleUpdate: ((LocusResult) -> Unit)? = null,
     ) {
         val observer = PermissionObserver {
             it?.let { error ->
@@ -209,6 +213,7 @@ object Locus {
             !getAllPermissions(config.enableBackgroundUpdates).all(context::hasPermission) ->
                 // Doesn't have permission, start permission resolution
                 startPermissionAndResolutionProcess(context, observer, singleUpdate != null)
+
             config.shouldResolveRequest ->
                 // has permissions, need to check for location settings
                 checkLocationSettings(context) { isSatisfied ->
@@ -220,6 +225,7 @@ object Locus {
                         startPermissionAndResolutionProcess(context, observer, singleUpdate != null)
                     }
                 }
+
             else ->
                 // has permission but location settings resolution is disabled so start updates directly
                 startUpdates(context, singleUpdate)
@@ -232,16 +238,34 @@ object Locus {
      * @param onResult Function1<Boolean, Unit>
      */
     private fun checkLocationSettings(context: Context, onResult: (Boolean) -> Unit) {
-        val builder = LocationSettingsRequest.Builder()
-        builder.addLocationRequest(config.locationRequest)
-        builder.setAlwaysShow(true)
-        val client = LocationServices.getSettingsClient(context)
-        val locationSettingsResponseTask = client.checkLocationSettings(builder.build())
-        locationSettingsResponseTask.addOnSuccessListener {
-            onResult(true)
-        }.addOnFailureListener { exception ->
-            logError(exception)
-            onResult(false)
+        when (val locationRequest = config.locationRequest) {
+            is LocusLocationRequest.LocusHMSLocationRequest -> {
+                val builder = HMSLocationSettingsRequest.Builder()
+                builder.addLocationRequest(locationRequest.locationRequest)
+                builder.setAlwaysShow(true)
+                val client = HMSLocationServices.getSettingsClient(context)
+                val locationSettingsResponseTask = client.checkLocationSettings(builder.build())
+                locationSettingsResponseTask.addOnSuccessListener {
+                    onResult(true)
+                }.addOnFailureListener { exception ->
+                    logError(exception)
+                    onResult(false)
+                }
+            }
+
+            is LocusLocationRequest.LocusGMSLocationRequest -> {
+                val builder = GMSLocationSettingsRequest.Builder()
+                builder.addLocationRequest(locationRequest.locationRequest)
+                builder.setAlwaysShow(true)
+                val client = GMSLocationServices.getSettingsClient(context)
+                val locationSettingsResponseTask = client.checkLocationSettings(builder.build())
+                locationSettingsResponseTask.addOnSuccessListener {
+                    onResult(true)
+                }.addOnFailureListener { exception ->
+                    logError(exception)
+                    onResult(false)
+                }
+            }
         }
     }
 
@@ -253,9 +277,29 @@ object Locus {
     private fun startUpdates(context: Context, singleUpdate: ((LocusResult) -> Unit)? = null) {
         initLocationProvider(context.applicationContext)
         if (singleUpdate == null) {
-            locationProvider.startUpdates(config.locationRequest)
+            when (val locusLocationRequest = config.locationRequest) {
+                is LocusLocationRequest.LocusGMSLocationRequest -> {
+                    locationProvider.startUpdates(locusLocationRequest.locationRequest)
+                }
+
+                is LocusLocationRequest.LocusHMSLocationRequest -> {
+                    locationProvider.startUpdates(locusLocationRequest.locationRequest)
+                }
+            }
         } else {
-            locationProvider.getSingleUpdate(config.locationRequest, singleUpdate)
+            when (val locusLocationRequest = config.locationRequest) {
+                is LocusLocationRequest.LocusGMSLocationRequest -> {
+                    locationProvider.getSingleUpdate(
+                        locusLocationRequest.locationRequest, singleUpdate
+                    )
+                }
+
+                is LocusLocationRequest.LocusHMSLocationRequest -> {
+                    locationProvider.getSingleUpdate(
+                        locusLocationRequest.locationRequest, singleUpdate
+                    )
+                }
+            }
         }
     }
 
@@ -269,7 +313,7 @@ object Locus {
     private fun startPermissionAndResolutionProcess(
         context: Context,
         permissionObserver: Observer<String>,
-        isOneTime: Boolean = false
+        isOneTime: Boolean = false,
     ) {
         if (isRequestingPermission.getAndSet(true)) {
             logDebug("A request is already ongoing")
@@ -342,8 +386,9 @@ object Locus {
      */
     fun getCurrentLocation(
         context: Context,
-        onResult: (LocusResult) -> Unit
+        onResult: (LocusResult) -> Unit,
     ) {
+        config.locationRequest = getLocusLocationRequest(context.getAvailableService())
         initLocationProvider(context.applicationContext)
         checkAndStartLocationUpdates(context.applicationContext, onResult)
     }

@@ -13,56 +13,14 @@
  * limitations under the License.
  */
 
-package com.birjuvachhani.locus
+package com.birjuvachhani.locus.extensions
 
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
+import com.birjuvachhani.locus.Constants
 
 /*
  * Created by Birju Vachhani on 06 February 2019
  * Copyright © 2019 locus-android. All rights reserved.
  */
-
-/**
- * LiveData extension to observer it in a null safe way
- * */
-fun <T : Any> LiveData<T?>.watch(owner: LifecycleOwner, func: (T) -> Unit) {
-    this.observe(owner) { result -> result?.apply(func) }
-}
-
-/**
- * Observes LiveData for only one time in lifecycle aware way and then removes the observer
- * @receiver LiveData<T?>
- * @param lifecycleOwner LifecycleOwner
- * @param func Function1<T, Unit> will be called upon getting data in observer
- */
-fun <T : Any> LiveData<T?>.observeOnce(lifecycleOwner: LifecycleOwner, func: (T) -> Unit) {
-    observe(lifecycleOwner, object : Observer<T?> {
-        override fun onChanged(value: T?) {
-            if (value != null) {
-                func(value)
-                removeObserver(this)
-            }
-        }
-    })
-}
-
-/**
- * Observes LiveData for only one time in and then removes the observer
- * @receiver LiveData<T?>
- * @param func Function1<T, Unit> will be called upon getting data in observer
- */
-fun <T : Any> LiveData<T?>.observeOnce(func: (T) -> Unit) {
-    observeForever(object : Observer<T?> {
-        override fun onChanged(value: T?) {
-            if (value != null) {
-                func(value)
-                removeObserver(this)
-            }
-        }
-    })
-}
 
 // Extension property to check if the error caused because the user denied permission or not
 val Throwable.isDenied get() = this.message == Constants.DENIED

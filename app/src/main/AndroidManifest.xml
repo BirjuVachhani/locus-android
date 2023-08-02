@@ -36,6 +36,10 @@
                 <action android:name="com.birjuvachhani.locationextensionsample.ServiceStopBroadcastReceiver"/>
             </intent-filter>
         </receiver>
+
+        <!-- todo: the application should be registered in the Huawei App Gallery. -->
+        <meta-data android:name="com.huawei.hms.client.appid" android:value="appid=?????????" />
+        <meta-data android:name="com.huawei.hms.client.cpid" android:value="cpid=??????????????" />
     </application>
 
 </manifest>
