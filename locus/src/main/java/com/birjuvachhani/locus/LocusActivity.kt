@@ -77,7 +77,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
         config = Configuration(getLocusLocationRequest(getAvailableService()))
 
         intent?.getParcelableExtra<Configuration>(Constants.INTENT_EXTRA_CONFIGURATION)?.let {
-            config = it.copy(locationRequest = getLocusLocationRequest(getAvailableService()))
+            config = it
         } ?: logError("No config is sent to the permission activity")
         val isSingleUpdate =
             intent?.getBooleanExtra(Constants.INTENT_EXTRA_IS_SINGLE_UPDATE, false) ?: false
