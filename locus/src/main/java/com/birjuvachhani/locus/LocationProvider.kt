@@ -22,16 +22,16 @@ import android.os.Looper
 import androidx.lifecycle.MutableLiveData
 import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.OnTokenCanceledListener
-import com.huawei.hms.location.LocationCallback as HMSLocationCallback
-import com.google.android.gms.location.LocationCallback as GMSLocationCallback
-import com.google.android.gms.location.LocationResult as GMSLocationResult
-import com.huawei.hms.location.LocationResult as HMSLocationResult
 import java.util.concurrent.atomic.AtomicBoolean
 import com.google.android.gms.location.FusedLocationProviderClient as GMSFusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback as GMSLocationCallback
 import com.google.android.gms.location.LocationRequest as GMSLocationRequest
+import com.google.android.gms.location.LocationResult as GMSLocationResult
 import com.google.android.gms.location.LocationServices as GMSLocationServices
 import com.huawei.hms.location.FusedLocationProviderClient as HMSFusedLocationProviderClient
+import com.huawei.hms.location.LocationCallback as HMSLocationCallback
 import com.huawei.hms.location.LocationRequest as HMSLocationRequest
+import com.huawei.hms.location.LocationResult as HMSLocationResult
 import com.huawei.hms.location.LocationServices as HMSLocationServices
 
 /*
@@ -146,7 +146,7 @@ internal class LocationProvider(context: Context) {
         gmsFusedLocationProviderClient.getCurrentLocation(
             request.priority, EmptyCancellationToken()
         ).addOnSuccessListener { location ->
-            location?.let { onUpdate(LocusResult.success(it)) }
+            if (location != null) onUpdate(LocusResult.success(location)) else startUpdates()
         }.addOnFailureListener {
             logError(it)
             logDebug("Looks like last known location is not available in Google mobile service, requesting a new location update")
@@ -182,7 +182,7 @@ internal class LocationProvider(context: Context) {
         }
 
         hmsFusedLocationProviderClient.lastLocation.addOnSuccessListener { location ->
-            location?.let { onUpdate(LocusResult.success(it)) }
+            if (location != null) onUpdate(LocusResult.success(location)) else startUpdates()
         }.addOnFailureListener {
             logError(it)
             logDebug("Looks like last known location is not available in Huawei Mobile Service, requesting a new location update")
