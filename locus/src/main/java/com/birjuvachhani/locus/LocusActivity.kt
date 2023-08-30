@@ -29,7 +29,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Lifecycle
 import com.birjuvachhani.locus.LocusLocationRequest.Companion.checkAvailableService
-import com.birjuvachhani.locus.extensions.getAvailableService
 import com.google.android.gms.common.api.ApiException as GMSApiException
 import com.google.android.gms.common.api.ResolvableApiException as GMSResolvableApiException
 import com.google.android.gms.location.LocationServices as GMSLocationServices
@@ -74,7 +73,6 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_location_permission)
-        config = Configuration(getLocusLocationRequest(getAvailableService()))
 
         intent?.getParcelableExtra<Configuration>(Constants.INTENT_EXTRA_CONFIGURATION)?.let {
             config = it
@@ -156,7 +154,7 @@ class LocusActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRe
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
-        grantResults: IntArray
+        grantResults: IntArray,
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         val perms = if (config.enableBackgroundUpdates && config.forceBackgroundUpdates) {

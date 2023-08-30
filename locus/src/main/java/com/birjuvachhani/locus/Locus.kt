@@ -33,11 +33,11 @@ import androidx.lifecycle.Observer
 import com.birjuvachhani.locus.Locus.config
 import com.birjuvachhani.locus.Locus.locationProvider
 import com.birjuvachhani.locus.extensions.getAvailableService
-import com.huawei.hms.location.LocationServices as HMSLocationServices
-import com.huawei.hms.location.LocationSettingsRequest as HMSLocationSettingsRequest
+import java.util.concurrent.atomic.AtomicBoolean
 import com.google.android.gms.location.LocationServices as GMSLocationServices
 import com.google.android.gms.location.LocationSettingsRequest as GMSLocationSettingsRequest
-import java.util.concurrent.atomic.AtomicBoolean
+import com.huawei.hms.location.LocationServices as HMSLocationServices
+import com.huawei.hms.location.LocationSettingsRequest as HMSLocationSettingsRequest
 
 /*
  * Created by Birju Vachhani on 09 November 2018
@@ -128,7 +128,7 @@ object Locus {
      */
     @Throws(IllegalStateException::class)
     fun startLocationUpdates(context: Context): LiveData<LocusResult> {
-        config.locationRequest = getLocusLocationRequest(context.getAvailableService())
+        config.setLocationRequest(context.getAvailableService())
         assertMainThread("startLocationUpdates")
         checkAndStartLocationUpdates(context.applicationContext)
         return locationLiveData
@@ -266,6 +266,11 @@ object Locus {
                     onResult(false)
                 }
             }
+
+            null -> {
+                logError("The Location Request is null, and No service is available.")
+                onResult(false)
+            }
         }
     }
 
@@ -285,6 +290,10 @@ object Locus {
                 is LocusLocationRequest.LocusHMSLocationRequest -> {
                     locationProvider.startUpdates(locusLocationRequest.locationRequest)
                 }
+
+                null -> {
+                    logError("The Location Request is null, and No service is available.")
+                }
             }
         } else {
             when (val locusLocationRequest = config.locationRequest) {
@@ -298,6 +307,11 @@ object Locus {
                     locationProvider.getSingleUpdate(
                         locusLocationRequest.locationRequest, singleUpdate
                     )
+                }
+
+                null -> {
+                    singleUpdate(LocusResult.error(error = Exception("The Location Request is null, and No service is available.")))
+                    logError("The Location Request is null, and No service is available.")
                 }
             }
         }
@@ -388,7 +402,7 @@ object Locus {
         context: Context,
         onResult: (LocusResult) -> Unit,
     ) {
-        config.locationRequest = getLocusLocationRequest(context.getAvailableService())
+        config.setLocationRequest(context.getAvailableService())
         initLocationProvider(context.applicationContext)
         checkAndStartLocationUpdates(context.applicationContext, onResult)
     }
