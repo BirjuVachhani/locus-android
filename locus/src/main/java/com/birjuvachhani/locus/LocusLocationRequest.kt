@@ -28,12 +28,16 @@ sealed class LocusLocationRequest : Parcelable {
         /**
          * [checkAvailableService]
          */
-        fun LocusLocationRequest.checkAvailableService(
+        fun LocusLocationRequest?.checkAvailableService(
             onGMSAvailable: () -> Unit,
             onHMSAvailable: () -> Unit,
+            onNoServiceValid: () -> Unit = {
+                logError("The Location Request is null, and No service is available.")
+            },
         ) = when (this) {
             is LocusGMSLocationRequest -> onGMSAvailable()
             is LocusHMSLocationRequest -> onHMSAvailable()
+            null -> onNoServiceValid()
         }
     }
 }
