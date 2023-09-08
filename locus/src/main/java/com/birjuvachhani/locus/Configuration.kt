@@ -162,7 +162,7 @@ data class Configuration(
  */
 @Parcelize
 data class LocationRequestConfiguration(
-    var priority: Int = Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+    var priority: Int = Priority.PRIORITY_HIGH_ACCURACY,
     var interval: Long = INTERVAL_IN_MS,
     var fastestInterval: Long = FASTEST_INTERVAL_IN_MS,
     var expirationTime: Long = Long.MAX_VALUE,
