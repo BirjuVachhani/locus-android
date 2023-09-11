@@ -1,3 +1,7 @@
+## 5.0.0
+
+- Add support for Huawei HMS location Kit by [@Abdullqadir](https://github.com/Abdullqadir).
+
 ## 4.1.2
 
 - Fixes [#83](https://github.com/BirjuVachhani/locus-android/issues/83)

@@ -48,7 +48,7 @@ afterEvaluate {
             create<MavenPublication>("locus-android") {
                 groupId = "com.github.BirjuVachhani"
                 artifactId = "locus-android"
-                version = "4.1.2"
+                version = "5.0.0"
 
                 afterEvaluate {
                     artifact(tasks.getByName("bundleReleaseAar"))
