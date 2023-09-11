@@ -39,7 +39,7 @@ dependencies {
     compileOnly("com.huawei.hms:location:6.11.0.301")
     compileOnly("com.google.android.gms:play-services-location:21.0.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("androidx.activity:activity-ktx:1.7.1")
+    implementation("androidx.activity:activity-ktx:1.7.2")
 }
 
 afterEvaluate {
